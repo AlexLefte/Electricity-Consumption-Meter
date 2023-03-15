@@ -22,23 +22,75 @@ Data Stack size         : 256
 
 // I/O Registers definitions
 #include <mega164a.h>
+#include <util/delay.h>
+
+// Useful definitions
+// Numar perioade necesare duratei unui 
+// puls intreg (100 ms)
+#define T 5
+
+// Numar de perioade necesare
+// duratei unui puls pozitiv (cu durata 20 ms)
+#define DP 1   
 
 
-// Definitions for the parallel communication protocol
-#define T 100
-#define DP 25
-
-
+/////// SCI ///////
 // Timer 0 overflow interrupt service routine
 interrupt [TIM0_OVF] void timer0_ovf_isr(void)
 {
-// Reinitialize Timer 0 value
-TCNT0=0x3C;
-// Place your code here
+    // Reinitialize Timer 0 value
+    TCNT0=0x3C;
+
+    // Check for pulses coming from ADSP
+    UpdateConsumption();
 
 }
+///////////////////
 
-// Declare your global variables here
+
+////// Global variables //////// 
+// PULSE
+char PULSE;
+
+// State variables ( Q -> consumption range, 
+// S1 -> consumption counting state)
+char S1, S2, Q; 
+ 
+// Consumption array
+char[] CONSUM = {0, 0, 0, 0}
+
+// Total consumption
+char TOTAL_CONS = 0;
+
+// Digits
+char C4, C3, C2, C1;
+
+// CA
+char CA;
+
+// Digit patterns (CLC)
+const char DIGITS[] = {
+    0b00111111, // 0
+    0b00000110, // 1
+    0b01011011, // 2
+    0b01001111, // 3
+    0b01100110, // 4
+    0b01101101, // 5
+    0b01111101, // 6
+    0b00000111, // 7
+    0b01111111, // 8
+    0b01101111  // 9
+};
+///////////////////////////////
+
+
+//// Function headers ////
+void Init();
+void UpdateConsumption();
+void DisplayConsumption();
+void DisplayDigit();
+/////////////////////////
+
 
 void main(void)
 {
@@ -182,9 +234,161 @@ TWCR=(0<<TWEA) | (0<<TWSTA) | (0<<TWSTO) | (0<<TWEN) | (0<<TWIE);
 // Globally enable interrupts
 #asm("sei")
 
+// Initialize the device
+Init();
+
 while (1)
       {
-      // Place your code here
-
+      // Display the consumption
+      DisplayConsumption();
+      
+      // Wait for interruptions
       }
 }
+
+///// Function definitions /////
+void Init()
+{
+    // Setting initial states = 0
+    Q = S1 = S2 = 0;     
+    
+    // Turn off displays
+    PORTC = 0xff;
+    PORTD = 0xff;
+}
+
+void UpdateConsumption()
+{
+    char cntP = 0;
+                
+    // Identify PULSE
+    PULSE = PINA && 0x01;
+    
+    switch(S2) 
+    {
+        case 0:
+        {                     
+            // Check if sending request flag is up
+            // (Receiving sending request on PD6)
+            if (PORTD && 0x40)
+            {                
+                // Send reading ack 
+                // (Sending ack on PD7)  
+                PORTD |= 0x80;   
+                
+                // Going further to reading the pulses
+                S2 = 1;
+            }   
+            break;
+        }
+        case 1:
+        {          
+            // If PULSE is on, start counting
+            if (PULSE)
+            {   
+                // Increment cntP          
+                cntP += 1;   
+                
+                // Reset reading flag
+                PORTD &= 0x7f;   
+                
+                // Go further if the pulse period has passed,
+                // otherwise go back wait for sensding ack again.
+                S2 = (cntP == DP) ? 2 : 0;
+            }
+            break;
+        }
+        case 2:
+        {
+            if (~PULSE)
+            {   
+                // Determine current consumption range
+                
+                // Call Ana's method
+                // AnasMethod();
+                
+                // Increment consumption
+                CONS[Q] += 1;
+                
+                // Wait for another pulse
+                S2 = 0;
+            }          
+            break;  
+        }   
+    }
+}
+
+void DisplayConsumption()
+{
+    // We assume:
+    // PORTC: PC0 - PC6 -> 7 segments (A-G)
+    // PORTD: PD0 - PD3 -> select the common cathode for each digit (multiplexing)
+              // PD3 - C4, PD2 - C3, PD1 - C2, PD0 - C1  
+    // Q - consumption range:
+        // 0 -> 00:00 - 08:00
+        // 1 -> 08:00 - 16:00               (MON - FRI)
+        // 2 -> 16:00 - 00:00 (next day)
+        // 3 -> SAT - SUN
+    
+    // The actual approach:
+    // Each main loop iteration we multiplex the digits and display one at a time
+      
+    // If CA is pressed -> display total consumption,
+    // else -> display consumption based on current range.
+    char cons = (~CA) ? TOTAL_CONS : CONSUM[Q];
+    
+    // Compute and display C4
+    C4 = cons / 1000;  
+    cons %= 1000;
+    DisplayDigit(4, C4); 
+    
+    // Compute and display C3  
+    C3 = cons / 100; 
+    cons %= 100;   
+    DisplayDigit(3, C3);
+    
+    // Compute and display C2
+    C2 = cons / 10;
+    DisplayDigit(2, C2); 
+    
+    // Compute and display C1
+    C1 = cons % 10;
+    DisplayDigit(1, C1);
+}
+
+void DisplayDigit(char currentDisplay, char digit)
+{
+    // Set PORTB pins to the corresponding digit
+    PORTB = DIGITS[digit];
+    
+    // Select the desired display (turn on the pin
+    // corresponding to the desired digit (C4/C3/C2/C1) 
+    char output = 0xff;
+    
+    switch (currentDisplay)
+    {
+        case 4:       
+            // Turn PC3 on
+            output &= 0b11110111;     
+            break;
+        case 3:       
+            // Turn PC2 on
+            output &= 0b11111011;     
+            break;  
+        case 2:       
+            // Turn PC1 on
+            output &= 0b11111101;     
+            break; 
+        case 1:       
+            // Turn PC0 on
+            output &= 0b11111110;     
+            break;
+    } 
+            
+    // Assign output to PORTC in order to select the desired display;
+    PORTC = output;
+    
+    // Add delay (10 us)
+    _display_us(10); 
+}
+////////////////////////////////////////
