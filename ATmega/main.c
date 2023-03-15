@@ -33,6 +33,42 @@ Data Stack size         : 256
 // duratei unui puls pozitiv (cu durata 20 ms)
 #define DP 1   
 
+/// CLS definitions ///
+char S1 = 0; // starea CLS
+int H1 = 8;
+int H2 = 16;
+
+int A0[]={0x00000000+H1<<16, 1, 0x01000000+H1<<16, 1, 0x02000000+H1<<16, 1, 0x03000000+H1<<16, 1, 0x04000000+H1<<16, 1, T , 0};
+int A1[]={0x00000000+H2<<16, 2, 0x01000000+H2<<16, 2, 0x02000000+H2<<16, 2, 0x03000000+H2<<16, 2, 0x04000000+H2<<16, 2, T , 1};
+int A2[]={0x01000000       , 0, 0x02000000       , 0, 0x03000000       , 0, 0x04000000       , 0, 0x05000000       , 3, T , 2};
+int A3[]={0x00000000       , 0, T, 3};
+
+char Tout[] = {0, 1, 2, 3};
+int *TABA[] = {A0, A1, A2, A3};
+///////////////////////
+
+/// Time variables ///
+char H = 0; //hour
+char D = 0; //day
+char M = 0; //minutes
+char S = 0; //seconds
+/////////////////////
+
+
+char cnt_time = 0; //contor de timp
+char T_SEC; // numar de perioade necesare pentru a acoperi 1 sec
+char S2 = 0; //starea de contorizare a PS-ului
+
+ 
+//// Function headers ////
+void Init();
+void UpdateConsumption();
+void DisplayConsumption();
+void DisplayDigit();
+void UpdateTime();
+void CLS();
+/////////////////////////
+
 
 /////// SCI ///////
 // Timer 0 overflow interrupt service routine
@@ -85,14 +121,6 @@ const char DIGITS[] = {
     0b01101111  // 9
 };
 ///////////////////////////////
-
-
-//// Function headers ////
-void Init();
-void UpdateConsumption();
-void DisplayConsumption();
-void DisplayDigit();
-/////////////////////////
 
 
 void main(void)
@@ -394,4 +422,55 @@ void DisplayDigit(char currentDisplay, char digit)
     // Add delay (10 us)
     _display_us(10); 
 }
+
+
+void UpdateTime(){ 
+    cnt_time += 1; //incrementare contor de timp
+    if(cnt_time != T_SEC) return; 
+    
+    cnt_time = 0; // se reseteaza contorul 
+    S+=1;  //incrementeaza contor secunde
+    
+    if(S!=60) return; 
+    S = 0;//se reseteaza nr de secunde
+    M += 1; //incrementeaza contor minute
+    
+    if(M!=60) return;
+    M = 0;
+    H += 1;
+    
+    if(H!=24) return;
+    H = 0;
+    Z += 1;
+    
+    if (Z == 7) Z = 0;
+    return;
+}
+
+ 
+
+void CLS()
+{
+    //exemplu
+    // Ziua 3, ora 8, min 6, sec 3
+    0x03080603
+    int now = (Z<<24) | (H<<16) | (M<<8) | S;
+
+    int *adr = TABA[S1];
+    char ready = 0;
+    int i = 0;
+
+    while (!ready)
+    {
+        if (now == adr[i]) {
+            S1 = adr[i + 1];
+            ready = 1;  // ies din while
+        }
+        else if (adr[i] == T) ready = 1;
+        else i = i+2;
+    }
+    
+    char out = Tout[S1];
+}
+
 ////////////////////////////////////////
