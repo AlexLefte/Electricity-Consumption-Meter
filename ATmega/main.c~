@@ -293,12 +293,15 @@ void UpdateConsumption()
     char cntP = 0;
                 
     // Identify PULSE
-    PULSE = PINA && 0x01;
+    PULSE = PINA & 0x01;
     
     switch(S2) 
     {
         case 0:
-        {                     
+        {                 
+            // PD6 -> Sending request from ADSP
+            // PD7 -> Reading ack from ATmega164A
+                
             // Check if sending request flag is up
             // (Receiving sending request on PD6)
             if (PORTD && 0x40)
@@ -325,7 +328,7 @@ void UpdateConsumption()
                 
                 // Go further if the pulse period has passed,
                 // otherwise go back wait for sensding ack again.
-                S2 = (cntP == DP) ? 2 : 0;
+                S2 = (cntP == DP) ? 2 : 1;
             }
             break;
         }
@@ -333,10 +336,8 @@ void UpdateConsumption()
         {
             if (~PULSE)
             {   
-                // Determine current consumption range
-                
-                // Call Ana's method
-                // AnasMethod();
+                // Update current consumption range
+                Q = CLS();
                 
                 // Increment consumption
                 CONS[Q] += 1;
@@ -356,9 +357,9 @@ void DisplayConsumption()
     // PORTD: PD0 - PD3 -> select the common cathode for each digit (multiplexing)
               // PD3 - C4, PD2 - C3, PD1 - C2, PD0 - C1  
     // Q - consumption range:
-        // 0 -> 00:00 - 08:00
-        // 1 -> 08:00 - 16:00               (MON - FRI)
-        // 2 -> 16:00 - 00:00 (next day)
+        // 0 -> 00:00 - H1:00
+        // 1 -> H1:00 - H2:00               (MON - FRI)
+        // 2 -> H2:00 - 00:00 (next day)
         // 3 -> SAT - SUN
     
     // The actual approach:
@@ -389,8 +390,8 @@ void DisplayConsumption()
 
 void DisplayDigit(char currentDisplay, char digit)
 {
-    // Set PORTB pins to the corresponding digit
-    PORTB = DIGITS[digit];
+    // Set PORTC pins to the corresponding digit
+    PORTC = DIGITS[digit];
     
     // Select the desired display (turn on the pin
     // corresponding to the desired digit (C4/C3/C2/C1) 
@@ -399,25 +400,25 @@ void DisplayDigit(char currentDisplay, char digit)
     switch (currentDisplay)
     {
         case 4:       
-            // Turn PC3 on
+            // Turn PD3 on
             output &= 0b11110111;     
             break;
         case 3:       
-            // Turn PC2 on
+            // Turn PD2 on
             output &= 0b11111011;     
             break;  
         case 2:       
-            // Turn PC1 on
+            // Turn PD1 on
             output &= 0b11111101;     
             break; 
         case 1:       
-            // Turn PC0 on
+            // Turn PD0 on
             output &= 0b11111110;     
             break;
     } 
             
     // Assign output to PORTC in order to select the desired display;
-    PORTC = output;
+    PORTD = output;
     
     // Add delay (10 us)
     _display_us(10); 
@@ -451,35 +452,26 @@ void UpdateTime(){
 
 void CLS()
 {
- //exemplu
-// Ziua 3, ora 8, min 6, sec 3
-0x03080603
-int now = (Z<<24) | (H<<16) | (M<<8) | S;
+    //exemplu
+    // Ziua 3, ora 8, min 6, sec 3
+    0x03080603
+    int now = (Z<<24) | (H<<16) | (M<<8) | S;
 
- 
+    int *adr = TABA[S1];
+    char ready = 0;
+    int i = 0;
 
-int *adr = TABA[S1];
-char ready = 0;
-int i = 0;
-
- 
-
-while (!ready)
-{
-    if (now == adr[i]) {
-        S1 = adr[i + 1];
-        ready = 1;  // ies din while
+    while (!ready)
+    {
+        if (now == adr[i]) {
+            S1 = adr[i + 1];
+            ready = 1;  // ies din while
+        }
+        else if (adr[i] == T) ready = 1;
+        else i = i+2;
     }
-    else if (adr[i] == T) ready = 1;
-    else i = i+2;
-}
-
- 
-
-char out = Tout[S1];
-
- 
-
+    
+    char out = Tout[S1];
 }
 
 ////////////////////////////////////////
