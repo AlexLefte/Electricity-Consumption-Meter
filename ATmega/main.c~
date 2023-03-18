@@ -34,9 +34,9 @@ Data Stack size         : 256
 #define DP 1   
 
 /// CLS definitions ///
-char S1 = 0; // starea CLS
-int H1 = 8;
-int H2 = 16;
+char S1 = 0; // CLS state
+const int H1 = 8;
+const int H2 = 16;
 
 int A0[]={0x00000000+H1<<16, 1, 0x01000000+H1<<16, 1, 0x02000000+H1<<16, 1, 0x03000000+H1<<16, 1, 0x04000000+H1<<16, 1, T , 0};
 int A1[]={0x00000000+H2<<16, 2, 0x01000000+H2<<16, 2, 0x02000000+H2<<16, 2, 0x03000000+H2<<16, 2, 0x04000000+H2<<16, 2, T , 1};
@@ -57,7 +57,7 @@ char S = 0; //seconds
 
 char cnt_time = 0; //contor de timp
 char T_SEC; // numar de perioade necesare pentru a acoperi 1 sec
-char S2 = 0; //starea de contorizare a PS-ului
+char S2; //starea de contorizare a PS-ului
 
  
 //// Function headers ////
@@ -68,6 +68,46 @@ void DisplayDigit();
 void UpdateTime();
 void CLS();
 /////////////////////////
+
+
+////// Global variables //////// 
+// PULSE
+char PULSE;
+
+// State variables ( Q -> consumption range, 
+// S1 -> consumption counting state, 
+// S3 -> display state)
+char Q, S3; 
+ 
+// Consumption array
+char CONSUM[] = {0, 0, 0, 0};
+
+// Total consumption
+char TOTAL_CONS = 0;
+
+// Digits
+char C4, C3, C2, C1;
+
+// CA
+char CA;
+
+// Pulses contor
+char cntP;
+
+// Digit patterns (CLC)
+const char DIGITS[] = {
+    0b00111111, // 0
+    0b00000110, // 1
+    0b01011011, // 2
+    0b01001111, // 3
+    0b01100110, // 4
+    0b01101101, // 5
+    0b01111101, // 6
+    0b00000111, // 7
+    0b01111111, // 8
+    0b01101111  // 9
+};
+///////////////////////////////
 
 
 /////// SCI ///////
@@ -85,43 +125,6 @@ interrupt [TIM0_OVF] void timer0_ovf_isr(void)
 
 }
 ///////////////////
-
-
-////// Global variables //////// 
-// PULSE
-char PULSE;
-
-// State variables ( Q -> consumption range, 
-// S1 -> consumption counting state)
-char S1, S2, Q; 
- 
-// Consumption array
-char[] CONSUM = {0, 0, 0, 0}
-
-// Total consumption
-char TOTAL_CONS = 0;
-
-// Digits
-char C4, C3, C2, C1;
-
-// CA
-char CA;
-
-// Digit patterns (CLC)
-const char DIGITS[] = {
-    0b00111111, // 0
-    0b00000110, // 1
-    0b01011011, // 2
-    0b01001111, // 3
-    0b01100110, // 4
-    0b01101101, // 5
-    0b01111101, // 6
-    0b00000111, // 7
-    0b01111111, // 8
-    0b01101111  // 9
-};
-///////////////////////////////
-
 
 void main(void)
 {
@@ -286,19 +289,20 @@ void Init()
     // Turn off displays
     PORTC = 0xff;
     PORTD = 0xff;
+    PORTB = 0xff;
 }
 
 void UpdateConsumption()
-{
-    char cntP = 0;
-                
+{                
     // Identify PULSE
     PULSE = PINA & 0x01;
     
     switch(S2) 
     {
         case 0:
-        {                 
+        {      
+            char cntP = 0;
+                       
             // PD6 -> Sending request from ADSP
             // PD7 -> Reading ack from ATmega164A
                 
@@ -450,7 +454,7 @@ void UpdateTime(){
 
  
 
-void CLS()
+char CLS()
 {
     //exemplu
     // Ziua 3, ora 8, min 6, sec 3
@@ -465,13 +469,15 @@ void CLS()
     {
         if (now == adr[i]) {
             S1 = adr[i + 1];
-            ready = 1;  // ies din while
+            ready = 1;  // Stop iterating through while
         }
         else if (adr[i] == T) ready = 1;
         else i = i+2;
     }
     
-    char out = Tout[S1];
+    char out = Tout[S1];  
+    
+    return 
 }
 
 ////////////////////////////////////////

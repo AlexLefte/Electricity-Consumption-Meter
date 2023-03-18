@@ -22,7 +22,7 @@ Data Stack size         : 256
 
 // I/O Registers definitions
 #include <mega164a.h>
-#include <util/delay.h>
+// #include <util/delay.h>
 
 // Useful definitions
 // Numar perioade necesare duratei unui 
@@ -35,21 +35,23 @@ Data Stack size         : 256
 
 /// CLS definitions ///
 char S1 = 0; // CLS state
-const int H1 = 8;
-const int H2 = 16;
+const long int H1 = 95;
+const long int H2 = 7;    
+                   
+const long int Ter = 0x28000000;
 
-int A0[]={0x00000000+H1<<16, 1, 0x01000000+H1<<16, 1, 0x02000000+H1<<16, 1, 0x03000000+H1<<16, 1, 0x04000000+H1<<16, 1, T , 0};
-int A1[]={0x00000000+H2<<16, 2, 0x01000000+H2<<16, 2, 0x02000000+H2<<16, 2, 0x03000000+H2<<16, 2, 0x04000000+H2<<16, 2, T , 1};
-int A2[]={0x01000000       , 0, 0x02000000       , 0, 0x03000000       , 0, 0x04000000       , 0, 0x05000000       , 3, T , 2};
-int A3[]={0x00000000       , 0, T, 3};
+long int A0[]={0x00000000+H1, 1, 0x01000000+H1, 1, 0x02000000+H1, 1, 0x03000000+H1, 1, 0x04000000+H1, 1, Ter, 0};
+long int A1[]={0x00000000+H2, 2, 0x01000000+H2, 2, 0x02000000+H2, 2, 0x03000000+H2, 2, 0x04000000+H2, 2, Ter, 1};
+long int A2[]={0x01000000, 0, 0x02000000, 0, 0x03000000, 0, 0x04000000, 0, 0x05000000, 3, Ter, 2};
+long int A3[]={0x00000000, 0, Ter, 3};
 
 char Tout[] = {0, 1, 2, 3};
-int *TABA[] = {A0, A1, A2, A3};
+long int *TABA[] = {A0, A1, A2, A3};
 ///////////////////////
 
 /// Time variables ///
 char H = 0; //hour
-char D = 0; //day
+char Z = 0; //day
 char M = 0; //minutes
 char S = 0; //seconds
 /////////////////////
@@ -59,16 +61,8 @@ char cnt_time = 0; //contor de timp
 char T_SEC; // numar de perioade necesare pentru a acoperi 1 sec
 char S2; //starea de contorizare a PS-ului
 
+char S_PULSE;
  
-//// Function headers ////
-void Init();
-void UpdateConsumption();
-void DisplayConsumption();
-void DisplayDigit();
-void UpdateTime();
-void CLS();
-/////////////////////////
-
 
 ////// Global variables //////// 
 // PULSE
@@ -91,23 +85,33 @@ char C4, C3, C2, C1;
 // CA
 char CA;
 
-// Pulses contor
-char cntP;
-
 // Digit patterns (CLC)
 const char DIGITS[] = {
-    0b00111111, // 0
-    0b00000110, // 1
-    0b01011011, // 2
-    0b01001111, // 3
-    0b01100110, // 4
-    0b01101101, // 5
-    0b01111101, // 6
-    0b00000111, // 7
-    0b01111111, // 8
-    0b01101111  // 9
+    0b11000000, // 0
+    0b11111001, // 1
+    0b10100100, // 2
+    0b10110000, // 3
+    0b10011001, // 4
+    0b10010010, // 5
+    0b10000010, // 6
+    0b11111000, // 7
+    0b10000000, // 8
+    0b10010000  // 9
 };
 ///////////////////////////////
+
+// Pulses contor
+char cntP = 0;
+
+//// Function headers ////
+void Init();
+void UpdateConsumption();
+void DisplayConsumption();
+void DisplayDigit(char currentDisplay, char digit);
+void UpdateTime();
+void CLS();
+void MockPULSE();
+/////////////////////////
 
 
 /////// SCI ///////
@@ -119,9 +123,14 @@ interrupt [TIM0_OVF] void timer0_ovf_isr(void)
     
     // Update CA
     CA = (PORTD & 0x20) >> 5;
-
+                                    
+    // Update mock pulse
+    MockPULSE();
+    
     // Check for pulses coming from ADSP
-    UpdateConsumption();
+    UpdateConsumption();   
+    
+    // DisplayConsumption();
 
 }
 ///////////////////
@@ -275,16 +284,16 @@ while (1)
       {
       // Display the consumption
       DisplayConsumption();
-      
+              
       // Wait for interruptions
       }
 }
 
 ///// Function definitions /////
 void Init()
-{
+{                                            
     // Setting initial states = 0
-    Q = S1 = S2 = 0;     
+    Q = S1 = S2 = S3 = S_PULSE = 0;     
     
     // Turn off displays
     PORTC = 0xff;
@@ -295,9 +304,9 @@ void Init()
 void UpdateConsumption()
 {                
     // Identify PULSE
-    PULSE = PINA & 0x01;
+    // PULSE = PINA & 0x01;
     
-    switch(S2) 
+    /* switch(S2) 
     {
         case 0:
         {      
@@ -351,7 +360,63 @@ void UpdateConsumption()
             }          
             break;  
         }   
+    } */
+    
+    switch(S2) 
+    {
+        case 0:
+        {          
+            // If PULSE is on, start counting
+            if (PULSE)
+            {   
+                // Increment cntP          
+                cntP += 1;   
+                
+                // Reset reading flag
+                PORTD &= 0x7f;   
+                
+                // Go further if the pulse period has passed,
+                // otherwise go back wait for sensding ack again.
+                S2 = (cntP == DP) ? 1 : 0;
+            }
+            break;
+        }
+        case 1:
+        {
+            if (~PULSE)
+            {   
+                // Update current consumption range
+                CLS();
+                
+                // Increment consumption
+                CONSUM[Q] += 1;
+                
+                // Wait for another pulse
+                S2 = 0;
+                cntP = 0;
+            }          
+            break;  
+        }   
     }
+}
+
+void MockPULSE()
+{
+     switch(S_PULSE)
+     {   
+        case 0:
+        {
+            PULSE = 1;
+            S_PULSE = 1;
+            break;
+        }  
+        case 1:
+        {
+            PULSE = 0;
+            S_PULSE = 0;
+            break;
+        }
+     }
 }
 
 void DisplayConsumption()
@@ -370,8 +435,10 @@ void DisplayConsumption()
     // Each main loop iteration we multiplex the digits and display one at a time
       
     // If CA is pressed -> display total consumption,
-    // else -> display consumption based on current range.
-    char cons = (~CA) ? TOTAL_CONS : CONSUM[Q];
+    // else -> display consumption based on current range.    
+    char cons;
+    CA = 1;
+    cons = (!CA) ? TOTAL_CONS : CONSUM[Q];
     
     // Compute and display C4
     C4 = cons / 1000;  
@@ -394,38 +461,43 @@ void DisplayConsumption()
 
 void DisplayDigit(char currentDisplay, char digit)
 {
-    // Set PORTC pins to the corresponding digit
-    PORTC = DIGITS[digit];
-    
     // Select the desired display (turn on the pin
     // corresponding to the desired digit (C4/C3/C2/C1) 
     char output = 0xff;
     
+    // Set PORTC pins to the corresponding digit
+    // PORTC = DIGITS[digit];
+        
     switch (currentDisplay)
     {
         case 4:       
-            // Turn PD3 on
-            output &= 0b11110111;     
+            // Turn PD3 on 
+            //output &= 0b11110111;  
+            output &= 0b11111000;  
             break;
         case 3:       
             // Turn PD2 on
-            output &= 0b11111011;     
+            // output &= 0b11111011; 
+            output &= 0b11110100;    
             break;  
         case 2:       
             // Turn PD1 on
-            output &= 0b11111101;     
+            output &= 0b11110010;     
             break; 
         case 1:       
             // Turn PD0 on
-            output &= 0b11111110;     
+            output &= 0b11110001;     
             break;
-    } 
+    }          
             
     // Assign output to PORTC in order to select the desired display;
     PORTD = output;
     
+    // Set PORTC pins to the corresponding digit
+    PORTC = DIGITS[digit];
+    
     // Add delay (10 us)
-    _display_us(10); 
+    // _display_us(10); 
 }
 
 
@@ -454,28 +526,30 @@ void UpdateTime(){
 
  
 
-char CLS()
+void CLS()
 {
+    char out;
+    
     //exemplu
     // Ziua 3, ora 8, min 6, sec 3
-    0x03080603
+    // 0x03080603
     int now = (Z<<24) | (H<<16) | (M<<8) | S;
 
-    int *adr = TABA[S1];
+    long int *adr = TABA[Q];
     char ready = 0;
     int i = 0;
 
     while (!ready)
     {
         if (now == adr[i]) {
-            S1 = adr[i + 1];
-            ready = 1;  // Stop iterating through while
+            Q = adr[i + 1];
+            ready = 1;  // ies din while
         }
         else if (adr[i] == T) ready = 1;
         else i = i+2;
     }
     
-    char out = Tout[S1];  
+    out = Tout[Q];
 }
 
 ////////////////////////////////////////
