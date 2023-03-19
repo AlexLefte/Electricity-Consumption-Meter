@@ -21,7 +21,7 @@ OutputExecutableFilesDirectory=Release\Exe
 OutputLinkerFilesDirectory=Release\Link
 AllowDisplayFunctionCallTree=1
 CleanUp=2
-TimeStamp1=1450379089
+TimeStamp1=1450403081
 OF2=..\..\..\..\..\I\uC\Lab\L3\PS\exempluPS.c
 TimeStamp2=1433103117
 EditorPanelMode=0
@@ -139,7 +139,7 @@ UseBootAppXmega=0
 RebuildAll=0
 LinkageInformationPresent=1
 COFFileTimeStamp=1450402561
-Build=51
+Build=52
 GlobalVarAddr=696
 EEPROMVarAddr=0
 [DefinedSymbolsDebug]
@@ -251,7 +251,7 @@ UseBootAppXmega=0
 RebuildAll=0
 LinkageInformationPresent=1
 COFFileTimeStamp=-1
-Build=51
+Build=52
 [DefinedSymbols]
 Count=0
 [CompilerAdvanced]
@@ -289,7 +289,7 @@ RunUserProg=0
 ProgrammChip=0
 MergeROMFile=0
 ROMFilePath=
-SCKFrequency=0
+SCKFrequency=250000
 LockBits=0
 BootLockBits0=0
 BootLockBits1=0
@@ -355,7 +355,7 @@ Row=0
 Column=0
 ScrollPosX=0
 ScrollPosY=0
-TimeStamp=1450379662
+TimeStamp=1450403218
 [BookmarksFoldedCode]
 Files=3
 F1=D:\Cursuri\An3\II\P2\SourceCode\Electricity-Consumption-Meter\ATmega\main.c
@@ -397,11 +397,11 @@ BK7=-1
 BK8=-1
 BK9=-1
 [Bookmarks3]
-TimeStamp=1450379089
-Row=488
-Column=31
+TimeStamp=1450403081
+Row=0
+Column=0
 ScrollPosX=0
-ScrollPosY=462
+ScrollPosY=32
 BK0=-1
 BK1=-1
 BK2=-1
@@ -413,8 +413,6 @@ BK7=-1
 BK8=-1
 BK9=-1
 [FoldedCode2]
-Blocks=0
-[FoldedCode3]
 Blocks=0
 [BuildInfoCompiler]
 L1=Build configuration: Debug
@@ -477,3 +475,5 @@ F1=D:\Cursuri\An3\II\P2\SourceCode\Electricity-Consumption-Meter\TestingProjects
 Files=2
 F1=..\..\..\..\..\..\..\..\uC\codevisionavr\inc\mega164a.h
 F2=..\..\..\..\..\..\..\..\uC\codevisionavr\inc\mega324_bits.h
+[FoldedCode3]
+Blocks=0

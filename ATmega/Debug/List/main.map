@@ -1,0 +1,47 @@
+RAM Allocation [bytes]
+Variable                                                                          Address   Size
+------------------------------------------------------------------------------------------------
+A0                                                                                0x0200      48
+A1                                                                                0x0230      48
+A2                                                                                0x0260      48
+A3                                                                                0x0290      16
+Tout                                                                              0x02A0       4
+TABA                                                                              0x02A4       8
+CONSUM                                                                            0x02AC       8
+C4                                                                                0x02B4       1
+C3                                                                                0x02B5       1
+C2                                                                                0x02B6       1
+C1                                                                                0x02B7       1
+CA                                                                                0x02B8       1
+cntP                                                                              0x02B9       1
+
+EEPROM Allocation [bytes]
+Variable                                                                          Address   Size
+------------------------------------------------------------------------------------------------
+
+Register Allocation
+Variable                                                                          Register  Size
+------------------------------------------------------------------------------------------------
+S1                                                                                R4           1
+H                                                                                 R3           1
+Z                                                                                 R6           1
+M                                                                                 R5           1
+S                                                                                 R8           1
+cnt_time                                                                          R7           1
+T_SEC                                                                             R10          1
+S2                                                                                R9           1
+PULSE                                                                             R12          1
+Q                                                                                 R11          1
+S3                                                                                R14          1
+TOTAL_CONS                                                                        R13          1
+
+FLASH Allocation [words]
+Function                                                                          Address   Size
+------------------------------------------------------------------------------------------------
+timer0_ovf_isr                                                                    0x000DF     38
+main                                                                              0x00105     92
+Init                                                                              0x00161     10
+UpdateConsumption                                                                 0x0016B     41
+DisplayConsumption                                                                0x00194     73
+DisplayDigit                                                                      0x001DD     39
+CLS                                                                               0x00204     96
