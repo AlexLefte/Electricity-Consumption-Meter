@@ -40,8 +40,8 @@ const long int H2 = 16;
                    
 const long int Ter = 0x10000000;
 
-long int A0[]={0x00000000+H1, 1, 0x01000000+H1, 1, 0x02000000+H1, 1, 0x03000000+H1, 1, 0x04000000+H1, 1, Ter, 0};
-long int A1[]={0x00000000+H2, 2, 0x01000000+H2, 2, 0x02000000+H2, 2, 0x03000000+H2, 2, 0x04000000+H2, 2, Ter, 1};
+long int A0[]={0x00000000+H1<<16, 1, 0x01000000+H1<<16, 1, 0x02000000+H1<<16, 1, 0x03000000+H1<16, 1, 0x04000000+H1<<16, 1, Ter, 0};
+long int A1[]={0x00000000+H2<<16, 2, 0x01000000+H2<<16, 2, 0x02000000+H2<<16, 2, 0x03000000+H2<<16, 2, 0x04000000+H2<<16, 2, Ter, 1};
 long int A2[]={0x01000000, 0, 0x02000000, 0, 0x03000000, 0, 0x04000000, 0, 0x05000000, 3, Ter, 2};
 long int A3[]={0x00000000, 0, Ter, 3};
 
@@ -74,7 +74,7 @@ char PULSE;
 char Q, S3; 
  
 // Consumption array
-char CONSUM[] = {0, 0, 0, 0};
+int CONSUM[] = {0, 0, 0, 0};
 
 // Total consumption
 char TOTAL_CONS = 0;
@@ -415,8 +415,9 @@ void MockPULSE()
         {   
             cntMockPulse += 1;
             PULSE = 0;    
-            if (cntMockPulse == 45)
-                S_PULSE = 0;
+            S_PULSE = 0;
+            //if (cntMockPulse == 49)
+                //S_PULSE = 0;
             break;
         }
      }
