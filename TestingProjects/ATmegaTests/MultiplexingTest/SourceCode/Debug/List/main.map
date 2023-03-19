@@ -1,0 +1,50 @@
+RAM Allocation [bytes]
+Variable                                                                          Address   Size
+------------------------------------------------------------------------------------------------
+A0                                                                                0x0200      48
+A1                                                                                0x0230      48
+A2                                                                                0x0260      48
+A3                                                                                0x0290      16
+Tout                                                                              0x02A0       4
+TABA                                                                              0x02A4       8
+CONSUM                                                                            0x02AC       4
+TOTAL_CONS                                                                        0x02B0       1
+C4                                                                                0x02B1       1
+C3                                                                                0x02B2       1
+C2                                                                                0x02B3       1
+C1                                                                                0x02B4       1
+CA                                                                                0x02B5       1
+cntP                                                                              0x02B6       1
+cntMockPulse                                                                      0x02B7       1
+
+EEPROM Allocation [bytes]
+Variable                                                                          Address   Size
+------------------------------------------------------------------------------------------------
+
+Register Allocation
+Variable                                                                          Register  Size
+------------------------------------------------------------------------------------------------
+S1                                                                                R4           1
+H                                                                                 R3           1
+Z                                                                                 R6           1
+M                                                                                 R5           1
+S                                                                                 R8           1
+cnt_time                                                                          R7           1
+T_SEC                                                                             R10          1
+S2                                                                                R9           1
+S_PULSE                                                                           R12          1
+PULSE                                                                             R11          1
+Q                                                                                 R14          1
+S3                                                                                R13          1
+
+FLASH Allocation [words]
+Function                                                                          Address   Size
+------------------------------------------------------------------------------------------------
+timer0_ovf_isr                                                                    0x000DC     39
+main                                                                              0x00103     92
+Init                                                                              0x0015F     11
+UpdateConsumption                                                                 0x0016A     42
+MockPULSE                                                                         0x00194     27
+DisplayConsumption                                                                0x001AF     77
+DisplayDigit                                                                      0x001FC     39
+CLS                                                                               0x00223     83

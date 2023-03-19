@@ -8,8 +8,8 @@ C=
 D=3/11/2023
 Files=1
 F1=main.c
-OpenedFiles=0
-OF1=main.c
+OpenedFiles=2
+OF1=..\TestingProjects\ATmegaTests\MultiplexingTest\SourceCode\main.c
 ActiveTab=1
 DebugOutputListFilesDirectory=Debug\List
 DebugOutputObjectFilesDirectory=Debug
@@ -19,11 +19,11 @@ OutputListFilesDirectory=Release\List
 OutputObjectFilesDirectory=Release
 OutputExecutableFilesDirectory=Release\Exe
 OutputLinkerFilesDirectory=Release\Link
-AllowDisplayFunctionCallTree=0
+AllowDisplayFunctionCallTree=1
 CleanUp=2
-TimeStamp1=1450162648
-OF2=..\..\..\..\..\I\uC\Lab\L3\PS\exempluPS.c
-TimeStamp2=1433103117
+TimeStamp1=1450401866
+OF2=main.c
+TimeStamp2=1450400632
 EditorPanelMode=0
 ActiveEditorPanel=0
 Active0=1
@@ -137,7 +137,7 @@ UseEEPROMLocation0=1
 DisplayCodeSizeError=1
 UseBootAppXmega=0
 RebuildAll=1
-LinkageInformationPresent=0
+LinkageInformationPresent=1
 COFFileTimeStamp=-1
 Build=0
 [DefinedSymbolsDebug]
@@ -287,7 +287,7 @@ RunUserProg=0
 ProgrammChip=0
 MergeROMFile=0
 ROMFilePath=
-SCKFrequency=0
+SCKFrequency=250000
 LockBits=0
 BootLockBits0=0
 BootLockBits1=0
@@ -353,13 +353,14 @@ Row=0
 Column=0
 ScrollPosX=0
 ScrollPosY=0
-TimeStamp=1450354065
+TimeStamp=1450401875
 [BookmarksFoldedCode]
-Files=4
+Files=5
 F1=D:\Cursuri\An3\II\P2\SourceCode\Electricity-Consumption-Meter\ATmega\main.c
 F2=..\..\..\..\..\I\uC\Lab\L3\PS\exempluPS.c
 F3=main.c
 F4=..\TestingProjects\ATmegaTests\MultiplexingTest\main.c
+F5=..\TestingProjects\ATmegaTests\MultiplexingTest\SourceCode\main.c
 [Bookmarks1]
 TimeStamp=1449889052
 Row=202
@@ -396,11 +397,11 @@ BK7=-1
 BK8=-1
 BK9=-1
 [Bookmarks3]
-TimeStamp=1450354044
-Row=480
-Column=40
+TimeStamp=1450400632
+Row=346
+Column=0
 ScrollPosX=0
-ScrollPosY=288
+ScrollPosY=323
 BK0=-1
 BK1=-1
 BK2=-1
@@ -412,15 +413,6 @@ BK7=-1
 BK8=-1
 BK9=-1
 [FoldedCode2]
-Blocks=0
-[HeadersList]
-Files=1
-F1=D:\GithubRepos\Electricity-Consumption-Meter\ATmega\main.c
-[Header1]
-Files=2
-F1=C:\cvavreval\inc\mega164a.h
-F2=C:\cvavreval\inc\mega324_bits.h
-[FoldedCode3]
 Blocks=0
 [Bookmarks4]
 TimeStamp=1450353917
@@ -439,4 +431,70 @@ BK7=-1
 BK8=-1
 BK9=-1
 [FoldedCode4]
+Blocks=0
+[HeadersList]
+Files=1
+F1=D:\Cursuri\An3\II\P2\SourceCode\Electricity-Consumption-Meter\ATmega\main.c
+[Header1]
+Files=2
+F1=..\..\..\..\..\uC\codevisionavr\inc\mega164a.h
+F2=..\..\..\..\..\uC\codevisionavr\inc\mega324_bits.h
+[BuildInfoCompiler]
+L1=Build configuration: Debug
+L2=Chip: ATmega164A
+L3=Clock frequency: 10.000000 MHz
+L4=Program type: Application
+L5=Memory model: Small
+L6=Optimize for: Size
+L7=(s)printf features: int, width
+L8=(s)scanf features: int, width
+L9=Promote 'char' to 'int': Yes
+L10='char' is unsigned: Yes
+L11=global 'const' stored in FLASH: Yes
+L12=8 bit enums: Yes
+L13=Enhanced function parameters passing: Mode 2
+L14=Automatic register allocation: Yes
+L15=Smart register allocation: Yes
+L16=
+L17=Build: 0
+L18=1526 line(s) compiled
+L19=17 error(s)
+L20=2 warning(s)
+L21=
+L22=Bit variables size: 0 byte(s)
+L23=
+L24=Data Stack area: 0x100 to 0x1FF
+L25=Data Stack size: 256 byte(s)
+L26=Estimated Data Stack usage: 0 byte(s)
+L27=
+L28=RAM Global variables size: 0 byte(s)
+L29=
+L30=Hardware Stack area: 0x200 to 0x4FF
+L31=Hardware Stack size: 768 byte(s)
+L32=
+L33=Heap size: 0 byte(s)
+L34=
+L35=EEPROM usage: 0 byte(s), 0.0% of EEPROM
+Lines=35
+[BuildInfoAssembler]
+Lines=0
+[FoldedCode3]
+Blocks=0
+[Bookmarks5]
+TimeStamp=1450401866
+Row=407
+Column=23
+ScrollPosX=0
+ScrollPosY=393
+BK0=-1
+BK1=-1
+BK2=-1
+BK3=-1
+BK4=-1
+BK5=-1
+BK6=-1
+BK7=-1
+BK8=-1
+BK9=-1
+[FoldedCode5]
 Blocks=0

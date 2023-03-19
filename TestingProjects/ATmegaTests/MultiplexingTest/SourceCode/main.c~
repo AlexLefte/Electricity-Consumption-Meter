@@ -35,10 +35,10 @@ Data Stack size         : 256
 
 /// CLS definitions ///
 char S1 = 0; // CLS state
-const long int H1 = 95;
-const long int H2 = 7;    
+const long int H1 = 8;
+const long int H2 = 16;    
                    
-const long int Ter = 0x28000000;
+const long int Ter = 0x10000000;
 
 long int A0[]={0x00000000+H1, 1, 0x01000000+H1, 1, 0x02000000+H1, 1, 0x03000000+H1, 1, 0x04000000+H1, 1, Ter, 0};
 long int A1[]={0x00000000+H2, 2, 0x01000000+H2, 2, 0x02000000+H2, 2, 0x03000000+H2, 2, 0x04000000+H2, 2, Ter, 1};
@@ -102,6 +102,7 @@ const char DIGITS[] = {
 
 // Pulses contor
 char cntP = 0;
+char cntMockPulse = 0;
 
 //// Function headers ////
 void Init();
@@ -128,10 +129,7 @@ interrupt [TIM0_OVF] void timer0_ovf_isr(void)
     MockPULSE();
     
     // Check for pulses coming from ADSP
-    UpdateConsumption();   
-    
-    // DisplayConsumption();
-
+    UpdateConsumption();
 }
 ///////////////////
 
@@ -400,20 +398,25 @@ void UpdateConsumption()
     }
 }
 
+
+// Mocks the PULSE coming from ADSP2181 (PF0) -> ATMega164A (PINA0) 
 void MockPULSE()
 {
      switch(S_PULSE)
      {   
         case 0:
         {
+            cntMockPulse = 0;
             PULSE = 1;
             S_PULSE = 1;
             break;
         }  
         case 1:
-        {
-            PULSE = 0;
-            S_PULSE = 0;
+        {   
+            cntMockPulse += 1;
+            PULSE = 0;    
+            if (cntMockPulse == 100)
+                S_PULSE = 0;
             break;
         }
      }
@@ -482,11 +485,11 @@ void DisplayDigit(char currentDisplay, char digit)
             break;  
         case 2:       
             // Turn PD1 on
-            output &= 0b11111101;     
+            output &= 0b11110010;     
             break; 
         case 1:       
             // Turn PD0 on
-            output &= 0b11111110;     
+            output &= 0b11110001;     
             break;
     }          
             
@@ -523,8 +526,6 @@ void UpdateTime(){
     if (Z == 7) Z = 0;
     return;
 }
-
- 
 
 void CLS()
 {
