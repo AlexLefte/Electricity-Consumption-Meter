@@ -137,7 +137,10 @@ interrupt [TIM0_OVF] void timer0_ovf_isr(void)
     TCNT0=0x3C; 
     
     // Update CA
-    CA = (PORTD & 0x10) >> 4;
+    CA = (PIND & 0x80) >> 7; 
+    
+    if (CA == 0)
+        PORTB = 0x00;
     
     // DisplayInfo
     DisplayInfo();
@@ -183,9 +186,9 @@ PORTC=(1<<PORTC7) | (1<<PORTC6) | (1<<PORTC5) | (1<<PORTC4) | (1<<PORTC3) | (1<<
 
 // Port D initialization
 // Function: Bit7=In Bit6=In Bit5=Out Bit4=In Bit3=Out Bit2=Out Bit1=Out Bit0=Out 
-DDRD=(0<<DDD7) | (0<<DDD6) | (1<<DDD5) | (0<<DDD4) | (1<<DDD3) | (1<<DDD2) | (1<<DDD1) | (1<<DDD0);
+DDRD=(0<<DDD7) | (0<<DDD6) | (0<<DDD5) | (0<<DDD4) | (1<<DDD3) | (1<<DDD2) | (1<<DDD1) | (1<<DDD0);
 // State: Bit7=T Bit6=T Bit5=1 Bit4=0 Bit3=1 Bit2=1 Bit1=1 Bit0=1 
-PORTD=(0<<PORTD7) | (0<<PORTD6) | (1<<PORTD5) | (0<<PORTD4) | (1<<PORTD3) | (1<<PORTD2) | (1<<PORTD1) | (1<<PORTD0);
+PORTD=(1<<PORTD7) | (1<<PORTD6) | (1<<PORTD5) | (1<<PORTD4) | (1<<PORTD3) | (1<<PORTD2) | (1<<PORTD1) | (1<<PORTD0);
 
 // Timer/Counter 0 initialization
 // Clock source: System Clock
@@ -312,9 +315,9 @@ void Init()
     Q = Q1 = S1 = S2 = S3 = S_PULSE = 0;     
     
     // Turn off displays
-    PORTC = 0xff;
-    PORTD = 0xff;
-    PORTB = 0xff;
+    //PORTC = 0xff;
+    //PORTD = 0xff;
+    //PORTB = 0xff;
 }
 
 void UpdateConsumption()
@@ -395,7 +398,7 @@ void UpdateConsumption()
                 cntP += 1;   
                 
                 // Reset reading flag
-                PORTD &= 0x7f;   
+                // PORTD &= 0x7f;   
                 
                 // Go further if the pulse period has passed,
                 // otherwise go back wait for sensding ack again.
@@ -517,7 +520,7 @@ void DisplayDigit(char currentDisplay, char digit)
             output = 0x01;     
             break;
     }          
-            
+           
     // Delete PD0-3 
     PORTD &= 0xF0; 
     
@@ -622,7 +625,7 @@ void DisplayPowerLevel()
 void DisplayConsumptionDisplayMode()
 {
     char out;
-    
+          
     switch(S3)
     {
         case 0:                 
