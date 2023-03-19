@@ -304,7 +304,6 @@ while (1)
       DisplayConsumption();
               
       // Wait for interruptions     
-      // PORTB &= 0x00;
       }
 }
 
@@ -313,11 +312,6 @@ void Init()
 {                                            
     // Setting initial states = 0
     Q = Q1 = S1 = S2 = S3 = S_PULSE = 0;     
-    
-    // Turn off displays
-    //PORTC = 0xff;
-    //PORTD = 0xff;
-    //PORTB = 0xff;
 }
 
 void UpdateConsumption()
@@ -469,7 +463,7 @@ void DisplayConsumption()
       
     // If CA is pressed -> display total consumption,
     // else -> display consumption based on current range.    
-    char cons = CONSUM[Q1];
+    int cons = CONSUM[Q1];
     
     // Compute and display C4
     C4 = cons / 1000;  
