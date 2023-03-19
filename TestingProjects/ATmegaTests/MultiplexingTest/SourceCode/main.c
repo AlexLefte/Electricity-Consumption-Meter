@@ -415,7 +415,7 @@ void MockPULSE()
         {   
             cntMockPulse += 1;
             PULSE = 0;    
-            if (cntMockPulse == 10)
+            if (cntMockPulse == 49)                 
                 S_PULSE = 0;
             break;
         }

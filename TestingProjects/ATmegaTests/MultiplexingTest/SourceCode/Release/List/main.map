@@ -15,6 +15,7 @@ C2                                                                0x02B3       1
 C1                                                                0x02B4       1
 CA                                                                0x02B5       1
 cntP                                                              0x02B6       1
+cntMockPulse                                                      0x02B7       1
 
 EEPROM Allocation
 Variable                                                          Address   Size

@@ -472,8 +472,8 @@ L12=
 Lines=12
 [HeadersList]
 Files=1
-F1=D:\Cursuri\An3\II\P2\SourceCode\Electricity-Consumption-Meter\TestingProjects\ATmegaTests\MultiplexingTest\SourceCode\main.c
+F1=D:\git\Electricity-Consumption-Meter\TestingProjects\ATmegaTests\MultiplexingTest\SourceCode\main.c
 [Header1]
 Files=2
-F1=..\..\..\..\..\..\..\..\uC\codevisionavr\inc\mega164a.h
-F2=..\..\..\..\..\..\..\..\uC\codevisionavr\inc\mega324_bits.h
+F1=D:\cvavr\inc\mega164a.h
+F2=D:\cvavr\inc\mega324_bits.h
