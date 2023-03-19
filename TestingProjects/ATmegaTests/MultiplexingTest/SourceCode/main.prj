@@ -21,7 +21,7 @@ OutputExecutableFilesDirectory=Release\Exe
 OutputLinkerFilesDirectory=Release\Link
 AllowDisplayFunctionCallTree=1
 CleanUp=2
-TimeStamp1=1450410900
+TimeStamp1=1450417763
 OF2=..\..\..\..\..\I\uC\Lab\L3\PS\exempluPS.c
 TimeStamp2=1433103117
 EditorPanelMode=0
@@ -251,7 +251,7 @@ UseBootAppXmega=0
 RebuildAll=0
 LinkageInformationPresent=1
 COFFileTimeStamp=-1
-Build=85
+Build=57
 [DefinedSymbols]
 Count=0
 [CompilerAdvanced]
@@ -289,7 +289,7 @@ RunUserProg=0
 ProgrammChip=0
 MergeROMFile=0
 ROMFilePath=
-SCKFrequency=250000
+SCKFrequency=0
 LockBits=0
 BootLockBits0=0
 BootLockBits1=0
@@ -355,7 +355,7 @@ Row=0
 Column=0
 ScrollPosX=0
 ScrollPosY=0
-TimeStamp=1450410926
+TimeStamp=1450417801
 [BookmarksFoldedCode]
 Files=3
 F1=D:\Cursuri\An3\II\P2\SourceCode\Electricity-Consumption-Meter\ATmega\main.c
@@ -397,11 +397,11 @@ BK7=-1
 BK8=-1
 BK9=-1
 [Bookmarks3]
-TimeStamp=1450410900
-Row=51
-Column=22
+TimeStamp=1450417763
+Row=303
+Column=9
 ScrollPosX=0
-ScrollPosY=24
+ScrollPosY=288
 BK0=-1
 BK1=-1
 BK2=-1
@@ -470,10 +470,10 @@ L12=
 Lines=12
 [HeadersList]
 Files=1
-F1=D:\Cursuri\An3\II\P2\SourceCode\Electricity-Consumption-Meter\TestingProjects\ATmegaTests\MultiplexingTest\SourceCode\main.c
+F1=D:\GithubRepos\Electricity-Consumption-Meter\TestingProjects\ATmegaTests\MultiplexingTest\SourceCode\main.c
 [Header1]
 Files=2
-F1=..\..\..\..\..\..\..\..\uC\codevisionavr\inc\mega164a.h
-F2=..\..\..\..\..\..\..\..\uC\codevisionavr\inc\mega324_bits.h
+F1=C:\cvavreval\inc\mega164a.h
+F2=C:\cvavreval\inc\mega324_bits.h
 [FoldedCode3]
 Blocks=0

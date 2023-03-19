@@ -50,10 +50,10 @@ long int *TABA[] = {A0, A1, A2, A3};
 ///////////////////////
 
 /// Time variables ///
-int H = 12; //hour
-int Z = 3; //day
-int M = 45; //minutes
-int S = 21; //seconds
+long int Z = 0; //day
+long int H = 0; //hour
+long int M = 0; //minutes
+long int S = 0; //seconds
 /////////////////////
 
 
@@ -441,10 +441,9 @@ void MockPULSE()
         case 1:
         {   
             cntMockPulse += 1;
-            PULSE = 0; 
-            S_PULSE = 0;   
-            //if (cntMockPulse == 49)
-                //S_PULSE = 0;
+            PULSE = 0;    
+            if (cntMockPulse == 49)
+                S_PULSE = 0;
             break;
         }
      }
@@ -560,10 +559,7 @@ void CLS()
     //exemplu
     // Ziua 3, ora 8, min 6, sec 3
     // 0x03080603
-    //long int now = (Z<<24) | (H<<16) | (M<<8) | S;
-    //long int out2 = Z << 2;               
-       
-    int now = Z;
+    long int now = (Z<<24) | (H<<16) | (M<<8) | S;
     
     long int *adr = TABA[Q];
     char ready = 0;
