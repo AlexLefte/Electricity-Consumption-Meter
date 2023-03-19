@@ -40,7 +40,7 @@ const long int H2 = 16;
                    
 const long int Ter = 0x10000000;
 
-long int A0[]={0x00000000+H1<<16, 1, 0x01000000+H1<<16, 1, 0x02000000+H1<<16, 1, 0x03000000+H1<16, 1, 0x04000000+H1<<16, 1, Ter, 0};
+long int A0[]={0x00000000+H1<<16, 1, 0x01000000+H1<<16, 1, 0x02000000+H1<<16, 1, 0x03000000+H1<<16, 1, 0x04000000+H1<<16, 1, Ter, 0};
 long int A1[]={0x00000000+H2<<16, 2, 0x01000000+H2<<16, 2, 0x02000000+H2<<16, 2, 0x03000000+H2<<16, 2, 0x04000000+H2<<16, 2, Ter, 1};
 long int A2[]={0x01000000, 0, 0x02000000, 0, 0x03000000, 0, 0x04000000, 0, 0x05000000, 3, Ter, 2};
 long int A3[]={0x00000000, 0, Ter, 3};
@@ -74,7 +74,7 @@ char PULSE;
 char Q, Q1, S3; 
  
 // Consumption array
-int CONSUM[] = {0, 0, 0, 0};
+int CONSUM[] = {10, 21, 34, 100};
 
 // Total consumption
 char TOTAL_CONS = 0;
@@ -86,7 +86,7 @@ char C4, C3, C2, C1;
 char CA;
 
 // Power level
-char PowerLevel = 0;
+int PowerLevel = 0;
 
 // Digit patterns (CLC)
 const char DIGITS[] = {
@@ -137,7 +137,7 @@ interrupt [TIM0_OVF] void timer0_ovf_isr(void)
     TCNT0=0x3C; 
     
     // Update CA
-    CA = (PORTD & 0x20) >> 5;
+    CA = (PORTD & 0x10) >> 4;
     
     // DisplayInfo
     DisplayInfo();
@@ -395,7 +395,7 @@ void UpdateConsumption()
                 cntP += 1;   
                 
                 // Reset reading flag
-                PORTD &= 0x7f;   
+                // PORTD &= 0x7f;   
                 
                 // Go further if the pulse period has passed,
                 // otherwise go back wait for sensding ack again.
@@ -491,7 +491,7 @@ void DisplayDigit(char currentDisplay, char digit)
 {
     // Select the desired display (turn on the pin
     // corresponding to the desired digit (C4/C3/C2/C1) 
-    char output = 0xff;
+    char output;
     
     // Set PORTC pins to the corresponding digit
     // PORTC = DIGITS[digit];
@@ -500,26 +500,29 @@ void DisplayDigit(char currentDisplay, char digit)
     {
         case 4:       
             // Turn PD3 on 
-            //output &= 0b11110111;  
-            output &= 0b11111000;  
+            //output &= 0b00000111;  
+            output = 0x08;  
             break;
         case 3:       
             // Turn PD2 on
-            // output &= 0b11111011; 
-            output &= 0b11110100;    
+            // output &= 0b00001011; 
+            output = 0x04;    
             break;  
         case 2:       
             // Turn PD1 on
-            output &= 0b11110010;     
+            output = 0x02;     
             break; 
         case 1:       
             // Turn PD0 on
-            output &= 0b11110001;     
+            output = 0x01;     
             break;
     }          
             
+    // Delete PD0-3 
+    PORTD &= 0xF0; 
+    
     // Assign output to PORTC in order to select the desired display;
-    PORTD = output;
+    PORTD |= output;
     
     // Set PORTC pins to the corresponding digit
     PORTC = DIGITS[digit];
@@ -569,7 +572,7 @@ void CLS()
     {
         if (now == adr[i]) {
             Q = adr[i + 1];
-            ready = 1;  // ies din while
+            ready = 1;  
         }
         else if (adr[i] == Ter) ready = 1;
         else i = i+2;
@@ -624,11 +627,10 @@ void DisplayConsumptionDisplayMode()
     {
         case 0:                 
         {
-            if (!CA)            // Pressed CA
+            if (CA == 0)            // Pressed CA
             {
                 S3 = 1;  
             }
-            out = CLC_RANGE_OUTPUT[Q1] | (CLC_RANGE_OUTPUT[Q] << 2);
             break;
         }
         case 1:                 // Released CA
@@ -638,16 +640,14 @@ void DisplayConsumptionDisplayMode()
                 S3 = 2;  
                 Q1 = 1;
             }
-            out = CLC_RANGE_OUTPUT[Q1] | (CLC_RANGE_OUTPUT[Q] << 2);
             break;
         }
         case 2:                //  Pressed CA
         {
-            if (!CA) 
+            if (CA == 0) 
             {
                 S3 = 3;  
             }
-            out = CLC_RANGE_OUTPUT[Q1] | (CLC_RANGE_OUTPUT[Q] << 2);
             break;
         }
         case 3:                // Released CA
@@ -657,16 +657,14 @@ void DisplayConsumptionDisplayMode()
                 S3 = 4;  
                 Q1 = 2;
             }
-            out = CLC_RANGE_OUTPUT[Q1] | (CLC_RANGE_OUTPUT[Q] << 2);
             break;
         }
         case 4:
         {
-            if (!CA) 
+            if (CA == 0) 
             {
                 S3 = 5;  
             }
-            out = CLC_RANGE_OUTPUT[Q1] | (CLC_RANGE_OUTPUT[Q] << 2);
             break;
         }
         case 5:
@@ -676,16 +674,14 @@ void DisplayConsumptionDisplayMode()
                 S3 = 6; 
                 Q1 = 3; 
             }
-            out = CLC_RANGE_OUTPUT[Q1] | (CLC_RANGE_OUTPUT[Q] << 2);
             break;
         }    
         case 6:
         {
-            if (!CA) 
+            if (CA == 0) 
             {
                 S3 = 7;  
             }
-            out = CLC_RANGE_OUTPUT[Q1] | (CLC_RANGE_OUTPUT[Q] << 2);
             break;
         }
         case 7:
@@ -695,15 +691,16 @@ void DisplayConsumptionDisplayMode()
                 S3 = 8; 
                 Q1 = 0; 
             }
-            out = CLC_RANGE_OUTPUT[Q1] | (CLC_RANGE_OUTPUT[Q] << 2);
             break;
         }      
-        
-        // Delete PB3-PB0
-        PORTB &= 0xf0;   
+    } 
+      
+    out = CLC_RANGE_OUTPUT[Q1] | (CLC_RANGE_OUTPUT[Q] << 2);
+    
+    // Delete PB3-PB0
+    PORTB &= 0xf0;   
    
-        // Display out on PB3-PB0
-        PORTB |= out; 
-    }
+    // Display out on PB3-PB0
+    PORTB |= out; 
 }
 ////////////////////////////////////////

@@ -1418,17 +1418,17 @@ __DELAY_USW_LOOP:
 
 ;NAME DEFINITIONS FOR GLOBAL VARIABLES ALLOCATED TO REGISTERS
 	.DEF _S1=R4
-	.DEF _Z=R5
-	.DEF _Z_msb=R6
-	.DEF _H=R7
-	.DEF _H_msb=R8
-	.DEF _M=R9
-	.DEF _M_msb=R10
-	.DEF _S=R11
-	.DEF _S_msb=R12
 	.DEF _cnt_time=R3
-	.DEF _T_SEC=R14
-	.DEF _S2=R13
+	.DEF _T_SEC=R6
+	.DEF _S2=R5
+	.DEF _S_PULSE=R8
+	.DEF _PULSE=R7
+	.DEF _Q=R10
+	.DEF _Q1=R9
+	.DEF _S3=R12
+	.DEF _TOTAL_CONS=R11
+	.DEF _C4=R14
+	.DEF _C3=R13
 
 ;GPIOR0 INITIALIZATION VALUE
 	.EQU __GPIOR0_INIT=0x00
@@ -1478,15 +1478,15 @@ _DIGITS:
 
 ;GLOBAL REGISTER VARIABLES INITIALIZATION
 __REG_VARS:
-	.DB  0x0,0x0,0x3,0x0
-	.DB  0xC,0x0,0x2D,0x0
-	.DB  0x15,0x0
+	.DB  0x0,0x0,0x0,0x0
+	.DB  0x0,0x0,0x0,0x0
+	.DB  0x0
 
 _0x3:
 	.DB  0x0,0x0,0x8,0x0,0x1,0x0,0x0,0x0
 	.DB  0x0,0x0,0x8,0x0,0x1,0x0,0x0,0x0
 	.DB  0x0,0x0,0x8,0x0,0x1,0x0,0x0,0x0
-	.DB  0x0,0x0,0x0,0x0,0x1,0x0,0x0,0x0
+	.DB  0x0,0x0,0x8,0x0,0x1,0x0,0x0,0x0
 	.DB  0x0,0x0,0x8,0x0,0x1,0x0,0x0,0x0
 	.DB  0x0,0x0,0x0,0x10
 _0x4:
@@ -1511,12 +1511,14 @@ _0x7:
 _0x8:
 	.DB  LOW(_A0),HIGH(_A0),LOW(_A1),HIGH(_A1),LOW(_A2),HIGH(_A2),LOW(_A3),HIGH(_A3)
 _0x9:
-	.DB  0x0,0x10,0x30,0x70,0xF0
+	.DB  0xA,0x0,0x15,0x0,0x22,0x0,0x64
 _0xA:
+	.DB  0x0,0x10,0x30,0x70,0xF0
+_0xB:
 	.DB  0x1,0x2,0x3
 
 __GLOBAL_INI_TBL:
-	.DW  0x0A
+	.DW  0x09
 	.DW  0x03
 	.DW  __REG_VARS*2
 
@@ -1544,13 +1546,17 @@ __GLOBAL_INI_TBL:
 	.DW  _TABA
 	.DW  _0x8*2
 
+	.DW  0x07
+	.DW  _CONSUM
+	.DW  _0x9*2
+
 	.DW  0x05
 	.DW  _CLC_LEVEL
-	.DW  _0x9*2
+	.DW  _0xA*2
 
 	.DW  0x03
 	.DW  _CLC_RANGE_OUTPUT
-	.DW  _0xA*2
+	.DW  _0xB*2
 
 _0xFFFFFFFF:
 	.DW  0
@@ -1681,12 +1687,10 @@ _timer0_ovf_isr:
 	OUT  0x26,R30
 ; 0000 008A 
 ; 0000 008B // Update CA
-; 0000 008C CA = (PORTD & 0x20) >> 5;
+; 0000 008C CA = (PORTD & 0x10) >> 4;
 	IN   R30,0xB
-	ANDI R30,LOW(0x20)
+	ANDI R30,LOW(0x10)
 	LDI  R31,0
-	ASR  R31
-	ROR  R30
 	RCALL __ASRW4
 	STS  _CA,R30
 ; 0000 008D 
@@ -1925,22 +1929,19 @@ _main:
 	RCALL _Init
 ; 0000 0129 
 ; 0000 012A while (1)
-_0xB:
+_0xC:
 ; 0000 012B {
 ; 0000 012C // Display the consumption
 ; 0000 012D DisplayConsumption();
 	RCALL _DisplayConsumption
 ; 0000 012E 
 ; 0000 012F // Wait for interruptions
-; 0000 0130 PORTB &= 0x00;
-	IN   R30,0x5
-	ANDI R30,LOW(0x0)
-	OUT  0x5,R30
+; 0000 0130 // PORTB &= 0x00;
 ; 0000 0131 }
-	RJMP _0xB
+	RJMP _0xC
 ; 0000 0132 }
-_0xE:
-	RJMP _0xE
+_0xF:
+	RJMP _0xF
 ; .FEND
 ;void Init()
 ; 0000 0136 {
@@ -1949,12 +1950,12 @@ _Init:
 ; 0000 0137 // Setting initial states = 0
 ; 0000 0138 Q = Q1 = S1 = S2 = S3 = S_PULSE = 0;
 	LDI  R30,LOW(0)
-	STS  _S_PULSE,R30
-	STS  _S3,R30
-	MOV  R13,R30
+	MOV  R8,R30
+	MOV  R12,R30
+	MOV  R5,R30
 	MOV  R4,R30
-	STS  _Q1,R30
-	STS  _Q,R30
+	MOV  R9,R30
+	MOV  R10,R30
 ; 0000 0139 
 ; 0000 013A // Turn off displays
 ; 0000 013B PORTC = 0xff;
@@ -2036,21 +2037,22 @@ _UpdateConsumption:
 ; 0000 0180 // For testing purposes, we will assume PowerLevel = 6 kW
 ; 0000 0181 PowerLevel = 6;
 	LDI  R30,LOW(6)
+	LDI  R31,HIGH(6)
 	STS  _PowerLevel,R30
+	STS  _PowerLevel+1,R31
 ; 0000 0182 
 ; 0000 0183 switch(S2)
-	MOV  R30,R13
+	MOV  R30,R5
 	LDI  R31,0
 ; 0000 0184 {
 ; 0000 0185 case 0:
 	SBIW R30,0
-	BRNE _0x12
+	BRNE _0x13
 ; 0000 0186 {
 ; 0000 0187 // If PULSE is on, start counting
 ; 0000 0188 if (PULSE)
-	LDS  R30,_PULSE
-	CPI  R30,0
-	BREQ _0x13
+	TST  R7
+	BREQ _0x14
 ; 0000 0189 {
 ; 0000 018A // Increment cntP
 ; 0000 018B cntP += 1;
@@ -2059,38 +2061,37 @@ _UpdateConsumption:
 	STS  _cntP,R30
 ; 0000 018C 
 ; 0000 018D // Reset reading flag
-; 0000 018E PORTD &= 0x7f;
-	CBI  0xB,7
+; 0000 018E // PORTD &= 0x7f;
 ; 0000 018F 
 ; 0000 0190 // Go further if the pulse period has passed,
 ; 0000 0191 // otherwise go back wait for sensding ack again.
 ; 0000 0192 S2 = (cntP == DP) ? 1 : 0;
 	LDS  R26,_cntP
 	CPI  R26,LOW(0x1)
-	BRNE _0x14
+	BRNE _0x15
 	LDI  R30,LOW(1)
-	RJMP _0x15
-_0x14:
-	LDI  R30,LOW(0)
+	RJMP _0x16
 _0x15:
-	MOV  R13,R30
+	LDI  R30,LOW(0)
+_0x16:
+	MOV  R5,R30
 ; 0000 0193 }
 ; 0000 0194 break;
-_0x13:
-	RJMP _0x11
+_0x14:
+	RJMP _0x12
 ; 0000 0195 }
 ; 0000 0196 case 1:
-_0x12:
+_0x13:
 	CPI  R30,LOW(0x1)
 	LDI  R26,HIGH(0x1)
 	CPC  R31,R26
-	BRNE _0x11
+	BRNE _0x12
 ; 0000 0197 {
 ; 0000 0198 if (~PULSE)
-	LDS  R30,_PULSE
+	MOV  R30,R7
 	COM  R30
 	CPI  R30,0
-	BREQ _0x18
+	BREQ _0x19
 ; 0000 0199 {
 ; 0000 019A // Update current consumption range
 ; 0000 019B CLS();
@@ -2098,7 +2099,7 @@ _0x12:
 ; 0000 019C 
 ; 0000 019D // Increment consumption
 ; 0000 019E CONSUM[Q] += 1;
-	LDS  R30,_Q
+	MOV  R30,R10
 	RCALL SUBOPT_0x0
 	LD   R30,X+
 	LD   R31,X+
@@ -2114,16 +2115,16 @@ _0x12:
 ; 0000 01A2 
 ; 0000 01A3 // Wait for another pulse
 ; 0000 01A4 S2 = 0;
-	CLR  R13
+	CLR  R5
 ; 0000 01A5 cntP = 0;
 	LDI  R30,LOW(0)
 	STS  _cntP,R30
 ; 0000 01A6 }
 ; 0000 01A7 break;
-_0x18:
+_0x19:
 ; 0000 01A8 }
 ; 0000 01A9 }
-_0x11:
+_0x12:
 ; 0000 01AA }
 	RET
 ; .FEND
@@ -2132,75 +2133,77 @@ _0x11:
 _MockPULSE:
 ; .FSTART _MockPULSE
 ; 0000 01B0 switch(S_PULSE)
-	LDS  R30,_S_PULSE
+	MOV  R30,R8
 	LDI  R31,0
 ; 0000 01B1 {
 ; 0000 01B2 case 0:
 	SBIW R30,0
-	BRNE _0x1C
+	BRNE _0x1D
 ; 0000 01B3 {
 ; 0000 01B4 cntMockPulse = 0;
 	LDI  R30,LOW(0)
 	STS  _cntMockPulse,R30
 ; 0000 01B5 PULSE = 1;
 	LDI  R30,LOW(1)
-	STS  _PULSE,R30
+	MOV  R7,R30
 ; 0000 01B6 S_PULSE = 1;
-	RJMP _0x4C
+	MOV  R8,R30
 ; 0000 01B7 break;
+	RJMP _0x1C
 ; 0000 01B8 }
 ; 0000 01B9 case 1:
-_0x1C:
+_0x1D:
 	CPI  R30,LOW(0x1)
 	LDI  R26,HIGH(0x1)
 	CPC  R31,R26
-	BRNE _0x1B
+	BRNE _0x1C
 ; 0000 01BA {
 ; 0000 01BB cntMockPulse += 1;
 	LDS  R30,_cntMockPulse
 	SUBI R30,-LOW(1)
 	STS  _cntMockPulse,R30
 ; 0000 01BC PULSE = 0;
-	LDI  R30,LOW(0)
-	STS  _PULSE,R30
-; 0000 01BD S_PULSE = 0;
-_0x4C:
-	STS  _S_PULSE,R30
-; 0000 01BE //if (cntMockPulse == 49)
-; 0000 01BF //S_PULSE = 0;
-; 0000 01C0 break;
+	CLR  R7
+; 0000 01BD if (cntMockPulse == 49)
+	LDS  R26,_cntMockPulse
+	CPI  R26,LOW(0x31)
+	BRNE _0x1F
+; 0000 01BE S_PULSE = 0;
+	CLR  R8
+; 0000 01BF break;
+_0x1F:
+; 0000 01C0 }
 ; 0000 01C1 }
+_0x1C:
 ; 0000 01C2 }
-_0x1B:
-; 0000 01C3 }
 	RET
 ; .FEND
 ;void DisplayConsumption()
-; 0000 01C6 {
+; 0000 01C5 {
 _DisplayConsumption:
 ; .FSTART _DisplayConsumption
-; 0000 01C7 // We assume:
-; 0000 01C8 // PORTC: PC0 - PC6 -> 7 segments (A-G)
-; 0000 01C9 // PORTD: PD0 - PD3 -> select the common cathode for each digit (multiplexing)
-; 0000 01CA // PD3 - C4, PD2 - C3, PD1 - C2, PD0 - C1
-; 0000 01CB // Q - consumption range:
-; 0000 01CC // 0 -> 00:00 - H1:00
-; 0000 01CD // 1 -> H1:00 - H2:00               (MON - FRI)
-; 0000 01CE // 2 -> H2:00 - 00:00 (next day)
-; 0000 01CF // 3 -> SAT - SUN
-; 0000 01D0 
-; 0000 01D1 // The actual approach:
-; 0000 01D2 // Each main loop iteration we multiplex the digits and display one at a time
-; 0000 01D3 
-; 0000 01D4 // If CA is pressed -> display total consumption,
-; 0000 01D5 // else -> display consumption based on current range.
-; 0000 01D6 char cons = CONSUM[Q1];
-; 0000 01D7 
-; 0000 01D8 // Compute and display C4
-; 0000 01D9 C4 = cons / 1000;
+; 0000 01C6 // We assume:
+; 0000 01C7 // PORTC: PC0 - PC6 -> 7 segments (A-G)
+; 0000 01C8 // PORTD: PD0 - PD3 -> select the common cathode for each digit (multiplexing)
+; 0000 01C9 // PD3 - C4, PD2 - C3, PD1 - C2, PD0 - C1
+; 0000 01CA // Q - consumption range:
+; 0000 01CB // 0 -> 00:00 - H1:00
+; 0000 01CC // 1 -> H1:00 - H2:00               (MON - FRI)
+; 0000 01CD // 2 -> H2:00 - 00:00 (next day)
+; 0000 01CE // 3 -> SAT - SUN
+; 0000 01CF 
+; 0000 01D0 // The actual approach:
+; 0000 01D1 // Each main loop iteration we multiplex the digits and display one at a time
+; 0000 01D2 
+; 0000 01D3 // If CA is pressed -> display total consumption,
+; 0000 01D4 // else -> display consumption based on current range.
+; 0000 01D5 char cons = CONSUM[Q1];
+; 0000 01D6 
+; 0000 01D7 // Compute and display C4
+; 0000 01D8 C4 = cons / 1000;
 	ST   -Y,R17
 ;	cons -> R17
-	LDS  R30,_Q1
+	MOV  R30,R9
 	RCALL SUBOPT_0x0
 	LD   R30,X
 	MOV  R17,R30
@@ -2209,214 +2212,249 @@ _DisplayConsumption:
 	LDI  R30,LOW(1000)
 	LDI  R31,HIGH(1000)
 	RCALL __DIVW21
-	STS  _C4,R30
-; 0000 01DA cons %= 1000;
+	MOV  R14,R30
+; 0000 01D9 cons %= 1000;
 	MOV  R26,R17
 	CLR  R27
 	LDI  R30,LOW(1000)
 	LDI  R31,HIGH(1000)
 	RCALL __MODW21
 	MOV  R17,R30
-; 0000 01DB DisplayDigit(4, C4);
+; 0000 01DA DisplayDigit(4, C4);
 	LDI  R30,LOW(4)
 	ST   -Y,R30
-	LDS  R26,_C4
+	MOV  R26,R14
 	RCALL _DisplayDigit
-; 0000 01DC 
-; 0000 01DD // Compute and display C3
-; 0000 01DE C3 = cons / 100;
+; 0000 01DB 
+; 0000 01DC // Compute and display C3
+; 0000 01DD C3 = cons / 100;
 	MOV  R26,R17
 	LDI  R27,0
 	LDI  R30,LOW(100)
 	LDI  R31,HIGH(100)
 	RCALL __DIVW21
-	STS  _C3,R30
-; 0000 01DF cons %= 100;
+	MOV  R13,R30
+; 0000 01DE cons %= 100;
 	MOV  R26,R17
 	CLR  R27
 	LDI  R30,LOW(100)
 	LDI  R31,HIGH(100)
 	RCALL __MODW21
 	MOV  R17,R30
-; 0000 01E0 DisplayDigit(3, C3);
+; 0000 01DF DisplayDigit(3, C3);
 	LDI  R30,LOW(3)
 	ST   -Y,R30
-	LDS  R26,_C3
+	MOV  R26,R13
 	RCALL _DisplayDigit
-; 0000 01E1 
-; 0000 01E2 // Compute and display C2
-; 0000 01E3 C2 = cons / 10;
+; 0000 01E0 
+; 0000 01E1 // Compute and display C2
+; 0000 01E2 C2 = cons / 10;
 	MOV  R26,R17
 	LDI  R27,0
 	LDI  R30,LOW(10)
 	LDI  R31,HIGH(10)
 	RCALL __DIVW21
 	STS  _C2,R30
-; 0000 01E4 DisplayDigit(2, C2);
+; 0000 01E3 DisplayDigit(2, C2);
 	LDI  R30,LOW(2)
 	ST   -Y,R30
 	LDS  R26,_C2
 	RCALL _DisplayDigit
-; 0000 01E5 
-; 0000 01E6 // Compute and display C1
-; 0000 01E7 C1 = cons % 10;
+; 0000 01E4 
+; 0000 01E5 // Compute and display C1
+; 0000 01E6 C1 = cons % 10;
 	MOV  R26,R17
 	CLR  R27
 	LDI  R30,LOW(10)
 	LDI  R31,HIGH(10)
 	RCALL __MODW21
 	STS  _C1,R30
-; 0000 01E8 DisplayDigit(1, C1);
+; 0000 01E7 DisplayDigit(1, C1);
 	LDI  R30,LOW(1)
 	ST   -Y,R30
 	LDS  R26,_C1
 	RCALL _DisplayDigit
-; 0000 01E9 }
-	RJMP _0x2000001
+; 0000 01E8 }
+	RJMP _0x2000002
 ; .FEND
 ;void DisplayDigit(char currentDisplay, char digit)
-; 0000 01EC {
+; 0000 01EB {
 _DisplayDigit:
 ; .FSTART _DisplayDigit
-; 0000 01ED // Select the desired display (turn on the pin
-; 0000 01EE // corresponding to the desired digit (C4/C3/C2/C1)
-; 0000 01EF char output = 0xff;
-; 0000 01F0 
-; 0000 01F1 // Set PORTC pins to the corresponding digit
-; 0000 01F2 // PORTC = DIGITS[digit];
-; 0000 01F3 
-; 0000 01F4 switch (currentDisplay)
+; 0000 01EC // Select the desired display (turn on the pin
+; 0000 01ED // corresponding to the desired digit (C4/C3/C2/C1)
+; 0000 01EE char output;
+; 0000 01EF 
+; 0000 01F0 // Set PORTC pins to the corresponding digit
+; 0000 01F1 // PORTC = DIGITS[digit];
+; 0000 01F2 
+; 0000 01F3 switch (currentDisplay)
 	RCALL __SAVELOCR4
 	MOV  R16,R26
 	LDD  R19,Y+4
 ;	currentDisplay -> R19
 ;	digit -> R16
 ;	output -> R17
-	LDI  R17,255
 	MOV  R30,R19
 	LDI  R31,0
-; 0000 01F5 {
-; 0000 01F6 case 4:
+; 0000 01F4 {
+; 0000 01F5 case 4:
 	CPI  R30,LOW(0x4)
 	LDI  R26,HIGH(0x4)
 	CPC  R31,R26
-	BRNE _0x21
-; 0000 01F7 // Turn PD3 on
-; 0000 01F8 //output &= 0b11110111;
-; 0000 01F9 output &= 0b11111000;
-	ANDI R17,LOW(248)
-; 0000 01FA break;
-	RJMP _0x20
-; 0000 01FB case 3:
-_0x21:
+	BRNE _0x23
+; 0000 01F6 // Turn PD3 on
+; 0000 01F7 //output &= 0b00000111;
+; 0000 01F8 output = 0x08;
+	LDI  R17,LOW(8)
+; 0000 01F9 break;
+	RJMP _0x22
+; 0000 01FA case 3:
+_0x23:
 	CPI  R30,LOW(0x3)
 	LDI  R26,HIGH(0x3)
 	CPC  R31,R26
-	BRNE _0x22
-; 0000 01FC // Turn PD2 on
-; 0000 01FD // output &= 0b11111011;
-; 0000 01FE output &= 0b11110100;
-	ANDI R17,LOW(244)
-; 0000 01FF break;
-	RJMP _0x20
-; 0000 0200 case 2:
-_0x22:
+	BRNE _0x24
+; 0000 01FB // Turn PD2 on
+; 0000 01FC // output &= 0b00001011;
+; 0000 01FD output = 0x04;
+	LDI  R17,LOW(4)
+; 0000 01FE break;
+	RJMP _0x22
+; 0000 01FF case 2:
+_0x24:
 	CPI  R30,LOW(0x2)
 	LDI  R26,HIGH(0x2)
 	CPC  R31,R26
-	BRNE _0x23
-; 0000 0201 // Turn PD1 on
-; 0000 0202 output &= 0b11110010;
-	ANDI R17,LOW(242)
-; 0000 0203 break;
-	RJMP _0x20
-; 0000 0204 case 1:
-_0x23:
+	BRNE _0x25
+; 0000 0200 // Turn PD1 on
+; 0000 0201 output = 0x02;
+	LDI  R17,LOW(2)
+; 0000 0202 break;
+	RJMP _0x22
+; 0000 0203 case 1:
+_0x25:
 	CPI  R30,LOW(0x1)
 	LDI  R26,HIGH(0x1)
 	CPC  R31,R26
-	BRNE _0x20
-; 0000 0205 // Turn PD0 on
-; 0000 0206 output &= 0b11110001;
-	ANDI R17,LOW(241)
-; 0000 0207 break;
-; 0000 0208 }
-_0x20:
-; 0000 0209 
-; 0000 020A // Assign output to PORTC in order to select the desired display;
-; 0000 020B PORTD = output;
-	OUT  0xB,R17
-; 0000 020C 
-; 0000 020D // Set PORTC pins to the corresponding digit
-; 0000 020E PORTC = DIGITS[digit];
+	BRNE _0x22
+; 0000 0204 // Turn PD0 on
+; 0000 0205 output = 0x01;
+	LDI  R17,LOW(1)
+; 0000 0206 break;
+; 0000 0207 }
+_0x22:
+; 0000 0208 
+; 0000 0209 // Delete PD0-3
+; 0000 020A PORTD &= 0xF0;
+	IN   R30,0xB
+	ANDI R30,LOW(0xF0)
+	OUT  0xB,R30
+; 0000 020B 
+; 0000 020C // Assign output to PORTC in order to select the desired display;
+; 0000 020D PORTD |= output;
+	IN   R30,0xB
+	OR   R30,R17
+	OUT  0xB,R30
+; 0000 020E 
+; 0000 020F // Set PORTC pins to the corresponding digit
+; 0000 0210 PORTC = DIGITS[digit];
 	MOV  R30,R16
 	LDI  R31,0
 	SUBI R30,LOW(-_DIGITS*2)
 	SBCI R31,HIGH(-_DIGITS*2)
 	LPM  R0,Z
 	OUT  0x8,R0
-; 0000 020F 
-; 0000 0210 // Add delay (10 us)
-; 0000 0211 // _display_us(10);
-; 0000 0212 }
+; 0000 0211 
+; 0000 0212 // Add delay (10 us)
+; 0000 0213 // _display_us(10);
+; 0000 0214 }
 	RCALL __LOADLOCR4
 	ADIW R28,5
 	RET
 ; .FEND
 ;void UpdateTime(){
-; 0000 0215 void UpdateTime(){
-; 0000 0216 cnt_time += 1; //incrementare contor de timp
-; 0000 0217 if(cnt_time != T_SEC) return;
-; 0000 0218 
-; 0000 0219 cnt_time = 0; // se reseteaza contorul
-; 0000 021A S+=1;  //incrementeaza contor secunde
-; 0000 021B 
-; 0000 021C if(S!=60) return;
-; 0000 021D S = 0;//se reseteaza nr de secunde
-; 0000 021E M += 1; //incrementeaza contor minute
-; 0000 021F 
-; 0000 0220 if(M!=60) return;
-; 0000 0221 M = 0;
-; 0000 0222 H += 1;
-; 0000 0223 
-; 0000 0224 if(H!=24) return;
-; 0000 0225 H = 0;
-; 0000 0226 Z += 1;
-; 0000 0227 
-; 0000 0228 if (Z == 7) Z = 0;
-; 0000 0229 return;
-; 0000 022A }
+; 0000 0217 void UpdateTime(){
+; 0000 0218 cnt_time += 1; //incrementare contor de timp
+; 0000 0219 if(cnt_time != T_SEC) return;
+; 0000 021A 
+; 0000 021B cnt_time = 0; // se reseteaza contorul
+; 0000 021C S+=1;  //incrementeaza contor secunde
+; 0000 021D 
+; 0000 021E if(S!=60) return;
+; 0000 021F S = 0;//se reseteaza nr de secunde
+; 0000 0220 M += 1; //incrementeaza contor minute
+; 0000 0221 
+; 0000 0222 if(M!=60) return;
+; 0000 0223 M = 0;
+; 0000 0224 H += 1;
+; 0000 0225 
+; 0000 0226 if(H!=24) return;
+; 0000 0227 H = 0;
+; 0000 0228 Z += 1;
+; 0000 0229 
+; 0000 022A if (Z == 7) Z = 0;
+; 0000 022B return;
+; 0000 022C }
 ;void CLS()
-; 0000 022D {
+; 0000 022F {
 _CLS:
 ; .FSTART _CLS
-; 0000 022E char out;
-; 0000 022F 
-; 0000 0230 //exemplu
-; 0000 0231 // Ziua 3, ora 8, min 6, sec 3
-; 0000 0232 // 0x03080603
-; 0000 0233 //long int now = (Z<<24) | (H<<16) | (M<<8) | S;
-; 0000 0234 //long int out2 = Z << 2;
-; 0000 0235 
-; 0000 0236 int now = Z;
-; 0000 0237 
-; 0000 0238 long int *adr = TABA[Q];
-; 0000 0239 char ready = 0;
-; 0000 023A int i = 0;
-; 0000 023B 
-; 0000 023C while (!ready)
-	SBIW R28,2
-	LDI  R30,LOW(0)
-	ST   Y,R30
-	STD  Y+1,R30
+; 0000 0230 char out;
+; 0000 0231 
+; 0000 0232 //exemplu
+; 0000 0233 // Ziua 3, ora 8, min 6, sec 3
+; 0000 0234 // 0x03080603
+; 0000 0235 long int now = (Z<<24) | (H<<16) | (M<<8) | S;
+; 0000 0236 
+; 0000 0237 long int *adr = TABA[Q];
+; 0000 0238 char ready = 0;
+; 0000 0239 int i = 0;
+; 0000 023A 
+; 0000 023B while (!ready)
+	SBIW R28,4
 	RCALL __SAVELOCR6
 ;	out -> R17
-;	now -> R18,R19
-;	*adr -> R20,R21
+;	now -> Y+6
+;	*adr -> R18,R19
 ;	ready -> R16
-;	i -> Y+6
-	__MOVEWRR 18,19,5,6
-	LDS  R30,_Q
+;	i -> R20,R21
+	LDS  R26,_Z
+	LDS  R27,_Z+1
+	LDS  R24,_Z+2
+	LDS  R25,_Z+3
+	LDI  R30,LOW(24)
+	RCALL __LSLD12
+	MOVW R26,R30
+	MOVW R24,R22
+	LDS  R30,_H
+	LDS  R31,_H+1
+	LDS  R22,_H+2
+	LDS  R23,_H+3
+	__LSLD16
+	RCALL SUBOPT_0x1
+	PUSH R23
+	PUSH R22
+	PUSH R31
+	PUSH R30
+	LDS  R26,_M
+	LDS  R27,_M+1
+	LDS  R24,_M+2
+	LDS  R25,_M+3
+	LDI  R30,LOW(8)
+	RCALL __LSLD12
+	POP  R26
+	POP  R27
+	POP  R24
+	POP  R25
+	RCALL SUBOPT_0x1
+	LDS  R26,_S
+	LDS  R27,_S+1
+	LDS  R24,_S+2
+	LDS  R25,_S+3
+	RCALL SUBOPT_0x1
+	__PUTD1S 6
+	MOV  R30,R10
 	LDI  R26,LOW(_TABA)
 	LDI  R27,HIGH(_TABA)
 	LDI  R31,0
@@ -2425,354 +2463,351 @@ _CLS:
 	ADD  R26,R30
 	ADC  R27,R31
 	__GETW1P
-	MOVW R20,R30
+	MOVW R18,R30
 	LDI  R16,0
-_0x2A:
+	__GETWRN 20,21,0
+_0x2C:
 	CPI  R16,0
-	BRNE _0x2C
-; 0000 023D {
-; 0000 023E if (now == adr[i]) {
-	RCALL SUBOPT_0x1
-	MOVW R26,R18
-	__CWD2
+	BRNE _0x2E
+; 0000 023C {
+; 0000 023D if (now == adr[i]) {
+	RCALL SUBOPT_0x2
+	__GETD2S 6
 	__CPD12
-	BRNE _0x2D
-; 0000 023F Q = adr[i + 1];
-	LDD  R30,Y+6
-	LDD  R31,Y+6+1
+	BRNE _0x2F
+; 0000 023E Q = adr[i + 1];
+	MOVW R30,R20
 	ADIW R30,1
-	MOVW R26,R20
+	MOVW R26,R18
 	RCALL __LSLW2
 	ADD  R26,R30
 	ADC  R27,R31
-	LD   R30,X
-	STS  _Q,R30
-; 0000 0240 ready = 1;  // ies din while
+	LD   R10,X
+; 0000 023F ready = 1;
 	LDI  R16,LOW(1)
-; 0000 0241 }
-; 0000 0242 else if (adr[i] == Ter) ready = 1;
-	RJMP _0x2E
-_0x2D:
-	RCALL SUBOPT_0x1
-	__CPD1N 0x10000000
-	BRNE _0x2F
-	LDI  R16,LOW(1)
-; 0000 0243 else i = i+2;
+; 0000 0240 }
+; 0000 0241 else if (adr[i] == Ter) ready = 1;
 	RJMP _0x30
 _0x2F:
-	LDD  R30,Y+6
-	LDD  R31,Y+6+1
-	ADIW R30,2
-	STD  Y+6,R30
-	STD  Y+6+1,R31
-; 0000 0244 }
+	RCALL SUBOPT_0x2
+	__CPD1N 0x10000000
+	BRNE _0x31
+	LDI  R16,LOW(1)
+; 0000 0242 else i = i+2;
+	RJMP _0x32
+_0x31:
+	__ADDWRN 20,21,2
+; 0000 0243 }
+_0x32:
 _0x30:
+	RJMP _0x2C
 _0x2E:
-	RJMP _0x2A
-_0x2C:
-; 0000 0245 
-; 0000 0246 out = Tout[Q];
-	LDS  R30,_Q
+; 0000 0244 
+; 0000 0245 out = Tout[Q];
+	MOV  R30,R10
 	LDI  R31,0
 	SUBI R30,LOW(-_Tout)
 	SBCI R31,HIGH(-_Tout)
 	LD   R17,Z
-; 0000 0247 }
+; 0000 0246 }
 	RCALL __LOADLOCR6
-	ADIW R28,8
+	ADIW R28,10
 	RET
 ; .FEND
 ;void DisplayInfo()
-; 0000 024A {
+; 0000 0249 {
 _DisplayInfo:
 ; .FSTART _DisplayInfo
-; 0000 024B DisplayConsumptionDisplayMode();
+; 0000 024A DisplayConsumptionDisplayMode();
 	RCALL _DisplayConsumptionDisplayMode
-; 0000 024C DisplayPowerLevel();
+; 0000 024B DisplayPowerLevel();
 	RCALL _DisplayPowerLevel
-; 0000 024D }
+; 0000 024C }
 	RET
 ; .FEND
 ;void DisplayPowerLevel()
-; 0000 0250 {
+; 0000 024F {
 _DisplayPowerLevel:
 ; .FSTART _DisplayPowerLevel
-; 0000 0251 char out;
-; 0000 0252 
-; 0000 0253 if (!PowerLevel)         // PowerLevel = 0 kW
+; 0000 0250 char out;
+; 0000 0251 
+; 0000 0252 if (!PowerLevel)         // PowerLevel = 0 kW
 	ST   -Y,R17
 ;	out -> R17
-	LDS  R30,_PowerLevel
-	CPI  R30,0
-	BRNE _0x31
-; 0000 0254 {
-; 0000 0255 out = CLC_LEVEL[0];
+	RCALL SUBOPT_0x3
+	SBIW R30,0
+	BRNE _0x33
+; 0000 0253 {
+; 0000 0254 out = CLC_LEVEL[0];
 	LDS  R17,_CLC_LEVEL
-; 0000 0256 }
-; 0000 0257 else if (PowerLevel < 2.5)   // 0 < PowerLevel < 2.5 kW
-	RJMP _0x32
-_0x31:
-	RCALL SUBOPT_0x2
-	__GETD1N 0x40200000
-	RCALL __CMPF12
-	BRSH _0x33
-; 0000 0258 {
-; 0000 0259 out = CLC_LEVEL[1];
-	__GETBRMN 17,_CLC_LEVEL,1
-; 0000 025A }
-; 0000 025B else if (PowerLevel < 5)     // 2.5 <= PowerLevel < 5 kW
+; 0000 0255 }
+; 0000 0256 else if (PowerLevel < 2.5)   // 0 < PowerLevel < 2.5 kW
 	RJMP _0x34
 _0x33:
-	LDS  R26,_PowerLevel
-	CPI  R26,LOW(0x5)
+	RCALL SUBOPT_0x4
+	__GETD1N 0x40200000
+	RCALL __CMPF12
 	BRSH _0x35
-; 0000 025C {
-; 0000 025D out = CLC_LEVEL[2];
-	__GETBRMN 17,_CLC_LEVEL,2
-; 0000 025E }
-; 0000 025F else if (PowerLevel < 7.5)   // 5 <= PowerLevel < 7.5 kW
+; 0000 0257 {
+; 0000 0258 out = CLC_LEVEL[1];
+	__GETBRMN 17,_CLC_LEVEL,1
+; 0000 0259 }
+; 0000 025A else if (PowerLevel < 5)     // 2.5 <= PowerLevel < 5 kW
 	RJMP _0x36
 _0x35:
-	RCALL SUBOPT_0x2
-	__GETD1N 0x40F00000
-	RCALL __CMPF12
-	BRSH _0x37
-; 0000 0260 {
-; 0000 0261 out = CLC_LEVEL[3];
-	__GETBRMN 17,_CLC_LEVEL,3
-; 0000 0262 }
-; 0000 0263 else                         // PowerLvel >= 7.5 kW
+	LDS  R26,_PowerLevel
+	LDS  R27,_PowerLevel+1
+	SBIW R26,5
+	BRGE _0x37
+; 0000 025B {
+; 0000 025C out = CLC_LEVEL[2];
+	__GETBRMN 17,_CLC_LEVEL,2
+; 0000 025D }
+; 0000 025E else if (PowerLevel < 7.5)   // 5 <= PowerLevel < 7.5 kW
 	RJMP _0x38
 _0x37:
-; 0000 0264 {
-; 0000 0265 out = CLC_LEVEL[4];
+	RCALL SUBOPT_0x4
+	__GETD1N 0x40F00000
+	RCALL __CMPF12
+	BRSH _0x39
+; 0000 025F {
+; 0000 0260 out = CLC_LEVEL[3];
+	__GETBRMN 17,_CLC_LEVEL,3
+; 0000 0261 }
+; 0000 0262 else                         // PowerLvel >= 7.5 kW
+	RJMP _0x3A
+_0x39:
+; 0000 0263 {
+; 0000 0264 out = CLC_LEVEL[4];
 	__GETBRMN 17,_CLC_LEVEL,4
-; 0000 0266 }
+; 0000 0265 }
+_0x3A:
 _0x38:
 _0x36:
 _0x34:
-_0x32:
-; 0000 0267 
-; 0000 0268 // Delete PB7-PB4
-; 0000 0269 PORTB &= 0x0f;
+; 0000 0266 
+; 0000 0267 // Delete PB7-PB4
+; 0000 0268 PORTB &= 0x0f;
 	IN   R30,0x5
 	ANDI R30,LOW(0xF)
-	OUT  0x5,R30
-; 0000 026A 
-; 0000 026B // Display out on PB7-PB4
-; 0000 026C PORTB |= out;
-	IN   R30,0x5
-	OR   R30,R17
-	OUT  0x5,R30
-; 0000 026D }
 	RJMP _0x2000001
+; 0000 0269 
+; 0000 026A // Display out on PB7-PB4
+; 0000 026B PORTB |= out;
+; 0000 026C }
 ; .FEND
 ;void DisplayConsumptionDisplayMode()
-; 0000 0270 {
+; 0000 026F {
 _DisplayConsumptionDisplayMode:
 ; .FSTART _DisplayConsumptionDisplayMode
-; 0000 0271 char out;
-; 0000 0272 
-; 0000 0273 switch(S3)
+; 0000 0270 char out;
+; 0000 0271 
+; 0000 0272 switch(S3)
 	ST   -Y,R17
 ;	out -> R17
-	LDS  R30,_S3
+	MOV  R30,R12
 	LDI  R31,0
-; 0000 0274 {
-; 0000 0275 case 0:
+; 0000 0273 {
+; 0000 0274 case 0:
 	SBIW R30,0
-	BRNE _0x3C
-; 0000 0276 {
-; 0000 0277 if (!CA)            // Pressed CA
+	BRNE _0x3E
+; 0000 0275 {
+; 0000 0276 if (CA == 0)            // Pressed CA
 	LDS  R30,_CA
 	CPI  R30,0
-	BRNE _0x3D
-; 0000 0278 {
-; 0000 0279 S3 = 1;
+	BRNE _0x3F
+; 0000 0277 {
+; 0000 0278 S3 = 1;
 	LDI  R30,LOW(1)
-	STS  _S3,R30
-; 0000 027A }
-; 0000 027B out = CLC_RANGE_OUTPUT[Q1] | (CLC_RANGE_OUTPUT[Q] << 2);
-_0x3D:
-	RCALL SUBOPT_0x3
-; 0000 027C break;
-	RJMP _0x3B
-; 0000 027D }
-; 0000 027E case 1:                 // Released CA
-_0x3C:
+	MOV  R12,R30
+; 0000 0279 }
+; 0000 027A break;
+_0x3F:
+	RJMP _0x3D
+; 0000 027B }
+; 0000 027C case 1:                 // Released CA
+_0x3E:
 	CPI  R30,LOW(0x1)
 	LDI  R26,HIGH(0x1)
 	CPC  R31,R26
-	BRNE _0x3E
-; 0000 027F {
-; 0000 0280 if (CA)
+	BRNE _0x40
+; 0000 027D {
+; 0000 027E if (CA)
 	LDS  R30,_CA
 	CPI  R30,0
-	BREQ _0x3F
-; 0000 0281 {
-; 0000 0282 S3 = 2;
+	BREQ _0x41
+; 0000 027F {
+; 0000 0280 S3 = 2;
 	LDI  R30,LOW(2)
-	STS  _S3,R30
-; 0000 0283 Q1 = 1;
+	MOV  R12,R30
+; 0000 0281 Q1 = 1;
 	LDI  R30,LOW(1)
-	STS  _Q1,R30
+	MOV  R9,R30
+; 0000 0282 }
+; 0000 0283 break;
+_0x41:
+	RJMP _0x3D
 ; 0000 0284 }
-; 0000 0285 out = CLC_RANGE_OUTPUT[Q1] | (CLC_RANGE_OUTPUT[Q] << 2);
-_0x3F:
-	RCALL SUBOPT_0x3
-; 0000 0286 break;
-	RJMP _0x3B
-; 0000 0287 }
-; 0000 0288 case 2:                //  Pressed CA
-_0x3E:
+; 0000 0285 case 2:                //  Pressed CA
+_0x40:
 	CPI  R30,LOW(0x2)
 	LDI  R26,HIGH(0x2)
 	CPC  R31,R26
-	BRNE _0x40
-; 0000 0289 {
-; 0000 028A if (!CA)
+	BRNE _0x42
+; 0000 0286 {
+; 0000 0287 if (CA == 0)
 	LDS  R30,_CA
 	CPI  R30,0
-	BRNE _0x41
-; 0000 028B {
-; 0000 028C S3 = 3;
+	BRNE _0x43
+; 0000 0288 {
+; 0000 0289 S3 = 3;
 	LDI  R30,LOW(3)
-	STS  _S3,R30
-; 0000 028D }
-; 0000 028E out = CLC_RANGE_OUTPUT[Q1] | (CLC_RANGE_OUTPUT[Q] << 2);
-_0x41:
-	RCALL SUBOPT_0x3
-; 0000 028F break;
-	RJMP _0x3B
-; 0000 0290 }
-; 0000 0291 case 3:                // Released CA
-_0x40:
+	MOV  R12,R30
+; 0000 028A }
+; 0000 028B break;
+_0x43:
+	RJMP _0x3D
+; 0000 028C }
+; 0000 028D case 3:                // Released CA
+_0x42:
 	CPI  R30,LOW(0x3)
 	LDI  R26,HIGH(0x3)
 	CPC  R31,R26
-	BRNE _0x42
-; 0000 0292 {
-; 0000 0293 if (CA)
+	BRNE _0x44
+; 0000 028E {
+; 0000 028F if (CA)
 	LDS  R30,_CA
 	CPI  R30,0
-	BREQ _0x43
-; 0000 0294 {
-; 0000 0295 S3 = 4;
+	BREQ _0x45
+; 0000 0290 {
+; 0000 0291 S3 = 4;
 	LDI  R30,LOW(4)
-	STS  _S3,R30
-; 0000 0296 Q1 = 2;
+	MOV  R12,R30
+; 0000 0292 Q1 = 2;
 	LDI  R30,LOW(2)
-	STS  _Q1,R30
-; 0000 0297 }
-; 0000 0298 out = CLC_RANGE_OUTPUT[Q1] | (CLC_RANGE_OUTPUT[Q] << 2);
-_0x43:
-	RCALL SUBOPT_0x3
-; 0000 0299 break;
-	RJMP _0x3B
-; 0000 029A }
-; 0000 029B case 4:
-_0x42:
+	MOV  R9,R30
+; 0000 0293 }
+; 0000 0294 break;
+_0x45:
+	RJMP _0x3D
+; 0000 0295 }
+; 0000 0296 case 4:
+_0x44:
 	CPI  R30,LOW(0x4)
 	LDI  R26,HIGH(0x4)
 	CPC  R31,R26
-	BRNE _0x44
-; 0000 029C {
-; 0000 029D if (!CA)
+	BRNE _0x46
+; 0000 0297 {
+; 0000 0298 if (CA == 0)
 	LDS  R30,_CA
 	CPI  R30,0
-	BRNE _0x45
-; 0000 029E {
-; 0000 029F S3 = 5;
+	BRNE _0x47
+; 0000 0299 {
+; 0000 029A S3 = 5;
 	LDI  R30,LOW(5)
-	STS  _S3,R30
-; 0000 02A0 }
-; 0000 02A1 out = CLC_RANGE_OUTPUT[Q1] | (CLC_RANGE_OUTPUT[Q] << 2);
-_0x45:
-	RCALL SUBOPT_0x3
-; 0000 02A2 break;
-	RJMP _0x3B
-; 0000 02A3 }
-; 0000 02A4 case 5:
-_0x44:
+	MOV  R12,R30
+; 0000 029B }
+; 0000 029C break;
+_0x47:
+	RJMP _0x3D
+; 0000 029D }
+; 0000 029E case 5:
+_0x46:
 	CPI  R30,LOW(0x5)
 	LDI  R26,HIGH(0x5)
 	CPC  R31,R26
-	BRNE _0x46
-; 0000 02A5 {
-; 0000 02A6 if (CA)
+	BRNE _0x48
+; 0000 029F {
+; 0000 02A0 if (CA)
 	LDS  R30,_CA
 	CPI  R30,0
-	BREQ _0x47
-; 0000 02A7 {
-; 0000 02A8 S3 = 6;
+	BREQ _0x49
+; 0000 02A1 {
+; 0000 02A2 S3 = 6;
 	LDI  R30,LOW(6)
-	STS  _S3,R30
-; 0000 02A9 Q1 = 3;
+	MOV  R12,R30
+; 0000 02A3 Q1 = 3;
 	LDI  R30,LOW(3)
-	STS  _Q1,R30
-; 0000 02AA }
-; 0000 02AB out = CLC_RANGE_OUTPUT[Q1] | (CLC_RANGE_OUTPUT[Q] << 2);
-_0x47:
-	RCALL SUBOPT_0x3
-; 0000 02AC break;
-	RJMP _0x3B
-; 0000 02AD }
-; 0000 02AE case 6:
-_0x46:
+	MOV  R9,R30
+; 0000 02A4 }
+; 0000 02A5 break;
+_0x49:
+	RJMP _0x3D
+; 0000 02A6 }
+; 0000 02A7 case 6:
+_0x48:
 	CPI  R30,LOW(0x6)
 	LDI  R26,HIGH(0x6)
 	CPC  R31,R26
-	BRNE _0x48
-; 0000 02AF {
-; 0000 02B0 if (!CA)
+	BRNE _0x4A
+; 0000 02A8 {
+; 0000 02A9 if (CA == 0)
 	LDS  R30,_CA
 	CPI  R30,0
-	BRNE _0x49
-; 0000 02B1 {
-; 0000 02B2 S3 = 7;
+	BRNE _0x4B
+; 0000 02AA {
+; 0000 02AB S3 = 7;
 	LDI  R30,LOW(7)
-	STS  _S3,R30
-; 0000 02B3 }
-; 0000 02B4 out = CLC_RANGE_OUTPUT[Q1] | (CLC_RANGE_OUTPUT[Q] << 2);
-_0x49:
-	RCALL SUBOPT_0x3
-; 0000 02B5 break;
-	RJMP _0x3B
-; 0000 02B6 }
-; 0000 02B7 case 7:
-_0x48:
+	MOV  R12,R30
+; 0000 02AC }
+; 0000 02AD break;
+_0x4B:
+	RJMP _0x3D
+; 0000 02AE }
+; 0000 02AF case 7:
+_0x4A:
 	CPI  R30,LOW(0x7)
 	LDI  R26,HIGH(0x7)
 	CPC  R31,R26
-	BRNE _0x3B
-; 0000 02B8 {
-; 0000 02B9 if (CA)
+	BRNE _0x3D
+; 0000 02B0 {
+; 0000 02B1 if (CA)
 	LDS  R30,_CA
 	CPI  R30,0
-	BREQ _0x4B
-; 0000 02BA {
-; 0000 02BB S3 = 8;
+	BREQ _0x4D
+; 0000 02B2 {
+; 0000 02B3 S3 = 8;
 	LDI  R30,LOW(8)
-	STS  _S3,R30
-; 0000 02BC Q1 = 0;
-	LDI  R30,LOW(0)
-	STS  _Q1,R30
-; 0000 02BD }
-; 0000 02BE out = CLC_RANGE_OUTPUT[Q1] | (CLC_RANGE_OUTPUT[Q] << 2);
-_0x4B:
-	RCALL SUBOPT_0x3
-; 0000 02BF break;
-; 0000 02C0 }
-; 0000 02C1 
-; 0000 02C2 // Delete PB3-PB0
-; 0000 02C3 PORTB &= 0xf0;
-; 0000 02C4 
-; 0000 02C5 // Display out on PB3-PB0
-; 0000 02C6 PORTB |= out;
-; 0000 02C7 }
-_0x3B:
-; 0000 02C8 }
+	MOV  R12,R30
+; 0000 02B4 Q1 = 0;
+	CLR  R9
+; 0000 02B5 }
+; 0000 02B6 break;
+_0x4D:
+; 0000 02B7 }
+; 0000 02B8 }
+_0x3D:
+; 0000 02B9 
+; 0000 02BA out = CLC_RANGE_OUTPUT[Q1] | (CLC_RANGE_OUTPUT[Q] << 2);
+	MOV  R30,R9
+	LDI  R31,0
+	SUBI R30,LOW(-_CLC_RANGE_OUTPUT)
+	SBCI R31,HIGH(-_CLC_RANGE_OUTPUT)
+	LD   R26,Z
+	MOV  R30,R10
+	LDI  R31,0
+	SUBI R30,LOW(-_CLC_RANGE_OUTPUT)
+	SBCI R31,HIGH(-_CLC_RANGE_OUTPUT)
+	LD   R30,Z
+	LSL  R30
+	LSL  R30
+	OR   R30,R26
+	MOV  R17,R30
+; 0000 02BB 
+; 0000 02BC // Delete PB3-PB0
+; 0000 02BD PORTB &= 0xf0;
+	IN   R30,0x5
+	ANDI R30,LOW(0xF0)
 _0x2000001:
+	OUT  0x5,R30
+; 0000 02BE 
+; 0000 02BF // Display out on PB3-PB0
+; 0000 02C0 PORTB |= out;
+	IN   R30,0x5
+	OR   R30,R17
+	OUT  0x5,R30
+; 0000 02C1 }
+_0x2000002:
 	LD   R17,Y+
 	RET
 ; .FEND
@@ -2790,22 +2825,16 @@ _Tout:
 	.BYTE 0x4
 _TABA:
 	.BYTE 0x8
-_S_PULSE:
-	.BYTE 0x1
-_PULSE:
-	.BYTE 0x1
-_Q:
-	.BYTE 0x1
-_Q1:
-	.BYTE 0x1
-_S3:
-	.BYTE 0x1
+_Z:
+	.BYTE 0x4
+_H:
+	.BYTE 0x4
+_M:
+	.BYTE 0x4
+_S:
+	.BYTE 0x4
 _CONSUM:
 	.BYTE 0x8
-_C4:
-	.BYTE 0x1
-_C3:
-	.BYTE 0x1
 _C2:
 	.BYTE 0x1
 _C1:
@@ -2813,7 +2842,7 @@ _C1:
 _CA:
 	.BYTE 0x1
 _PowerLevel:
-	.BYTE 0x1
+	.BYTE 0x2
 _CLC_LEVEL:
 	.BYTE 0x5
 _CLC_RANGE_OUTPUT:
@@ -2835,44 +2864,34 @@ SUBOPT_0x0:
 	ADC  R27,R31
 	RET
 
-;OPTIMIZER ADDED SUBROUTINE, CALLED 2 TIMES, CODE SIZE REDUCTION:7 WORDS
+;OPTIMIZER ADDED SUBROUTINE, CALLED 3 TIMES, CODE SIZE REDUCTION:4 WORDS
 SUBOPT_0x1:
-	LDD  R30,Y+6
-	LDD  R31,Y+6+1
-	MOVW R26,R20
+	__ORD12
+	RET
+
+;OPTIMIZER ADDED SUBROUTINE, CALLED 2 TIMES, CODE SIZE REDUCTION:6 WORDS
+SUBOPT_0x2:
+	MOVW R30,R20
+	MOVW R26,R18
 	RCALL __LSLW2
 	ADD  R26,R30
 	ADC  R27,R31
 	__GETD1P_INC
 	RET
 
-;OPTIMIZER ADDED SUBROUTINE, CALLED 2 TIMES, CODE SIZE REDUCTION:5 WORDS
-SUBOPT_0x2:
+;OPTIMIZER ADDED SUBROUTINE, CALLED 3 TIMES, CODE SIZE REDUCTION:4 WORDS
+SUBOPT_0x3:
 	LDS  R30,_PowerLevel
-	CLR  R31
-	CLR  R22
-	CLR  R23
+	LDS  R31,_PowerLevel+1
+	RET
+
+;OPTIMIZER ADDED SUBROUTINE, CALLED 2 TIMES, CODE SIZE REDUCTION:6 WORDS
+SUBOPT_0x4:
+	RCALL SUBOPT_0x3
+	__CWD1
 	RCALL __CDF1
 	MOVW R26,R30
 	MOVW R24,R22
-	RET
-
-;OPTIMIZER ADDED SUBROUTINE, CALLED 8 TIMES, CODE SIZE REDUCTION:103 WORDS
-SUBOPT_0x3:
-	LDS  R30,_Q1
-	LDI  R31,0
-	SUBI R30,LOW(-_CLC_RANGE_OUTPUT)
-	SBCI R31,HIGH(-_CLC_RANGE_OUTPUT)
-	LD   R26,Z
-	LDS  R30,_Q
-	LDI  R31,0
-	SUBI R30,LOW(-_CLC_RANGE_OUTPUT)
-	SBCI R31,HIGH(-_CLC_RANGE_OUTPUT)
-	LD   R30,Z
-	LSL  R30
-	LSL  R30
-	OR   R30,R26
-	MOV  R17,R30
 	RET
 
 ;RUNTIME LIBRARY
@@ -2920,6 +2939,34 @@ __ANEGD1:
 	SBCI R23,-1
 	RET
 
+__LSLD12:
+	TST  R30
+	MOV  R0,R30
+	LDI  R30,8
+	MOV  R1,R30
+	MOVW R30,R26
+	MOVW R22,R24
+	BREQ __LSLD12R
+__LSLD12S8:
+	CP   R0,R1
+	BRLO __LSLD12L
+	MOV  R23,R22
+	MOV  R22,R31
+	MOV  R31,R30
+	LDI  R30,0
+	SUB  R0,R1
+	BRNE __LSLD12S8
+	RET
+__LSLD12L:
+	LSL  R30
+	ROL  R31
+	ROL  R22
+	ROL  R23
+	DEC  R0
+	BRNE __LSLD12L
+__LSLD12R:
+	RET
+
 __LSLW2:
 	LSL  R30
 	ROL  R31
@@ -2938,14 +2985,6 @@ __ASRW2:
 	ROR  R30
 	ASR  R31
 	ROR  R30
-	RET
-
-__CBD1:
-	MOV  R31,R30
-	ADD  R31,R31
-	SBC  R31,R31
-	MOV  R22,R31
-	MOV  R23,R31
 	RET
 
 __DIVW21U:
