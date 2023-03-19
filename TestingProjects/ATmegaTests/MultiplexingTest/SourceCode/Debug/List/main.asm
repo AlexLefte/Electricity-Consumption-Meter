@@ -2123,9 +2123,9 @@ _0x1A:
 	STS  _cntMockPulse,R30
 ; 0000 01A1 PULSE = 0;
 	CLR  R11
-; 0000 01A2 if (cntMockPulse == 10)
+; 0000 01A2 if (cntMockPulse == 49)
 	LDS  R26,_cntMockPulse
-	CPI  R26,LOW(0xA)
+	CPI  R26,LOW(0x31)
 	BRNE _0x1C
 ; 0000 01A3 S_PULSE = 0;
 	CLR  R12

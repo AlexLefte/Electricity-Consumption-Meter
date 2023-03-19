@@ -1,5 +1,5 @@
 
-AVRASM ver. 2.1.30  D:\Cursuri\An3\II\P2\SourceCode\Electricity-Consumption-Meter\TestingProjects\ATmegaTests\MultiplexingTest\SourceCode\Debug\List\main.asm Sun Mar 19 12:24:00 2023
+AVRASM ver. 2.1.30  D:\Cursuri\An3\II\P2\SourceCode\Electricity-Consumption-Meter\TestingProjects\ATmegaTests\MultiplexingTest\SourceCode\Debug\List\main.asm Sun Mar 19 12:34:45 2023
 
 D:\Cursuri\An3\II\P2\SourceCode\Electricity-Consumption-Meter\TestingProjects\ATmegaTests\MultiplexingTest\SourceCode\Debug\List\main.asm(1420): warning: Register r4 already defined by the .DEF directive
 D:\Cursuri\An3\II\P2\SourceCode\Electricity-Consumption-Meter\TestingProjects\ATmegaTests\MultiplexingTest\SourceCode\Debug\List\main.asm(1421): warning: Register r3 already defined by the .DEF directive
@@ -2205,9 +2205,9 @@ D:\Cursuri\An3\II\P2\SourceCode\Electricity-Consumption-Meter\TestingProjects\AT
 0001a6 93e0 02b7 	STS  _cntMockPulse,R30
                  ; 0000 01A1 PULSE = 0;
 0001a8 24bb      	CLR  R11
-                 ; 0000 01A2 if (cntMockPulse == 10)
+                 ; 0000 01A2 if (cntMockPulse == 49)
 0001a9 91a0 02b7 	LDS  R26,_cntMockPulse
-0001ab 30aa      	CPI  R26,LOW(0xA)
+0001ab 33a1      	CPI  R26,LOW(0x31)
 0001ac f409      	BRNE _0x1C
                  ; 0000 01A3 S_PULSE = 0;
 0001ad 24cc      	CLR  R12
