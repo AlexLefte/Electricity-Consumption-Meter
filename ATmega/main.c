@@ -43,15 +43,15 @@ const long int Ter = 0x10000000;
 long int A0[]={0x00000000+H1<<16, 1, 0x01000000+H1<<16, 1, 0x02000000+H1<<16, 1, 0x03000000+H1<<16, 1, 0x04000000+H1<<16, 1, Ter , 0};
 long int A1[]={0x00000000+H2<<16, 2, 0x01000000+H2<<16, 2, 0x02000000+H2<<16, 2, 0x03000000+H2<<16, 2, 0x04000000+H2<<16, 2, Ter , 1};
 long int A2[]={0x01000000       , 0, 0x02000000       , 0, 0x03000000       , 0, 0x04000000       , 0, 0x05000000       , 3, Ter , 2};
-long int A3[]={0x00000000       , 0, T, 3};
+long int A3[]={0x00000000       , 0, Ter, 3};
 
 char Tout[] = {0, 1, 2, 3};
 long int *TABA[] = {A0, A1, A2, A3};
 ///////////////////////
 
 /// Time variables ///
-char H = 0; //hour
 char Z = 0; //day
+char H = 0; //hour
 char M = 0; //minutes
 char S = 0; //seconds
 /////////////////////
@@ -60,24 +60,29 @@ char S = 0; //seconds
 char cnt_time = 0; //contor de timp
 char T_SEC; // numar de perioade necesare pentru a acoperi 1 sec
 char S2; //starea de contorizare a PS-ului
-
- 
-
-
+                         
 ////// Global variables //////// 
 // PULSE
 char PULSE;
+
+// Working mode ///
+// 0 -> range on 
+// 1 -> range off
+char MODE = 0;
+
+// Flag (1 -> mode not set yet)
+char modeFlag = 1;
+///////////////////
 
 // State variables ( Q -> consumption range, 
 // S1 -> consumption counting state, 
 // S3 -> display state)
 char Q,Q1,S3; 
 
-// Consumption array
-int CONSUM[] = {0, 0, 0, 0};
-
-// Total consumption
-char TOTAL_CONS = 0;
+/// Consumption array
+//            0 - H1   H1 - H2   H2 - 0   Sat - Sun   Total 
+//              ^         ^         ^         ^         ^
+int CONSUM[] = {0,        0,        0,        0,        0};
 
 // Digits
 char C4, C3, C2, C1;
@@ -104,11 +109,14 @@ const char DIGITS[] = {
 ///////////////////////////////
 
 
-//  Power level (CLC) ///
-char CLC_LEVEL[] = {0X00, 0x10, 0X30, 0X70, 0Xf0 );
+// Power Level (CLC) ///
+// char CLC_LEVEL[] = {0x00, 0x10, 0x30, 0x70, 0xF0};  // 4 levels
+char CLC_LEVEL[] = {0x00, 0x20, 0x60, 0xE0};           // 3 levels               
+////////////////////////
 
-
-
+// Consumption range output (CLC) //
+char CLC_RANGE_OUTPUT[] = {0x01, 0x02, 0x03, 0x00};
+///////////////////////////////////
 
 // Pulses contor
 char cntP = 0;
@@ -137,13 +145,10 @@ interrupt [TIM0_OVF] void timer0_ovf_isr(void)
     CA = (PORTD & 0x20) >> 5; 
     
     //DisplayInfo
-    DisplayInfo()l
+    DisplayInfo();
     
     // Check for pulses coming from ADSP
     UpdateConsumption();
-    
-    
-
 }
 ///////////////////
 
@@ -374,8 +379,14 @@ void UpdateConsumption()
             break;  
         }   
     } */     
+                      
+    ///// PORT F /////////////
+    // _   _ _ _ : _ _ _  _ // 
+    // M   P O W   E E R PU //
     
-    PowerLevel = (PINA & 0xfe) >> 1;
+    // Reading the power level
+    PowerLevel = (PINA & 0x7E) >> 1;  
+    
      switch(S2) 
     {
         case 0:
@@ -387,7 +398,13 @@ void UpdateConsumption()
                 cntP += 1;   
                 
                 // Reset reading flag
-                PORTD &= 0x7f;   
+                // PORTD &= 0x7f;       
+                
+                if (modeFlag) 
+                {
+                    MODE = (PINA & 0x80) >> 7; 
+                    modeFlag = 0;
+                }
                 
                 // Go further if the pulse period has passed,
                 // otherwise go back wait for sensding ack again.
@@ -402,8 +419,15 @@ void UpdateConsumption()
                 // Update current consumption range
                 CLS();
                 
-                // Increment consumption
-                CONSUM[Q] += 1;
+                // Increment consumption 
+                if (MODE == 0)
+                {
+                    CONSUM[Q] += 1;    // Working range on
+                }
+                else
+                {
+                    CONSUM[4] += 1;    // Working range off   
+                }
                 
                 // Wait for another pulse
                 S2 = 0;
@@ -430,12 +454,10 @@ void DisplayConsumption()
     // The actual approach:
     // Each main loop iteration we multiplex the digits and display one at a time
       
-    // If CA is pressed -> display total consumption,
+    // If MODE = 1 -> display total consumption,
     // else -> display consumption based on current range.    
-    
-    char cons = (~CA) ? TOTAL_CONS : CONSUM[Q];     //DE REVENEIT!!!!
+    int cons = (MODE) ?  CONSUM[4] : CONSUM[Q1];    
      
-    char const = CONSUM[Q1];
     // Compute and display C4
     C4 = cons / 1000;  
     cons %= 1000;
@@ -463,28 +485,28 @@ void DisplayDigit(char currentDisplay, char digit)
     // Select the desired display (turn on the pin
     // corresponding to the desired digit (C4/C3/C2/C1) 
     char output = 0xff;
-    
+         
     switch (currentDisplay)
     {
         case 4:       
-            // Turn PD3 on
-            //output &= 0b11110111;    
-            output &= 0b11111000;  
+            // Turn PD3 on 
+            //output &= 0b00000111;  
+            output = 0x08;  
             break;
         case 3:       
             // Turn PD2 on
-            //output &= 0b11111011;  
-            output &= 0b11110100;   
+            // output &= 0b00001011; 
+            output = 0x04;    
             break;  
         case 2:       
             // Turn PD1 on
-            output &= 0b11110010;      
+            output = 0x02;     
             break; 
         case 1:       
             // Turn PD0 on
-            output &= 0b11110001;      
+            output = 0x01;     
             break;
-    } 
+    }
             
     // Assign output to PORTC in order to select the desired display;
     PORTD = output;  
@@ -543,42 +565,156 @@ void CLS()
         else if (adr[i] == T) ready = 1;
         else i = i+2;
     }
-    
-    out = Tout[Q];  
 }
 
-void 
-
-
+void DisplayInfo()
+{
+    DisplayConsumptionDisplayMode();
+    DisplayPowerLevel();
+}
 
 void DisplayPowerLevel()
 {
-   char out;  
-                                              
-   if(PowerLevel)    //PowerLevel = 0 kW
+   char out;
+   
+//   if (!PowerLevel)          PowerLevel = 0 kW
+//   {
+//        out = CLC_LEVEL[0];
+//   }                       
+//   else if (PowerLevel < 2.5)    0 < PowerLevel < 2.5 kW
+//   {
+//        out = CLC_LEVEL[1];
+//   }  
+//   else if (PowerLevel < 5)      2.5 <= PowerLevel < 5 kW
+//   {
+//        out = CLC_LEVEL[2];
+//   }  
+//   else if (PowerLevel < 7.5)    5 <= PowerLevel < 7.5 kW
+//   {
+//        out = CLC_LEVEL[3];
+//   }
+//   else                          PowerLvel >= 7.5 kW
+//   {
+//        out = CLC_LEVEL[4];
+//   }    
+   
+   if (!PowerLevel)         // PowerLevel = 0 kW
    {
         out = CLC_LEVEL[0];
-   }                      
-   else if(PowerLevel<2.5)    //0 <  PowerLevel < 2.5 kW
-   {     
-        out = CLC_LEVEL[1];  
+   }                       
+   else if (PowerLevel < 3)   // 0 < PowerLevel < 3 kW
+   {
+        out = CLC_LEVEL[1];
    }  
-   else if(PowerLevel<5)    // 2.5<= PowerLevel < 5 kW
-   {     
-        out = CLC_LEVEL[2];  
-   }
-   else if(PowerLevel<7.5)  // 5<= PowerLevel < 7.5 kW
-   {     
-        out = CLC_LEVEL[3];  
+   else if (PowerLevel < 6)     // 3 <= PowerLevel < 6 kW
+   {
+        out = CLC_LEVEL[2];
    }  
-   else{
-        out = CLC_LEVEL[4];  // PowerLevel >=7.5 kW
-   }    
-   //Delete PB7-PB4
-   PORTB &= 0x0f;      
+   else                         // PowerLvel >= 6 kW
+   {
+        out = CLC_LEVEL[3];
+   }  
+                   
+   // Delete PB7-PB5
+   PORTB &= 0x1f;       
    
-   //Display out on PB7-PB4
-   PORTB |= out;
+   // Display out on PB7-PB5
+   PORTB |= out;  
 }
 
+void DisplayConsumptionDisplayMode()
+{
+    char out;
+    
+    if (MODE == 1)  // Working without ranges
+    {            
+        // Clear PB4-0
+        PORTB &= 0xE0;
+        
+        // Display on PB4-0
+        PORTB |= 0x10; 
+        
+        return;
+    }
+          
+    switch(S3)
+    {
+        case 0:                 
+        {
+            if (CA == 0)            // Pressed CA
+            {
+                S3 = 1;  
+            }
+            break;
+        }
+        case 1:                 // Released CA
+        {
+            if (CA) 
+            {
+                S3 = 2;  
+                Q1 = 1;
+            }
+            break;
+        }
+        case 2:                //  Pressed CA
+        {
+            if (CA == 0) 
+            {
+                S3 = 3;  
+            }
+            break;
+        }
+        case 3:                // Released CA
+        {
+            if (CA) 
+            {
+                S3 = 4;  
+                Q1 = 2;
+            }
+            break;
+        }
+        case 4:
+        {
+            if (CA == 0) 
+            {
+                S3 = 5;  
+            }
+            break;
+        }
+        case 5:
+        {
+            if (CA) 
+            {
+                S3 = 6; 
+                Q1 = 3; 
+            }
+            break;
+        }    
+        case 6:
+        {
+            if (CA == 0) 
+            {
+                S3 = 7;  
+            }
+            break;
+        }
+        case 7:
+        {
+            if (CA) 
+            {
+                S3 = 0; 
+                Q1 = 0; 
+            }
+            break;
+        }      
+    } 
+      
+    out = CLC_RANGE_OUTPUT[Q1] | (CLC_RANGE_OUTPUT[Q] << 2);
+    
+    // Delete PB4-PB0
+    PORTB &= 0xE0;   
+   
+    // Display out on PB3-PB0
+    PORTB |= out; 
+}
 ////////////////////////////////////////

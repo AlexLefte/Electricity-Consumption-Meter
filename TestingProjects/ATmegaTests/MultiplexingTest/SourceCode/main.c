@@ -63,9 +63,10 @@ char S2; //starea de contorizare a PS-ului
 
 char S_PULSE;
  
-// Working mode
+// Working mode ///
 // 0 -> range on; 1 -> range off
 char MODE = 0;
+///////////////////
 
 ////// Global variables //////// 
 // PULSE
@@ -472,8 +473,8 @@ void DisplayConsumption()
     // The actual approach:
     // Each main loop iteration we multiplex the digits and display one at a time
       
-    // If CA is pressed -> display total consumption,
-    // else -> display consumption based on current range.    
+    // If MODE = 1 -> display total consumption,
+    // else -> display consumption based on current range.     
     int cons = (MODE) ?  CONSUM[4] : CONSUM[Q1];
     
     // Compute and display C4
