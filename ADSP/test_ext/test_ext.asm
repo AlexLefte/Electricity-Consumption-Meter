@@ -18,6 +18,9 @@
 // Input port
 #define PORT_IN 0x1FF
 
+// DP and T
+#define DP 0x01
+#define T 0x05
 
 .SECTION/DM		buf_var1;
 .var    rx_buf[3];      /* Status + L data + R data */
@@ -25,7 +28,6 @@
 .SECTION/DM		buf_var2;
 .var    	tx_buf[3] = 0xc000, 0x0000, 0x0000;      /* Cmd + L data + R data    */
 
-// Programming words?
 .SECTION/DM		buf_var3;
 .var    init_cmds[13] = 0xc002,     /*
                         				Left input control reg
@@ -143,6 +145,17 @@
 .var 	PF_input;
 .var 	PF_output;
 
+.var cntP = 0; 		// period counter
+.var dT;  			// Sampling period
+.var MODE = 0;		// Working mode (0 -> no working ranges)
+.var U;				// Voltage
+.var I;				// Current
+.var E = 0;			// Energy (kWs)
+.var n;				// Number of pulses to send
+.var Q;  			// PS state
+.var cntG;          // Pulse generator counter
+.var P;				// Power
+.var Threshold;		// Power threshold to generate a pulse 
 
 .SECTION/PM		pm_da;
 
@@ -315,6 +328,25 @@ start:
 
 //
 
+si = IO(PORT_IN);
+
+// Read the working mode
+// AR = si;
+// AY0 = 0x0001;
+// AR = AR AND AY0;
+// dm(MODE) = AR;
+
+// Read the sampling rate
+// AR = si;
+// AY0 = 0x0002;
+// AR = AR AND AY0;
+// dm(dT) = AR;
+
+ax0 = 0;
+dm(MODE) = 0;
+ax0 = 0x14;
+dm(dT) = ax0; 
+
 jump skip;
 
 //
@@ -404,8 +436,8 @@ dm(Dm_Wait_Reg)=si;
 
 // PF ports
 
-si=0x00f0;
-dm(Prog_Flag_Comp_Sel_Ctrl)=si; // PF0-3 inputs , PF4-7 outputs 
+si=0x00ff;
+dm(Prog_Flag_Comp_Sel_Ctrl)=si; // PF0-7 outputs 
 
 /* wait for char to go out */
 wt:
@@ -423,13 +455,105 @@ wt:
 input_samples:
         ena sec_reg;                /* use shadow register bank */
 
-        sr1 = dm (rx_buf + 2); /* get new sample from SPORT0 (from codec) */
+        ay0 = dm(Q);		// Read current state
+        ax0 = 0;			// We need the second operand: 0
+        ar = ax0 + ay0;		// ar = 0 + Q
+        if eq jump Q0;		// If ar = Q = 0 => jump towards Q0
+        
+        ar = ay0 - 1;		// ar = Q - 1
+        if eq jump Q1;		// If ar = 0 => jump towards Q1
+        
+        ax0 = 2;		
+        ar = ay0 - ax0;		// ar = Q - 2
+        if eq jump Q2;		// If ar = 0 => jump towards Q2
+        
+        ax0 = 3;
+        ar = ay0 - ax0;		// ar = Q - 3
+        if eq jump Q3;		// If ar = 0 => jump towards Q3
+        
+        ax0 = 4;
+        ar = ay0 - ax0;		// ar = Q - 4
+        if eq jump Q4;		// If ar = 0 => jump towards Q4
+        
+        
+        //////////////////// Q = 0 ////////////////////////
+        Q0:
+        // Check if the sampling period is complete
+        ay1 = dm(countP);		// ay1 = cntP
+        ar = ay1 + 1;			// ar = cntP + 1
+        dm(countP) = ar;		// cntP = ar = cntP + 1
+        ax1 = dm(dT);			// ax1 = dT
+        ay1 = dm(countP);		// Refresh: ay1 = cntP (incremented)
+        ar = ax1 - ay1;			// ar = dT - cntP
+        if gt rts;				// if dT > cntP => return
+        
+        // Read U & I    
+        ax1 = dm (rx_buf + 2); /* get new samples from SPORT0 (from codec) */
+        ay1 = dm (rx_buf + 1);
+        
+        // Compute dE
+        ar = ax1 * ay1 (rnd);	// ar = U * I
+        ax1 = dm(dT);			// ax0 = dT
+        ay1 = ar;				// ay0 = U * I
+        mr = dm(E)				// mr = E
+        mr =  mr + ax1 * ay1; 	// mr = E + U * I * dT = E + dE
+        ay1 = mr;				// ay0 = E' = E + dE
+        ax1 = dm(Threshold);	// ax0 = Th
+        ar = ay1 - ax1;			// ar = E' - Th
+        dm(E) = ay1;			// Save E = E'
+        if lt rts;				// if E' < Th => return
+        
+        // else:
+        ar = DIVS ay1, ax1;		// ar = E / Th
+        dm(n) = ar;   			// Save n = E / Th
+        mr = ay1;				// mr = ay0 = E
+        ax1 = ar;   			// ax0 = n
+        ay1 = dm(Threshold);	// ay0 = Th
+        mr = mr - ax1 * ay1;	// mr = E - n * Th
+        dm(E) = mr;				// Save the new E
+        dm(Q) = 1;				// Q = 1;
+        rts;
+        //////////////////////////////////////////////////////////
+        
+        
+        ///////////// Q = 1 ///////////
+        Q1:
+        ay0 = dm(n);			// ay0 = n 
+        ar = PASS ay0;			// ar = n 
+        if le rts; 				// if n <= 0 => return
+        
+        dm(Q) = 2;				// Go to Q = 2
+        rts;        
+        //////////////////////////////
+        
+        
+        //////////// Q = 2 ///////////
+        Q2:
+        // Generating the pulse //
+        ar = dm(P);				// ax0 = P
+        sr = LSHIFT ar BY 1; 	// sr = P << 1
+        ax0 = 0x0001;			
+        ay0 = sr;
+        ar = ax0 or ay0;
+        
+        
+		
+		
+		
+
+        //////////////////////////////
+        
+        
+ 
+        
+        
+        
 
 nofilt: /*sr=ashift sr1 by -1 (hi);*/   /* save the audience's ears from damage */
         mr1=sr1;
         
-        si=IO(PORT_IN);
-        IO(PORT_OUT)=si;
+        // si=IO(PORT_IN);
+        // IO(PORT_OUT)=si;
 output:
         dm (tx_buf + 1) = mr1;      /* filtered output to SPORT (to spkr) */
         dm (tx_buf + 2) = mr1;      /* filtered output to SPORT (to spkr) */
