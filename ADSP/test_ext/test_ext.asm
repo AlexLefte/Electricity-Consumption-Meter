@@ -156,6 +156,7 @@
 .var cntG;          // Pulse generator counter
 .var P;				// Power
 .var Threshold;		// Power threshold to generate a pulse 
+.var PulsesNumber;	// Pulses number / KWh
 
 .SECTION/PM		pm_da;
 
@@ -328,7 +329,7 @@ start:
 
 //
 
-si = IO(PORT_IN);
+// si = IO(PORT_IN);
 
 // Read the working mode
 // AR = si;
@@ -341,11 +342,6 @@ si = IO(PORT_IN);
 // AY0 = 0x0002;
 // AR = AR AND AY0;
 // dm(dT) = AR;
-
-ax0 = 0;
-dm(MODE) = 0;
-ax0 = 0x14;
-dm(dT) = ax0; 
 
 jump skip;
 
@@ -439,6 +435,19 @@ dm(Dm_Wait_Reg)=si;
 si=0x00ff;
 dm(Prog_Flag_Comp_Sel_Ctrl)=si; // PF0-7 outputs 
 
+dm(MODE) = 0;
+dm(dT) = 0x14; 
+dm(PulsesNumber) = 1;
+
+COMPUTE_THRESHOLD:
+	ax0 = 1000;
+	ay0 = 3600;
+	ar = ax0 * ay0;
+	ax0 = dm(PulsesNumber);
+	ay0 = ar;
+	ar = DIVS ay0, ax0;
+	dm(Threshold) = ar;
+
 /* wait for char to go out */
 wt:
 
@@ -476,8 +485,8 @@ input_samples:
         if eq jump Q4;		// If ar = 0 => jump towards Q4
         
         
-        //////////////////// Q = 0 ////////////////////////
-        Q0:
+//////////////////// Q = 0 ////////////////////////
+Q0:
         // Check if the sampling period is complete
         ay1 = dm(countP);		// ay1 = cntP
         ar = ay1 + 1;			// ar = cntP + 1
@@ -513,40 +522,88 @@ input_samples:
         dm(E) = mr;				// Save the new E
         dm(Q) = 1;				// Q = 1;
         rts;
-        //////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////
         
         
-        ///////////// Q = 1 ///////////
-        Q1:
-        ay0 = dm(n);			// ay0 = n 
-        ar = PASS ay0;			// ar = n 
+///////////// Q = 1 ///////////
+Q1:
+        ay1 = dm(n);			// ay0 = n 
+        ar = PASS ay1;			// ar = n 
         if le rts; 				// if n <= 0 => return
         
         dm(Q) = 2;				// Go to Q = 2
         rts;        
-        //////////////////////////////
+//////////////////////////////
         
         
-        //////////// Q = 2 ///////////
-        Q2:
+//////////// Q = 2 ///////////
+Q2:
         // Generating the pulse //
         ar = dm(P);				// ax0 = P
-        sr = LSHIFT ar BY 1; 	// sr = P << 1
-        ax0 = 0x0001;			
-        ay0 = sr;
-        ar = ax0 or ay0;
-        
-        
+        sr = LSHIFT ar BY 1 (LO); 	// sr = P << 1
+        ax1 = 0x0001;			// Set PULSE = 1
+        ay1 = sr;
+        ar = ax1 or ay1;						
+        dm(Prog_Flag_Data) = ar;	// PORTF = PPPP PPP1 (PULSE = 1)
+        ay1 = dm(cnt);
+        ar = ay1 + 1;           // Increment cnt
+        ax1 = ar;				// ax1 = cnt
+        ay1 = dm(DP);			// ay1 = DP
+        ar = ax1 - ay1;
+        if eq jump GO_TO_Q3; 
+		rts;
 		
 		
-		
-
-        //////////////////////////////
+		GO_TO_Q3:
+		dm(Q) = 3;
+		rts;
+//////////////////////////////
         
         
+//////////// Q = 3 ///////////
+Q3:
+        ar = dm(P);					// ax0 = P
+        sr = LSHIFT ar BY 1; 		// sr = P << 1		
+        dm(Prog_Flag_Data) = sr;	// PORTF = PPPP PPP0 (PULSE = 0)
+        ay1 = dm(cnt);
+        ar = ay1 + 1;				// Increment cnt
+        ax1 = dm(T);
+        ay1 = ar;
+        ar = ax1 - ay1;				// Check whether cnt = T
+        if eq jump GO_TO_Q4;		// If so, go to Q = 4
+        rts;
+        
+        GO_TO_Q4:
+        dm(cnt) = 0;  // Reset cnt
+        dm(Q) = 4;	  // Switch to Q = 4
+        rts;
+//////////////////////////////
  
         
+//////////// Q = 4 ///////////
+Q4:
+        ay1 = dm(n);
+        ar = ay1 - 1;
+        if gt jump GO_TO_Q2;
+        // if le jump UPDATE_INFO;
+        rts;
         
+        GO_TO_Q2:
+        dm(Q) = 2;	  // Switch to Q = 2
+        rts;
+        
+        UPDATE_INFO:
+        ax1 = IO(PORT_IN);		// Read input;
+        ay1 = 0x0003;
+        ar = ax1 and ay1;		// Read sampling period
+        dm(dT) = ar;
+        ay1 = 0x000A0;
+        ar = ax1 and ay1;
+        sr = LSHIFT ar BY (-2) (LO);  // Shift towards right >> 2
+        dm(PulsesNumber) = sr0;		  // Read pulses number / KWh
+        dm(Q) = 0;					  // 
+        rts;
+//////////////////////////////
         
 
 nofilt: /*sr=ashift sr1 by -1 (hi);*/   /* save the audience's ears from damage */
