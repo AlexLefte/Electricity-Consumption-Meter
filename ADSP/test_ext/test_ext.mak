@@ -51,7 +51,7 @@ test_ext_Debug : ./Debug/test_ext.dxe
 ./Debug/test_ext.doj :./def2181.h ./test_ext.asm 
 	$(VDSP)/easm218x.exe .\test_ext.asm -proc ADSP-2181 -g -o .\Debug\test_ext.doj -MM
 
-./Debug/test_ext.dxe :./ADSP-2181.ldf ./Debug/test_ext.doj 
+./Debug/test_ext.dxe :./Debug/test_ext.doj ./ADSP-2181.ldf 
 	$(VDSP)/cc218x.exe .\Debug\test_ext.doj -T .\ADSP-2181.ldf -L .\Debug -flags-link -od,.\Debug -o .\Debug\test_ext.dxe -proc ADSP-2181 -flags-link -MM
 
 endif

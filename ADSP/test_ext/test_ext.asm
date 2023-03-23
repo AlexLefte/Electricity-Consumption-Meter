@@ -181,7 +181,7 @@
         jump next_cmd;
         jump input_samples;             /*14: SPORT0 rx */
                      rti; rti; rti;
-        rti;         rti; rti; rti;     /*18: IRQE */
+        jump IRQE_SCI;         rti; rti; rti;     /*18: IRQE */
         rti;         rti; rti; rti;     /*1c: BDMA */
         rti;         rti; rti; rti;     /*20: SPORT1 tx or IRQ1 */
         rti;         rti; rti; rti;     /*24: SPORT1 rx or IRQ0 */
@@ -412,7 +412,7 @@ check_aci2:
         ifc = b#00000011111110;     /* clear any pending interrupt */
         nop;
 
-		imask = b#0001100001;       /* enable rx0 interrupt */
+		imask = b#0001110001;       /* enable rx0 interrupt */
             /*    |||||||||+ | timer
                   ||||||||+- | SPORT1 rec or IRQ0
                   |||||||+-- | SPORT1 trx or IRQ1
@@ -449,6 +449,10 @@ wt:
  -
  ------------------------------------------------------------------------------*/
 
+ IRQE_SCI:
+ 	ax0 = 2;
+ 	rti;
+ 
 input_samples:
         ena sec_reg;                /* use shadow register bank */
 
@@ -471,7 +475,7 @@ input_samples:
         ax0 = 4;
         ar = ay0 - ax0;		// ar = Q - 4
         if eq jump Q4;		// If ar = 0 => jump towards Q4
-        
+        rti;
         
 //////////////////// Q = 0 ////////////////////////
 Q0:
@@ -623,9 +627,9 @@ init:
 	si=0x00ff;
 	dm(Prog_Flag_Comp_Sel_Ctrl)=si; // PF0-7 outputs 
 
-	dm(MODE) = 0;
-	dm(dT) = 0x14; 
-	dm(PulsesNumber) = 1;
+	dm(MODE) = 0;			// Mode 0 => working range on
+	dm(dT) = 0x0032; 		// Interr -> every 20ms => dT = 50
+	dm(PulsesNumber) = 1;	// Pulses / kWh
 
 	/*
 	// Get input data
@@ -643,8 +647,17 @@ init:
 	dm(MODE) = sr;
 	
 	// Get Pulses number & Sampling rate
+	i3 = TAB_PULSES;
+	l3 = 4;
+	m3 = dm(PulsesNumberIndex)
+	ar = dm(i3, m3);
+	dm(PulsesNumber) = ar;
 	
-	
+	i3 = TAB_SAMPLING_PERIODS;
+	l3 = 4;
+	m3 = dm(dTIndex)
+	ar = dm(i3, m3);
+	dm(dT) = ar;	
 	*/
 
 	// COMPUTE_THRESHOLD:
@@ -655,9 +668,6 @@ init:
 	ay0 = ar;
 	ar = DIVS ay0, ax0;
 	dm(Threshold) = ar;	
-	
-	// Read input from SW0-7:
-		
 rts;		
 		
 		
