@@ -157,7 +157,11 @@
 .var P;				// Power
 .var Threshold;		// Power threshold to generate a pulse 
 .var PulsesNumber;	// Pulses number / KWh
-
+.var PulsesNumberIndex;
+.var dTIndex;
+ 
+.var TAB_PULSES[4] = {1, 2, 4, 8};	// Number of pulses/kWh -> 1/2/4/8;
+.var TAB_SAMPLING_PERIODS[4] = {50, 3000, 30000, 60000};	// 1s/1m/5m/10m
 .SECTION/PM		pm_da;
 
 
@@ -430,23 +434,7 @@ skip: imask = 0x200;
 si=0xFFFF;
 dm(Dm_Wait_Reg)=si;
 
-// PF ports
-
-si=0x00ff;
-dm(Prog_Flag_Comp_Sel_Ctrl)=si; // PF0-7 outputs 
-
-dm(MODE) = 0;
-dm(dT) = 0x14; 
-dm(PulsesNumber) = 1;
-
-COMPUTE_THRESHOLD:
-	ax0 = 1000;
-	ay0 = 3600;
-	ar = ax0 * ay0;
-	ax0 = dm(PulsesNumber);
-	ay0 = ar;
-	ar = DIVS ay0, ax0;
-	dm(Threshold) = ar;
+jump init;
 
 /* wait for char to go out */
 wt:
@@ -627,11 +615,52 @@ output:
 		ar=dm(PF_output);
 		sr=lshift ar by 4 (hi);
 		ax0=sr1;
-		dm(Prog_Flag_Data)=ax0;
-        
-        //
-        
+		dm(Prog_Flag_Data)=ax0;     
         rti;
+		
+init:
+	// PF ports
+	si=0x00ff;
+	dm(Prog_Flag_Comp_Sel_Ctrl)=si; // PF0-7 outputs 
+
+	dm(MODE) = 0;
+	dm(dT) = 0x14; 
+	dm(PulsesNumber) = 1;
+
+	/*
+	// Get input data
+    ay0 = IO(PORT_IN);
+	ax0 = 0x0003;
+	ar = ax0 and ay0;
+	dm(PulsesNumberIndex) = ar;
+	ax0 = 0x000a;
+	ar = ax0 and ay0;
+	sr = LSHIFT ar BY (-2) (LO); 
+	dm(dTIndex) = sr;
+	ax0 = 0x0010;
+	ar = ax0 and ayo;
+	sr = LSHIFT ar BY (-4) (LO);
+	dm(MODE) = sr;
+	
+	// Get Pulses number & Sampling rate
+	
+	
+	*/
+
+	// COMPUTE_THRESHOLD:
+	ax0 = 1000;
+	ay0 = 3600;
+	ar = ax0 * ay0;
+	ax0 = dm(PulsesNumber);
+	ay0 = ar;
+	ar = DIVS ay0, ax0;
+	dm(Threshold) = ar;	
+	
+	// Read input from SW0-7:
+		
+rts;		
+		
+		
 /*------------------------------------------------------------------------------
  -
  -  transmit interrupt used for Codec initialization

@@ -21,7 +21,7 @@ OutputExecutableFilesDirectory=Release\Exe
 OutputLinkerFilesDirectory=Release\Link
 AllowDisplayFunctionCallTree=1
 CleanUp=2
-TimeStamp1=1450486358
+TimeStamp1=1450508453
 OF2=..\..\..\..\..\I\uC\Lab\L3\PS\exempluPS.c
 TimeStamp2=1433103117
 EditorPanelMode=0
@@ -139,7 +139,7 @@ UseBootAppXmega=0
 RebuildAll=0
 LinkageInformationPresent=1
 COFFileTimeStamp=1450486360
-Build=108
+Build=113
 GlobalVarAddr=726
 EEPROMVarAddr=0
 [DefinedSymbolsDebug]
@@ -251,7 +251,7 @@ UseBootAppXmega=0
 RebuildAll=0
 LinkageInformationPresent=1
 COFFileTimeStamp=-1
-Build=108
+Build=113
 [DefinedSymbols]
 Count=0
 [CompilerAdvanced]
@@ -355,7 +355,7 @@ Row=0
 Column=0
 ScrollPosX=0
 ScrollPosY=0
-TimeStamp=1450486476
+TimeStamp=1450508857
 [BookmarksFoldedCode]
 Files=3
 F1=D:\Cursuri\An3\II\P2\SourceCode\Electricity-Consumption-Meter\ATmega\main.c
@@ -397,11 +397,11 @@ BK7=-1
 BK8=-1
 BK9=-1
 [Bookmarks3]
-TimeStamp=1450486358
-Row=24
-Column=55
+TimeStamp=1450508453
+Row=0
+Column=0
 ScrollPosX=0
-ScrollPosY=6
+ScrollPosY=61
 BK0=-1
 BK1=-1
 BK2=-1
