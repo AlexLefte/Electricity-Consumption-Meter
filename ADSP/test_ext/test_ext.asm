@@ -168,10 +168,8 @@
 /*** Interrupt Vector Table ***/
 .SECTION/PM     interrupts;
 		jump start;  rti; rti; rti;     /*00: reset */
-        
-		//rti;         rti; rti; rti;     /*04: IRQ2 */
-        
-		jump input_samples;         rti; rti; rti;
+      
+		jump input_samples;         rti; rti; rti;	/*04: IRQ2 */
 		
         rti;         rti; rti; rti;     /*08: IRQL1 */
         rti;         rti; rti; rti;     /*0c: IRQL0 */
@@ -181,7 +179,7 @@
         jump next_cmd;
         jump input_samples;             /*14: SPORT0 rx */
                      rti; rti; rti;
-        jump IRQE_SCI;         rti; rti; rti;     /*18: IRQE */
+        rti;         rti; rti; rti;     /*18: IRQE */
         rti;         rti; rti; rti;     /*1c: BDMA */
         rti;         rti; rti; rti;     /*20: SPORT1 tx or IRQ1 */
         rti;         rti; rti; rti;     /*24: SPORT1 rx or IRQ0 */
@@ -434,7 +432,57 @@ skip: imask = 0x200;
 si=0xFFFF;
 dm(Dm_Wait_Reg)=si;
 
-jump init;
+// call init;
+
+// PF ports
+si=0x00ff;
+dm(Prog_Flag_Comp_Sel_Ctrl)=si; // PF0-7 outputs 
+
+ax0 = 0;
+dm(MODE) = ax0;			// Mode 0 => working range on
+ax0 = 32;
+dm(dT) = ax0; 			// Interr -> every 20ms => dT = 50
+ax0 = 1;
+dm(PulsesNumber) = ax0;	// Pulses / kWh
+
+	/*
+	// Get input data
+    ay0 = IO(PORT_IN);
+	ax0 = 0x0003;
+	ar = ax0 and ay0;
+	dm(PulsesNumberIndex) = ar;
+	ax0 = 0x000a;
+	ar = ax0 and ay0;
+	sr = LSHIFT ar BY (-2) (LO); 
+	dm(dTIndex) = sr;
+	ax0 = 0x0010;
+	ar = ax0 and ayo;
+	sr = LSHIFT ar BY (-4) (LO);
+	dm(MODE) = sr;
+	
+	// Get Pulses number & Sampling rate
+	i3 = TAB_PULSES;
+	l3 = 4;
+	m3 = dm(PulsesNumberIndex)
+	ar = dm(i3, m3);
+	dm(PulsesNumber) = ar;
+	
+	i3 = TAB_SAMPLING_PERIODS;
+	l3 = 4;
+	m3 = dm(dTIndex)
+	ar = dm(i3, m3);
+	dm(dT) = ar;	
+	*/
+
+// COMPUTE_THRESHOLD:
+mx0 = 18;
+my0 = 36;
+mr = mx0 * my0 (uu);
+ax1 = dm(PulsesNumber);
+ay1 = ar;
+DIVS ay1, ax1;
+dm(Threshold) = mr0;	
+
 
 /* wait for char to go out */
 wt:
@@ -448,75 +496,76 @@ wt:
  -  SPORT0 interrupt handler
  -
  ------------------------------------------------------------------------------*/
-
- IRQE_SCI:
- 	ax0 = 2;
- 	rti;
  
 input_samples:
         ena sec_reg;                /* use shadow register bank */
 
         ay0 = dm(Q);		// Read current state
-        ax0 = 0;			// We need the second operand: 0
-        ar = ax0 + ay0;		// ar = 0 + Q
+        ar = ay0;			// ar = 0 + Q
         if eq jump Q0;		// If ar = Q = 0 => jump towards Q0
         
         ar = ay0 - 1;		// ar = Q - 1
-        if eq jump Q1;		// If ar = 0 => jump towards Q1
+        //if eq jump Q1;		// If ar = 0 => jump towards Q1
         
         ax0 = 2;		
         ar = ay0 - ax0;		// ar = Q - 2
-        if eq jump Q2;		// If ar = 0 => jump towards Q2
+        //if eq jump Q2;		// If ar = 0 => jump towards Q2
         
         ax0 = 3;
         ar = ay0 - ax0;		// ar = Q - 3
-        if eq jump Q3;		// If ar = 0 => jump towards Q3
+        //if eq jump Q3;		// If ar = 0 => jump towards Q3
         
         ax0 = 4;
         ar = ay0 - ax0;		// ar = Q - 4
-        if eq jump Q4;		// If ar = 0 => jump towards Q4
+        //if eq jump Q4;		// If ar = 0 => jump towards Q4
         rti;
         
 //////////////////// Q = 0 ////////////////////////
 Q0:
         // Check if the sampling period is complete
-        ay1 = dm(countP);		// ay1 = cntP
-        ar = ay1 + 1;			// ar = cntP + 1
-        dm(countP) = ar;		// cntP = ar = cntP + 1
-        ax1 = dm(dT);			// ax1 = dT
-        ay1 = dm(countP);		// Refresh: ay1 = cntP (incremented)
-        ar = ax1 - ay1;			// ar = dT - cntP
-        if gt rts;				// if dT > cntP => return
+        ay1 = dm(cntP);		// ay1 = cntP
+        ar = ay1 + 1;		// ar = cntP + 1
+        dm(cntP) = ar;		// cntP = ar = cntP + 1
+        ax1 = dm(dT);		// ax1 = dT
+        ay1 = dm(cntP);		// Refresh: ay1 = cntP (incremented)
+        ar = ax1 - ay1;		// ar = dT - cntP
+        if ne rti;			// if dT > cntP => return
         
         // Read U & I    
-        ax1 = dm (rx_buf + 2); /* get new samples from SPORT0 (from codec) */
-        ay1 = dm (rx_buf + 1);
+        mx0 = dm (rx_buf + 2); 	// Citeste senzorii de tensiune & curent
+        my0 = dm (rx_buf + 1);
+        
+        my0=230;
+        mx0=5;
         
         // Compute dE
-        ar = ax1 * ay1 (rnd);	// ar = U * I
-        ax1 = dm(dT);			// ax0 = dT
-        ay1 = ar;				// ay0 = U * I
-        mr = dm(E)				// mr = E
-        mr =  mr + ax1 * ay1; 	// mr = E + U * I * dT = E + dE
-        ay1 = mr;				// ay0 = E' = E + dE
-        ax1 = dm(Threshold);	// ax0 = Th
-        ar = ay1 - ax1;			// ar = E' - Th
-        dm(E) = ay1;			// Save E = E'
-        if lt rts;				// if E' < Th => return
+        mr = mx0 * my0 (uu);	// mr = U * I
+        mx1 = dm(dT);			// mx1 = dT
+        my1 = mr0;				// my1 = U * I
+        mr0 = dm(E);			// mr = E
+        mr1 = 0;
+        mr2 = 0;
+        mr =  mr + mx1 * my1 (uu); 	// mr = E + U * I * dT = E + dE
+        ay1 = mr0;					// ay0 = E' = E + dE
+        ax1 = dm(Threshold);		// ax0 = Th
+        ar = ay1 - ax1;				// ar = E' - Th
+        dm(E) = ay1;				// Save E = E'
+        if lt rts;					// if E' < Th => return
         
         // else:
-        ar = DIVS ay1, ax1;		// ar = E / Th
+        DIVS ay1, ax1;			// ar = E / Th
         dm(n) = ar;   			// Save n = E / Th
-        mr = ay1;				// mr = ay0 = E
-        ax1 = ar;   			// ax0 = n
-        ay1 = dm(Threshold);	// ay0 = Th
-        mr = mr - ax1 * ay1;	// mr = E - n * Th
-        dm(E) = mr;				// Save the new E
-        dm(Q) = 1;				// Q = 1;
-        rts;
+        mr0 = ay1;				// mr = ay0 = E
+        mx1 = ar;   			// ax0 = n
+        my1 = dm(Threshold);	// ay0 = Th
+        mr = mr - mx1 * my1 (uu);	// mr = E - n * Th
+        dm(E) = mr0;				// Save the new E
+        ax1 = 1;
+        dm(Q) = ax1;				// Q = 1;
+        rti;
 //////////////////////////////////////////////////////////
         
-        
+/*        
 ///////////// Q = 1 ///////////
 Q1:
         ay1 = dm(n);			// ay0 = n 
@@ -597,6 +646,7 @@ Q4:
         rts;
 //////////////////////////////
         
+*/
 
 nofilt: /*sr=ashift sr1 by -1 (hi);*/   /* save the audience's ears from damage */
         mr1=sr1;
@@ -621,7 +671,8 @@ output:
 		ax0=sr1;
 		dm(Prog_Flag_Data)=ax0;     
         rti;
-		
+
+/* 		
 init:
 	// PF ports
 	si=0x00ff;
@@ -659,7 +710,7 @@ init:
 	ar = dm(i3, m3);
 	dm(dT) = ar;	
 	*/
-
+	/*
 	// COMPUTE_THRESHOLD:
 	ax0 = 1000;
 	ay0 = 3600;
@@ -668,8 +719,7 @@ init:
 	ay0 = ar;
 	ar = DIVS ay0, ax0;
 	dm(Threshold) = ar;	
-rts;		
-		
+ret; */	
 		
 /*------------------------------------------------------------------------------
  -
