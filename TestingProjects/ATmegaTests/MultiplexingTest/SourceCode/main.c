@@ -65,7 +65,7 @@ char S_PULSE;
  
 // Working mode ///
 // 0 -> range on; 1 -> range off
-char MODE = 0;
+char MODE = 1;
 ///////////////////
 
 ////// Global variables //////// 
@@ -318,7 +318,7 @@ void Init()
     Q = Q1 = S1 = S2 = S3 = S_PULSE = 0;
     
     // Setting the working mode
-    MODE = 0;     
+    MODE = 1;     
 }
 
 void UpdateConsumption()
