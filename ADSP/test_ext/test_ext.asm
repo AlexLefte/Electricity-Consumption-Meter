@@ -159,7 +159,7 @@
 .var PulsesNumber;	// Pulses number / KWh
 .var PulsesNumberIndex;
 .var dTIndex;
-.var noCycles = 1;// No of interrupts to cover 20ms
+.var noCycles = 800;// No of interrupts to cover 20ms
 .var cntCycles = 0; // Cycles counter 
 .var SUB_MSB;
 .var SUB_LSB;
@@ -482,16 +482,19 @@ dm(PulsesNumber) = ax0;	// Pulses / kWh
 // COMPUTE_THRESHOLD:
 ena m_mode;
 ax1 = dm(PulsesNumber);	// Pulses/kWh
-af = PASS 0;
+// af = PASS 0;
 
+/*
 ax0 = astat;
 ay0 = 0xbf;
 ar = ax0 and ay0;
 ASTAT = ar;
+*/
 
 ay0 = 3600;				// ay0 = 1kWh = 3600 kWs
+ay1 = 0;
 
-DIVQ ax1; DIVQ ax1; 	// Compute division
+DIVS ay1, ax1; 
 DIVQ ax1; DIVQ ax1; 
 DIVQ ax1; DIVQ ax1; 
 DIVQ ax1; DIVQ ax1; 
@@ -499,8 +502,7 @@ DIVQ ax1; DIVQ ax1;
 DIVQ ax1; DIVQ ax1; 
 DIVQ ax1; DIVQ ax1; 
 DIVQ ax1; DIVQ ax1; 
-DIVQ ax1; 				// The quotient (threshold) is now in ay0 (expressed in kWs)
-
+DIVQ ax1; DIVQ ax1;
 
 mx0 = ay0;
 my0 = 1000;				// Get the result in Ws
@@ -524,50 +526,68 @@ wt:
  ------------------------------------------------------------------------------*/
  
 input_samples:
-        ena sec_reg;                /* use shadow register bank */
-        
-        /*ax1 = 0xBBA0;
-		ay1 = 0x2924;
-		ar = not ax1;
-		ar = ar + 1;
-		ax1 = ar;
-		ar = ax1 + ay1;
-		if av rti;*/
-        
+        ena sec_reg;                /* use shadow register bank */      
+        /*
+        // Implementing a counter in order to sync with ATmega 
+        // (which has timing interrupts at every 20ms;
         ay0 = dm(cntCycles);		// Read current cycles counter
         ar = ay0 + 1;				// Increment the cycles counter
         dm(cntCycles) = ar;
         ax0 = ar;
         ay0 = dm(noCycles);			// Get the necessary cycles number
         ar = ax0 - ay0;				// Compute cntCycles - noCycles
-        if ne rti;					// If not equal => return 
-        
+        if ne rti;					// If not equal => return  
         ax0 = 0;
         dm(cntCycles) = ax0;			// Restart counting cntCycles = 0
-        	
-
+        */
+        
         ay0 = dm(Q);		// Read current state
-        ar = ay0;			// ar = 0 + Q
+        ar = PASS ay0;		// ar = 0 + Q
         if eq jump Q0;		// If ar = Q = 0 => jump towards Q0
         
         ar = ay0 - 1;		// ar = Q - 1
-        //if eq jump Q1;		// If ar = 0 => jump towards Q1
+        if eq jump Q1;		// If ar = 0 => jump towards Q1
         
         ax0 = 2;		
         ar = ay0 - ax0;		// ar = Q - 2
-        //if eq jump Q2;		// If ar = 0 => jump towards Q2
+        if eq jump Q2;		// If ar = 0 => jump towards Q2
         
         ax0 = 3;
         ar = ay0 - ax0;		// ar = Q - 3
-        //if eq jump Q3;		// If ar = 0 => jump towards Q3
+        //if eq jump Q3;	// If ar = 0 => jump towards Q3
         
         ax0 = 4;
         ar = ay0 - ax0;		// ar = Q - 4
-        //if eq jump Q4;		// If ar = 0 => jump towards Q4
+        //if eq jump Q4;	// If ar = 0 => jump towards Q4
         rti;
         
-//////////////////// Q = 0 ////////////////////////
+        ax0 = 5;
+        ar = ay0 - ax0;		// ar = Q - 5
+        //if eq jump Q5;	// If ar = 0 => jump towards Q5
+        rti;
+        
 Q0:
+		// Implementing a counter in order to sync with ATmega 
+        // (which has timing interrupts at every 20ms;
+        ay0 = dm(cntCycles);		// Read current cycles counter
+        ar = ay0 + 1;				// Increment the cycles counter
+        dm(cntCycles) = ar;
+        ax0 = ar;
+        ay0 = dm(noCycles);			// Get the necessary cycles number
+        af = ax0 - ay0;				// Compute cntCycles - noCycles
+        if eq jump GO_Q0;				// If not equal => return
+    	ax1 = 1; 
+        dm(Q) = ax1;
+        rti;
+        
+        GO_Q0:
+        ax1 = 0;
+        dm(Q) = ax1;
+        rti;
+///////////////////////////////////////////////////       
+        
+//////////////////// Q = 1 ////////////////////////
+Q1:        
         // Check if the sampling period is complete
         ay1 = dm(cntP);		// ay1 = cntP
         ar = ay1 + 1;		// ar = cntP + 1
@@ -575,12 +595,11 @@ Q0:
         ax1 = dm(dT);		// ax1 = dT
         ay1 = dm(cntP);		// Refresh: ay1 = cntP (incremented)
         ar = ax1 - ay1;		// ar = dT - cntP
-        if ne rti;			// if dT > cntP => return
-        
+        if gt rti;			// if dT > cntP => return
         ax1 = 0;
         dm(cntP) = ax1;		// Restart counting
         
-        // Read U & I    
+		// Read U & I    
         mx0 = dm (rx_buf + 2); 	// Citeste senzorii de tensiune & curent
         my0 = dm (rx_buf + 1);
         
@@ -589,169 +608,117 @@ Q0:
         
         // Compute dE
         mr = mx0 * my0 (uu);	// mr = U * I
+        dm(P) = mr0;			// P (power) = U * I
         mx1 = dm(dT);			// mx1 = dT
         my1 = mr0;				// my1 = U * I
         mr0 = dm(E);			// mr = E
         mr1 = dm(E + 1);
         mr =  mr + mx1 * my1 (uu); 	// mr = E + U * I * dT = E + dE 			
-        ay1 = mr1;					// ay0 = E' = E + dE (MSB)
-        ax1 = dm(Threshold + 1);	// ax0 = Th (MSB)
         dm(E) = mr0;				// Save E = E'
         dm(E + 1) = mr1;
-        ar = ay1 - ax1;				// ar = E' - Th
-        if lt rti;					// if E' (MSB) < Threshold (MSB) => return
-          
-        // Compare LSBs:
-        ax1 = dm(E);
-        ay1 = dm(Threshold);
-     	
-        ax0 = 0;
-        ay0 = 0;
         
-        ar = ax1 + ay0;
-        if lt jump JUMP_CHECK_POS;
-        if gt jump JUMP_CHECK_NEG;
-        
-        JUMP_CHECK_POS:
-        ar = ax0 + ay1;
-        if gt rti;
-        jump COMPUTE_N;
-        
-        JUMP_CHECK_NEG:
-        ar = ax0 + ay1;
-        if lt rti;
-        
-        COMPUTE_N:      
-        ar = ax1 - ay1;
-        if lt rti;
-        
-        si = 0;
-        DIVIDE:
-        ax1 = dm(E);
-        ay1 = dm(Threshold);
-        ax0 = 0;
-        ay0 = 0;
-        
-        ar = ax1 + ay0;
-        if lt jump JUMP_CHECK_POS;
-        if gt jump JUMP_CHECK_NEG;
-        
-        JUMP_CHECK_POS:
-        ar = ax0 + ay1;
-        if gt ;
-        jump COMPUTE_N;
-        
-        JUMP_CHECK_NEG:
-        ar = ax0 + ay1;
-        if lt rti;
-        
-        
-        af = ax1 - ay1;
-        dm(SUB_LSB) = ar;
+        ax0 = dm(E);
         ax1 = dm(E + 1);
-        dm(SUB_MSB) = ax1;
-        if mv jump OVF;
-        if not mv jump NEXT1;
         
-        OVF:
-        ar = not ar;
-        dm(SUB_LSB) = ar;
-      	ay1 = dm(SUB_MSB);
-      	ar = ay1 - 1;
-      	dm(SUB_MSB) = ar;
-      	jump NEXT1;
-        
-        NEXT1:
-        ax1 = dm(SUB_MSB);
+        ay0 = dm(Threshold);
         ay1 = dm(Threshold + 1);
-        ar = ax1 - ay1;
+        
+        DIS AR_SAT;
+		ar = ax0 - ay0;
+		ar = ax1 - ay1 + C - 1, ax0 = ar;
+		ax1 = ar;
+        if lt rti;			
+        
+        // COMPUTE_N:      
+        si = 1;
+        DIVIDE:
+        // ax1 ax0 -> E
+        // ay1 ay0 -> TH
+        // Save last iteration's result:
+        dm(E) = ax0;
+        dm(E + 1) = ax1;
+        
+        DIS AR_SAT;
+		ar = ax0 - ay0;
+		ar = ax1 - ay1 + C - 1, ax0 = ar;
+		ax1 = ar;
         if lt jump STOP;
-        ay1 = si;
-        ar = ay1 + 1;
+        ar = si;
+        ar = ar + 1;
         si = ar;
         jump DIVIDE;
         
         STOP:
-        dm(n) = si;
-        ax1 = dm(SUB_LSB);
-        dm(E) = ax1;
-        
-        ay1 = dm(SUB_MSB);
-        dm(E + 1) = ay1;  
-        
-        /*
-        // DIVS ay1, ax1;			// ar = E / Th
-        // dm(n) = ar;   			// Save n = E / Th
-        mr0 = ay1;				// mr = ay0 = E
-        mx1 = ar;   			// ax0 = n
-        my1 = dm(Threshold);	// ay0 = Th
-        mr = mr - mx1 * my1 (uu);	// mr = E - n * Th
-        dm(E) = mr0;				// Save the new E
-        */
-        ax1 = 1;
-        dm(Q) = ax1;				// Q = 1;
+        dm(n) = si;      
+        ax1 = 2;
+        dm(Q) = ax1;				// Q = 2;
         rti;
         
 //////////////////////////////////////////////////////////
         
-/*        
-///////////// Q = 1 ///////////
-Q1:
-        ay1 = dm(n);			// ay0 = n 
-        ar = PASS ay1;			// ar = n 
-        if le rts; 				// if n <= 0 => return
-        
-        dm(Q) = 2;				// Go to Q = 2
-        rts;        
+    
+///////////// Q = 2 ///////////
+Q2:
+        ax0 = 0;
+        ax1 = 2;
+        ay0 = 0;
+		ay1 = dm(n);			// ay0 = n 
+        af = PASS ay1;			// ar = n 
+        if le ar = ax0 + ay0; 		// if n <= 0 => return to Q0
+        if gt ar = ax1 + ay0;			// else => return to Q1
+        dm(Q) = ar;				// Go to Q = 2
+        rti;        
 //////////////////////////////
         
-        
-//////////// Q = 2 ///////////
-Q2:
+       
+//////////// Q = 3 ///////////
+Q3:
         // Generating the pulse //
+        /*
         ar = dm(P);				// ax0 = P
         sr = LSHIFT ar BY 1 (LO); 	// sr = P << 1
-        ax1 = 0x0001;			// Set PULSE = 1
-        ay1 = sr;
-        ar = ax1 or ay1;						
-        dm(Prog_Flag_Data) = ar;	// PORTF = PPPP PPP1 (PULSE = 1)
-        ay1 = dm(cnt);
+        */
+        // ax1 = 1;			// Set PULSE = 1
+        // ay1 = sr0;
+        // ar = ax1 or ay1;		
+        
+        ax1 = 1;				
+        dm(Prog_Flag_Data) = ax1;	// PORTF = PPPP PPP1 (PULSE = 1)
+        ay1 = dm(cntG);
         ar = ay1 + 1;           // Increment cnt
         ax1 = ar;				// ax1 = cnt
         ay1 = dm(DP);			// ay1 = DP
-        ar = ax1 - ay1;
-        if eq jump GO_TO_Q3; 
-		rts;
-		
-		
-		GO_TO_Q3:
-		dm(Q) = 3;
-		rts;
+        af = ax1 - ay1;
+        ar = 2;				// Next state => default 2
+        if eq ar = ar + 1; 	// If cntG = DP => Go to Q3
+        dm(Q) = ar;			// Set Q state value
+		rti;
 //////////////////////////////
-        
-        
-//////////// Q = 3 ///////////
-Q3:
-        ar = dm(P);					// ax0 = P
+               
+//////////// Q = 4 ///////////
+Q4:
+        /*
+		ar = dm(P);					// ax0 = P
         sr = LSHIFT ar BY 1; 		// sr = P << 1		
         dm(Prog_Flag_Data) = sr;	// PORTF = PPPP PPP0 (PULSE = 0)
-        ay1 = dm(cnt);
+        */
+        ay1 = dm(cntG);
         ar = ay1 + 1;				// Increment cnt
         ax1 = dm(T);
         ay1 = ar;
-        ar = ax1 - ay1;				// Check whether cnt = T
-        if eq jump GO_TO_Q4;		// If so, go to Q = 4
-        rts;
-        
-        GO_TO_Q4:
-        dm(cnt) = 0;  // Reset cnt
-        dm(Q) = 4;	  // Switch to Q = 4
-        rts;
+        af = ax1 - ay1;				// Check whether cnt = T
+        ar = 3;
+        if eq ar = ar + 1;		// If so, go to Q = 4
+        dm(Q) = ar;
+        rti;
 //////////////////////////////
  
-        
-//////////// Q = 4 ///////////
-Q4:
+
+/*        
+//////////// Q = 5 ///////////
+Q5:
+		ax0 = 0;
+		dm(cntG) = 0;
         ay1 = dm(n);
         ar = ay1 - 1;
         if gt jump GO_TO_Q2;
@@ -774,7 +741,6 @@ Q4:
         dm(Q) = 0;					  // 
         rts;
 //////////////////////////////
-        
 */
 
 nofilt: /*sr=ashift sr1 by -1 (hi);*/   /* save the audience's ears from damage */
