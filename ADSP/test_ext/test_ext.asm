@@ -19,8 +19,8 @@
 #define PORT_IN 0x1FF
 
 // DP and T
-#define DP 0x01
-#define T 0x05
+#define DP 5
+#define T 25
 
 .SECTION/DM		buf_var1;
 .var    rx_buf[3];      /* Status + L data + R data */
@@ -159,7 +159,7 @@
 .var PulsesNumber;	// Pulses number / KWh
 .var PulsesNumberIndex;
 .var dTIndex;
-.var noCycles = 800;// No of interrupts to cover 20ms
+.var noCycles = 5;// No of interrupts to cover 20ms
 .var cntCycles = 0; // Cycles counter 
 .var SUB_MSB;
 .var SUB_LSB;
@@ -554,16 +554,15 @@ input_samples:
         
         ax0 = 3;
         ar = ay0 - ax0;		// ar = Q - 3
-        //if eq jump Q3;	// If ar = 0 => jump towards Q3
+        if eq jump Q3;	// If ar = 0 => jump towards Q3
         
         ax0 = 4;
         ar = ay0 - ax0;		// ar = Q - 4
-        //if eq jump Q4;	// If ar = 0 => jump towards Q4
-        rti;
+        if eq jump Q4;	// If ar = 0 => jump towards Q4
         
         ax0 = 5;
         ar = ay0 - ax0;		// ar = Q - 5
-        //if eq jump Q5;	// If ar = 0 => jump towards Q5
+        if eq jump Q5;	// If ar = 0 => jump towards Q5
         rti;
         
 Q0:
@@ -599,12 +598,15 @@ Q1:
         ax1 = 0;
         dm(cntP) = ax1;		// Restart counting
         
+        ax1 = 0;					// Write PULSE = 0 at 0xFF
+        IO(PORT_OUT) = ax1;
+        
 		// Read U & I    
         mx0 = dm (rx_buf + 2); 	// Citeste senzorii de tensiune & curent
         my0 = dm (rx_buf + 1);
         
-        my0=230;
-        mx0=5;
+        mx0 = 200;                 // U
+        my0 = 10;				   // I
         
         // Compute dE
         mr = mx0 * my0 (uu);	// mr = U * I
@@ -660,7 +662,7 @@ Q1:
 ///////////// Q = 2 ///////////
 Q2:
         ax0 = 0;
-        ax1 = 2;
+        ax1 = 3;
         ay0 = 0;
 		ay1 = dm(n);			// ay0 = n 
         af = PASS ay1;			// ar = n 
@@ -683,14 +685,16 @@ Q3:
         // ar = ax1 or ay1;		
         
         ax1 = 1;				
-        dm(Prog_Flag_Data) = ax1;	// PORTF = PPPP PPP1 (PULSE = 1)
+        // dm(Prog_Flag_Data) = ax1;	// PF = PPPP PPP1 (PULSE = 1)
+        IO(PORT_OUT) = ax1;		// Write PULSE = 1 at 0xFF
         ay1 = dm(cntG);
         ar = ay1 + 1;           // Increment cnt
+        dm(cntG) = ar;
         ax1 = ar;				// ax1 = cnt
-        ay1 = dm(DP);			// ay1 = DP
+        ay1 = DP;				// ay1 = DP
         af = ax1 - ay1;
-        ar = 2;				// Next state => default 2
-        if eq ar = ar + 1; 	// If cntG = DP => Go to Q3
+        ar = 3;				// Next state => default 3
+        if eq ar = ar + 1; 	// If cntG = DP => Go to Q4
         dm(Q) = ar;			// Set Q state value
 		rti;
 //////////////////////////////
@@ -702,33 +706,40 @@ Q4:
         sr = LSHIFT ar BY 1; 		// sr = P << 1		
         dm(Prog_Flag_Data) = sr;	// PORTF = PPPP PPP0 (PULSE = 0)
         */
+        ax1 = 0;					// Write PULSE = 0 at 0xFF
+        IO(PORT_OUT) = ax1;
         ay1 = dm(cntG);
         ar = ay1 + 1;				// Increment cnt
-        ax1 = dm(T);
+        dm(cntG) = ar;
+        ax1 = T;
         ay1 = ar;
         af = ax1 - ay1;				// Check whether cnt = T
-        ar = 3;
+        ar = 4;
         if eq ar = ar + 1;		// If so, go to Q = 4
         dm(Q) = ar;
         rti;
 //////////////////////////////
  
 
-/*        
+      
 //////////// Q = 5 ///////////
 Q5:
 		ax0 = 0;
-		dm(cntG) = 0;
+		dm(cntG) = ax0;
         ay1 = dm(n);
         ar = ay1 - 1;
-        if gt jump GO_TO_Q2;
+        if gt jump GO_TO_Q3;
         // if le jump UPDATE_INFO;
-        rts;
+        ax0 = 0;
+        dm(Q) = ax0;
+        rti;
         
-        GO_TO_Q2:
-        dm(Q) = 2;	  // Switch to Q = 2
-        rts;
+        GO_TO_Q3:
+        ax0 = 3;
+        dm(Q) = ax0;	  // Switch to Q = 3
+        rti;
         
+        /*
         UPDATE_INFO:
         ax1 = IO(PORT_IN);		// Read input;
         ay1 = 0x0003;
@@ -738,10 +749,11 @@ Q5:
         ar = ax1 and ay1;
         sr = LSHIFT ar BY (-2) (LO);  // Shift towards right >> 2
         dm(PulsesNumber) = sr0;		  // Read pulses number / KWh
-        dm(Q) = 0;					  // 
-        rts;
+        ax0 = 0;
+        dm(Q) = ax0;					  // 
+        rti;
+        */
 //////////////////////////////
-*/
 
 nofilt: /*sr=ashift sr1 by -1 (hi);*/   /* save the audience's ears from damage */
         mr1=sr1;
