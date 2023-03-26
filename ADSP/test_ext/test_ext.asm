@@ -173,7 +173,7 @@
 .SECTION/PM     interrupts;
 		jump start;  rti; rti; rti;     /*00: reset */
       
-		jump input_samples;         rti; rti; rti;	/*04: IRQ2 */
+		jump sci;    rti; rti; rti;	/*04: IRQ2 */
 		
         rti;         rti; rti; rti;     /*08: IRQL1 */
         rti;         rti; rti; rti;     /*0c: IRQL0 */
@@ -181,7 +181,7 @@
         ar = pass ar;
         if eq rti;
         jump next_cmd;
-        jump input_samples;             /*14: SPORT0 rx */
+        jump sci;             /*14: SPORT0 rx */
                      rti; rti; rti;
         rti;         rti; rti; rti;     /*18: IRQE */
         rti;         rti; rti; rti;     /*1c: BDMA */
@@ -525,7 +525,7 @@ wt:
  -
  ------------------------------------------------------------------------------*/
  
-input_samples:
+sci:
         ena sec_reg;                /* use shadow register bank */      
         /*
         // Implementing a counter in order to sync with ATmega 
