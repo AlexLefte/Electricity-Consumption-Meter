@@ -489,11 +489,11 @@ L10=[.dseg] 0x000100 0x0002c3      0    195    195    1024  19.0%
 L11=[.eseg] 0x000000 0x000000      0      0      0     512   0.0%
 L12=
 [Bookmarks5]
-TimeStamp=1450486823
-Row=115
-Column=22
+TimeStamp=1450508348
+Row=0
+Column=0
 ScrollPosX=0
-ScrollPosY=110
+ScrollPosY=0
 BK0=-1
 BK1=-1
 BK2=-1
