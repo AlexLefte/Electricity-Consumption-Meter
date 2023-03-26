@@ -150,16 +150,20 @@
 .var MODE = 0;		// Working mode (0 -> no working ranges)
 .var U;				// Voltage
 .var I;				// Current
-.var E = 0;			// Energy (kWs)
+.var E[2] = {0, 0};	// Energy (kWs)
 .var n;				// Number of pulses to send
 .var Q;  			// PS state
 .var cntG;          // Pulse generator counter
 .var P;				// Power
-.var Threshold;		// Power threshold to generate a pulse 
+.var Threshold[2] = {0, 0};		// Power threshold to generate a pulse 
 .var PulsesNumber;	// Pulses number / KWh
 .var PulsesNumberIndex;
 .var dTIndex;
- 
+.var noCycles = 1;// No of interrupts to cover 20ms
+.var cntCycles = 0; // Cycles counter 
+.var SUB_MSB;
+.var SUB_LSB;
+
 .var TAB_PULSES[4] = {1, 2, 4, 8};	// Number of pulses/kWh -> 1/2/4/8;
 .var TAB_SAMPLING_PERIODS[4] = {50, 3000, 30000, 60000};	// 1s/1m/5m/10m
 .SECTION/PM		pm_da;
@@ -438,11 +442,12 @@ dm(Dm_Wait_Reg)=si;
 si=0x00ff;
 dm(Prog_Flag_Comp_Sel_Ctrl)=si; // PF0-7 outputs 
 
+ena m_mode;
 ax0 = 0;
 dm(MODE) = ax0;			// Mode 0 => working range on
-ax0 = 32;
+ax0 = 50;
 dm(dT) = ax0; 			// Interr -> every 20ms => dT = 50
-ax0 = 1;
+ax0 = 4;
 dm(PulsesNumber) = ax0;	// Pulses / kWh
 
 	/*
@@ -475,13 +480,34 @@ dm(PulsesNumber) = ax0;	// Pulses / kWh
 	*/
 
 // COMPUTE_THRESHOLD:
-mx0 = 18;
-my0 = 36;
+ena m_mode;
+ax1 = dm(PulsesNumber);	// Pulses/kWh
+af = PASS 0;
+
+ax0 = astat;
+ay0 = 0xbf;
+ar = ax0 and ay0;
+ASTAT = ar;
+
+ay0 = 3600;				// ay0 = 1kWh = 3600 kWs
+
+DIVQ ax1; DIVQ ax1; 	// Compute division
+DIVQ ax1; DIVQ ax1; 
+DIVQ ax1; DIVQ ax1; 
+DIVQ ax1; DIVQ ax1; 
+DIVQ ax1; DIVQ ax1; 
+DIVQ ax1; DIVQ ax1; 
+DIVQ ax1; DIVQ ax1; 
+DIVQ ax1; DIVQ ax1; 
+DIVQ ax1; 				// The quotient (threshold) is now in ay0 (expressed in kWs)
+
+
+mx0 = ay0;
+my0 = 1000;				// Get the result in Ws
 mr = mx0 * my0 (uu);
-ax1 = dm(PulsesNumber);
-ay1 = ar;
-DIVS ay1, ax1;
-dm(Threshold) = mr0;	
+	
+dm(Threshold) = mr0;
+dm(Threshold + 1) = mr1;	
 
 
 /* wait for char to go out */
@@ -499,6 +525,26 @@ wt:
  
 input_samples:
         ena sec_reg;                /* use shadow register bank */
+        
+        /*ax1 = 0xBBA0;
+		ay1 = 0x2924;
+		ar = not ax1;
+		ar = ar + 1;
+		ax1 = ar;
+		ar = ax1 + ay1;
+		if av rti;*/
+        
+        ay0 = dm(cntCycles);		// Read current cycles counter
+        ar = ay0 + 1;				// Increment the cycles counter
+        dm(cntCycles) = ar;
+        ax0 = ar;
+        ay0 = dm(noCycles);			// Get the necessary cycles number
+        ar = ax0 - ay0;				// Compute cntCycles - noCycles
+        if ne rti;					// If not equal => return 
+        
+        ax0 = 0;
+        dm(cntCycles) = ax0;			// Restart counting cntCycles = 0
+        	
 
         ay0 = dm(Q);		// Read current state
         ar = ay0;			// ar = 0 + Q
@@ -531,6 +577,9 @@ Q0:
         ar = ax1 - ay1;		// ar = dT - cntP
         if ne rti;			// if dT > cntP => return
         
+        ax1 = 0;
+        dm(cntP) = ax1;		// Restart counting
+        
         // Read U & I    
         mx0 = dm (rx_buf + 2); 	// Citeste senzorii de tensiune & curent
         my0 = dm (rx_buf + 1);
@@ -543,26 +592,106 @@ Q0:
         mx1 = dm(dT);			// mx1 = dT
         my1 = mr0;				// my1 = U * I
         mr0 = dm(E);			// mr = E
-        mr1 = 0;
-        mr2 = 0;
-        mr =  mr + mx1 * my1 (uu); 	// mr = E + U * I * dT = E + dE
-        ay1 = mr0;					// ay0 = E' = E + dE
-        ax1 = dm(Threshold);		// ax0 = Th
+        mr1 = dm(E + 1);
+        mr =  mr + mx1 * my1 (uu); 	// mr = E + U * I * dT = E + dE 			
+        ay1 = mr1;					// ay0 = E' = E + dE (MSB)
+        ax1 = dm(Threshold + 1);	// ax0 = Th (MSB)
+        dm(E) = mr0;				// Save E = E'
+        dm(E + 1) = mr1;
         ar = ay1 - ax1;				// ar = E' - Th
-        dm(E) = ay1;				// Save E = E'
-        if lt rts;					// if E' < Th => return
+        if lt rti;					// if E' (MSB) < Threshold (MSB) => return
+          
+        // Compare LSBs:
+        ax1 = dm(E);
+        ay1 = dm(Threshold);
+     	
+        ax0 = 0;
+        ay0 = 0;
         
-        // else:
-        DIVS ay1, ax1;			// ar = E / Th
-        dm(n) = ar;   			// Save n = E / Th
+        ar = ax1 + ay0;
+        if lt jump JUMP_CHECK_POS;
+        if gt jump JUMP_CHECK_NEG;
+        
+        JUMP_CHECK_POS:
+        ar = ax0 + ay1;
+        if gt rti;
+        jump COMPUTE_N;
+        
+        JUMP_CHECK_NEG:
+        ar = ax0 + ay1;
+        if lt rti;
+        
+        COMPUTE_N:      
+        ar = ax1 - ay1;
+        if lt rti;
+        
+        si = 0;
+        DIVIDE:
+        ax1 = dm(E);
+        ay1 = dm(Threshold);
+        ax0 = 0;
+        ay0 = 0;
+        
+        ar = ax1 + ay0;
+        if lt jump JUMP_CHECK_POS;
+        if gt jump JUMP_CHECK_NEG;
+        
+        JUMP_CHECK_POS:
+        ar = ax0 + ay1;
+        if gt ;
+        jump COMPUTE_N;
+        
+        JUMP_CHECK_NEG:
+        ar = ax0 + ay1;
+        if lt rti;
+        
+        
+        af = ax1 - ay1;
+        dm(SUB_LSB) = ar;
+        ax1 = dm(E + 1);
+        dm(SUB_MSB) = ax1;
+        if mv jump OVF;
+        if not mv jump NEXT1;
+        
+        OVF:
+        ar = not ar;
+        dm(SUB_LSB) = ar;
+      	ay1 = dm(SUB_MSB);
+      	ar = ay1 - 1;
+      	dm(SUB_MSB) = ar;
+      	jump NEXT1;
+        
+        NEXT1:
+        ax1 = dm(SUB_MSB);
+        ay1 = dm(Threshold + 1);
+        ar = ax1 - ay1;
+        if lt jump STOP;
+        ay1 = si;
+        ar = ay1 + 1;
+        si = ar;
+        jump DIVIDE;
+        
+        STOP:
+        dm(n) = si;
+        ax1 = dm(SUB_LSB);
+        dm(E) = ax1;
+        
+        ay1 = dm(SUB_MSB);
+        dm(E + 1) = ay1;  
+        
+        /*
+        // DIVS ay1, ax1;			// ar = E / Th
+        // dm(n) = ar;   			// Save n = E / Th
         mr0 = ay1;				// mr = ay0 = E
         mx1 = ar;   			// ax0 = n
         my1 = dm(Threshold);	// ay0 = Th
         mr = mr - mx1 * my1 (uu);	// mr = E - n * Th
         dm(E) = mr0;				// Save the new E
+        */
         ax1 = 1;
         dm(Q) = ax1;				// Q = 1;
         rti;
+        
 //////////////////////////////////////////////////////////
         
 /*        
@@ -671,55 +800,6 @@ output:
 		ax0=sr1;
 		dm(Prog_Flag_Data)=ax0;     
         rti;
-
-/* 		
-init:
-	// PF ports
-	si=0x00ff;
-	dm(Prog_Flag_Comp_Sel_Ctrl)=si; // PF0-7 outputs 
-
-	dm(MODE) = 0;			// Mode 0 => working range on
-	dm(dT) = 0x0032; 		// Interr -> every 20ms => dT = 50
-	dm(PulsesNumber) = 1;	// Pulses / kWh
-
-	/*
-	// Get input data
-    ay0 = IO(PORT_IN);
-	ax0 = 0x0003;
-	ar = ax0 and ay0;
-	dm(PulsesNumberIndex) = ar;
-	ax0 = 0x000a;
-	ar = ax0 and ay0;
-	sr = LSHIFT ar BY (-2) (LO); 
-	dm(dTIndex) = sr;
-	ax0 = 0x0010;
-	ar = ax0 and ayo;
-	sr = LSHIFT ar BY (-4) (LO);
-	dm(MODE) = sr;
-	
-	// Get Pulses number & Sampling rate
-	i3 = TAB_PULSES;
-	l3 = 4;
-	m3 = dm(PulsesNumberIndex)
-	ar = dm(i3, m3);
-	dm(PulsesNumber) = ar;
-	
-	i3 = TAB_SAMPLING_PERIODS;
-	l3 = 4;
-	m3 = dm(dTIndex)
-	ar = dm(i3, m3);
-	dm(dT) = ar;	
-	*/
-	/*
-	// COMPUTE_THRESHOLD:
-	ax0 = 1000;
-	ay0 = 3600;
-	ar = ax0 * ay0;
-	ax0 = dm(PulsesNumber);
-	ay0 = ar;
-	ar = DIVS ay0, ax0;
-	dm(Threshold) = ar;	
-ret; */	
 		
 /*------------------------------------------------------------------------------
  -
