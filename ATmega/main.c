@@ -31,7 +31,7 @@ Data Stack size         : 256
 
 // Numar de perioade necesare
 // duratei unui puls pozitiv (cu durata 20 ms)
-#define DP 1   
+#define DP 1
 
 /// CLS definitions ///
 char S1 = 0; // CLS state

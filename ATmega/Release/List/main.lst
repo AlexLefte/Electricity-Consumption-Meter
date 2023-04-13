@@ -1,5 +1,5 @@
 
-AVRASM ver. 2.1.30  D:\GithubRepos\Electricity-Consumption-Meter\ATmega\Release\List\main.asm Thu Apr 13 23:26:54 2023
+AVRASM ver. 2.1.30  D:\GithubRepos\Electricity-Consumption-Meter\ATmega\Release\List\main.asm Fri Apr 14 00:17:18 2023
 
 D:\GithubRepos\Electricity-Consumption-Meter\ATmega\Release\List\main.asm(1074): warning: Register r4 already defined by the .DEF directive
 D:\GithubRepos\Electricity-Consumption-Meter\ATmega\Release\List\main.asm(1075): warning: Register r3 already defined by the .DEF directive
