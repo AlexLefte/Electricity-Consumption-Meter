@@ -1,0 +1,40 @@
+RAM Allocation
+Variable                                                          Address   Size
+--------------------------------------------------------------------------------
+A0                                                                0x0200      48
+A1                                                                0x0230      48
+A2                                                                0x0260      48
+A3                                                                0x0290      16
+TABA                                                              0x02A0       8
+Q1                                                                0x02A8       1
+S3                                                                0x02A9       1
+CONSUM                                                            0x02AA      10
+C4                                                                0x02B4       1
+C3                                                                0x02B5       1
+C2                                                                0x02B6       1
+C1                                                                0x02B7       1
+CA                                                                0x02B8       1
+PowerLevel                                                        0x02B9       1
+CLC_LEVEL                                                         0x02BA       4
+CLC_RANGE_OUTPUT                                                  0x02BE       4
+cntP                                                              0x02C2       1
+
+EEPROM Allocation
+Variable                                                          Address   Size
+--------------------------------------------------------------------------------
+
+Register Allocation
+Variable                                                          Register  Size
+--------------------------------------------------------------------------------
+S1                                                                R4           1
+Z                                                                 R3           1
+H                                                                 R6           1
+M                                                                 R5           1
+S                                                                 R8           1
+cnt_time                                                          R7           1
+T_SEC                                                             R10          1
+S2                                                                R9           1
+PULSE                                                             R12          1
+MODE                                                              R11          1
+modeFlag                                                          R14          1
+Q                                                                 R13          1
