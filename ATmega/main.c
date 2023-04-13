@@ -140,6 +140,8 @@ interrupt [TIM0_OVF] void timer0_ovf_isr(void)
 {
     // Reinitialize Timer 0 value
     TCNT0=0x3C; 
+    //Update current time
+    UpdateTime();
     
     // Update CA
     CA = (PORTD & 0x20) >> 5; 
