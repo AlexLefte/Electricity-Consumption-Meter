@@ -147,10 +147,10 @@
 
 .var cntP = 0; 		// period counter
 .var dT;  			// Sampling period
-.var MODE = 0;		// Working mode (0 -> no working ranges)
+.var MODE = 0;		// Working mode (0 -> with working ranges)
 .var U;				// Voltage
 .var I;				// Current
-.var E[2] = {0, 0};	// Energy (kWs)
+.var E[2] = {0, 0};	// Energy (Ws)
 .var n;				// Number of pulses to send
 .var Q;  			// PS state
 .var cntG;          // Pulse generator counter
@@ -574,7 +574,7 @@ Q0:
         ax0 = ar;
         ay0 = dm(noCycles);			// Get the necessary cycles number
         af = ax0 - ay0;				// Compute cntCycles - noCycles
-        if eq jump GO_Q0;				// If not equal => return
+        if lt jump GO_Q0;				// If not equal => return
     	ax1 = 1; 
         dm(Q) = ax1;
         rti;
@@ -661,14 +661,14 @@ Q1:
     
 ///////////// Q = 2 ///////////
 Q2:
-        ax0 = 0;
+        ax0 = 1;
         ax1 = 3;
         ay0 = 0;
 		ay1 = dm(n);			// ay0 = n 
         af = PASS ay1;			// ar = n 
-        if le ar = ax0 + ay0; 		// if n <= 0 => return to Q0
-        if gt ar = ax1 + ay0;			// else => return to Q1
-        dm(Q) = ar;				// Go to Q = 2
+        if le ar = ax0 + ay0; 	// if n <= 0 => return to Q0
+        if gt ar = ax1 + ay0;	// else => return to Q1
+        dm(Q) = ar;				// Go to Q = 3
         rti;        
 //////////////////////////////
         
