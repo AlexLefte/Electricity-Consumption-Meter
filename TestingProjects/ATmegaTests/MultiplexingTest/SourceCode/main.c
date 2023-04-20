@@ -324,7 +324,7 @@ void Init()
 void UpdateConsumption()
 {                
     // Identify PULSE
-    // PULSE = PINA & 0x01;
+    PULSE = PINA & 0x01;
     
     /* switch(S2) 
     {
@@ -392,8 +392,7 @@ void UpdateConsumption()
     switch(S2) 
     {
         case 0:
-        {      
-            PULSE = PINA & 0x01;    
+        {         
             // If PULSE is on, start counting
             if (PULSE)
             {   
@@ -411,7 +410,6 @@ void UpdateConsumption()
         }
         case 1:
         {      
-            PULSE = PINA & 0x01;
             if (~PULSE)
             {   
                 // Update current consumption range

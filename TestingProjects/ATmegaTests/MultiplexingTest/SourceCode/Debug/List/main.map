@@ -48,10 +48,10 @@ Function                                                                        
 timer0_ovf_isr                                                                    0x000ED     38
 main                                                                              0x00113     93
 Init                                                                              0x00170     10
-UpdateConsumption                                                                 0x0017A     59
-DisplayConsumption                                                                0x001B5     60
-DisplayDigit                                                                      0x001F1     43
-CLS                                                                               0x0021C    117
-DisplayInfo                                                                       0x00291      3
-DisplayPowerLevel                                                                 0x00294     27
-DisplayConsumptionDisplayMode                                                     0x002AF    124
+UpdateConsumption                                                                 0x0017A     57
+DisplayConsumption                                                                0x001B3     60
+DisplayDigit                                                                      0x001EF     43
+CLS                                                                               0x0021A    117
+DisplayInfo                                                                       0x0028F      3
+DisplayPowerLevel                                                                 0x00292     27
+DisplayConsumptionDisplayMode                                                     0x002AD    124
