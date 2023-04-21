@@ -21,7 +21,11 @@ OutputExecutableFilesDirectory=Release\Exe
 OutputLinkerFilesDirectory=Release\Link
 AllowDisplayFunctionCallTree=1
 CleanUp=2
+<<<<<<< Updated upstream
 TimeStamp1=1452605496
+=======
+TimeStamp1=1452588601
+>>>>>>> Stashed changes
 OF2=..\..\..\..\..\I\uC\Lab\L3\PS\exempluPS.c
 TimeStamp2=1433103117
 EditorPanelMode=0
@@ -251,7 +255,11 @@ UseBootAppXmega=0
 RebuildAll=0
 LinkageInformationPresent=1
 COFFileTimeStamp=-1
+<<<<<<< Updated upstream
 Build=114
+=======
+Build=121
+>>>>>>> Stashed changes
 [DefinedSymbols]
 Count=0
 [CompilerAdvanced]
@@ -355,7 +363,11 @@ Row=0
 Column=0
 ScrollPosX=0
 ScrollPosY=0
+<<<<<<< Updated upstream
 TimeStamp=1452605780
+=======
+TimeStamp=1452588882
+>>>>>>> Stashed changes
 [BookmarksFoldedCode]
 Files=3
 F1=D:\Cursuri\An3\II\P2\SourceCode\Electricity-Consumption-Meter\ATmega\main.c
@@ -397,11 +409,19 @@ BK7=-1
 BK8=-1
 BK9=-1
 [Bookmarks3]
+<<<<<<< Updated upstream
 TimeStamp=1452605496
 Row=415
 Column=43
 ScrollPosX=0
 ScrollPosY=408
+=======
+TimeStamp=1452588601
+Row=395
+Column=32
+ScrollPosX=0
+ScrollPosY=201
+>>>>>>> Stashed changes
 BK0=-1
 BK1=-1
 BK2=-1
@@ -470,7 +490,11 @@ L12=
 Lines=12
 [HeadersList]
 Files=1
+<<<<<<< Updated upstream
 F1=D:\Cursuri\An3\II\P2\SourceCode\Electricity-Consumption-Meter\TestingProjects\ATmegaTests\MultiplexingTest\SourceCode\main.c
+=======
+F1=D:\GithubRepos\Electricity-Consumption-Meter\TestingProjects\ATmegaTests\MultiplexingTest\SourceCode\main.c
+>>>>>>> Stashed changes
 [Header1]
 Files=2
 F1=..\..\..\..\..\..\..\..\uC\codevisionavr\inc\mega164a.h

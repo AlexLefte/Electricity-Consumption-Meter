@@ -1072,17 +1072,17 @@ __DELAY_USW_LOOP:
 
 ;NAME DEFINITIONS FOR GLOBAL VARIABLES ALLOCATED TO REGISTERS
 	.DEF _S1=R4
-	.DEF _H=R3
-	.DEF _Z=R6
-	.DEF _M=R5
-	.DEF _S=R8
-	.DEF _cnt_time=R7
-	.DEF _T_SEC=R10
-	.DEF _S2=R9
-	.DEF _S_PULSE=R12
-	.DEF _PULSE=R11
-	.DEF _Q=R14
-	.DEF _S3=R13
+	.DEF _cnt_time=R3
+	.DEF _T_SEC=R6
+	.DEF _S2=R5
+	.DEF _S_PULSE=R8
+	.DEF _MODE=R7
+	.DEF _PULSE=R10
+	.DEF _Q=R9
+	.DEF _Q1=R12
+	.DEF _S3=R11
+	.DEF _TOTAL_CONS=R14
+	.DEF _C4=R13
 
 ;GPIOR0 INITIALIZATION VALUE
 	.EQU __GPIOR0_INIT=0x00
@@ -1133,21 +1133,22 @@ _DIGITS:
 ;GLOBAL REGISTER VARIABLES INITIALIZATION
 __REG_VARS:
 	.DB  0x0,0x0,0x0,0x0
-	.DB  0x0,0x0
+	.DB  0x0,0x0,0x0,0x0
+	.DB  0x0,0x0,0x0,0x0
 
 _0x3:
-	.DB  0x8,0x0,0x0,0x0,0x1,0x0,0x0,0x0
-	.DB  0x8,0x0,0x0,0x1,0x1,0x0,0x0,0x0
-	.DB  0x8,0x0,0x0,0x2,0x1,0x0,0x0,0x0
-	.DB  0x8,0x0,0x0,0x3,0x1,0x0,0x0,0x0
-	.DB  0x8,0x0,0x0,0x4,0x1,0x0,0x0,0x0
+	.DB  0x0,0x0,0x8,0x0,0x1,0x0,0x0,0x0
+	.DB  0x0,0x0,0x8,0x0,0x1,0x0,0x0,0x0
+	.DB  0x0,0x0,0x8,0x0,0x1,0x0,0x0,0x0
+	.DB  0x0,0x0,0x8,0x0,0x1,0x0,0x0,0x0
+	.DB  0x0,0x0,0x8,0x0,0x1,0x0,0x0,0x0
 	.DB  0x0,0x0,0x0,0x10
 _0x4:
-	.DB  0x10,0x0,0x0,0x0,0x2,0x0,0x0,0x0
-	.DB  0x10,0x0,0x0,0x1,0x2,0x0,0x0,0x0
-	.DB  0x10,0x0,0x0,0x2,0x2,0x0,0x0,0x0
-	.DB  0x10,0x0,0x0,0x3,0x2,0x0,0x0,0x0
-	.DB  0x10,0x0,0x0,0x4,0x2,0x0,0x0,0x0
+	.DB  0x0,0x0,0x10,0x0,0x2,0x0,0x0,0x0
+	.DB  0x0,0x0,0x10,0x0,0x2,0x0,0x0,0x0
+	.DB  0x0,0x0,0x10,0x0,0x2,0x0,0x0,0x0
+	.DB  0x0,0x0,0x10,0x0,0x2,0x0,0x0,0x0
+	.DB  0x0,0x0,0x10,0x0,0x2,0x0,0x0,0x0
 	.DB  0x0,0x0,0x0,0x10,0x1
 _0x5:
 	.DB  0x0,0x0,0x0,0x1,0x0,0x0,0x0,0x0
@@ -1163,9 +1164,15 @@ _0x7:
 	.DB  0x0,0x1,0x2,0x3
 _0x8:
 	.DB  LOW(_A0),HIGH(_A0),LOW(_A1),HIGH(_A1),LOW(_A2),HIGH(_A2),LOW(_A3),HIGH(_A3)
+_0x9:
+	.DB  0x15
+_0xA:
+	.DB  0x0,0x20,0x60,0xE0
+_0xB:
+	.DB  0x1,0x2,0x3
 
 __GLOBAL_INI_TBL:
-	.DW  0x06
+	.DW  0x0C
 	.DW  0x03
 	.DW  __REG_VARS*2
 
@@ -1192,6 +1199,18 @@ __GLOBAL_INI_TBL:
 	.DW  0x08
 	.DW  _TABA
 	.DW  _0x8*2
+
+	.DW  0x01
+	.DW  _CONSUM
+	.DW  _0x9*2
+
+	.DW  0x04
+	.DW  _CLC_LEVEL
+	.DW  _0xA*2
+
+	.DW  0x03
+	.DW  _CLC_RANGE_OUTPUT
+	.DW  _0xB*2
 
 _0xFFFFFFFF:
 	.DW  0
@@ -1334,10 +1353,10 @@ __GLOBAL_INI_END:
 ;
 ;const long int Ter = 0x10000000;
 ;
-;long int A0[]={0x00000000+H1, 1, 0x01000000+H1, 1, 0x02000000+H1, 1, 0x03000000+H1, 1, 0x04000000+H1, 1, Ter, 0};
+;long int A0[]={0x00000000+H1<<16, 1, 0x01000000+H1<<16, 1, 0x02000000+H1<<16, 1, 0x03000000+H1<<16, 1, 0x04000000+H1<<16, 1, Ter, 0};
 
 	.DSEG
-;long int A1[]={0x00000000+H2, 2, 0x01000000+H2, 2, 0x02000000+H2, 2, 0x03000000+H2, 2, 0x04000000+H2, 2, Ter, 1};
+;long int A1[]={0x00000000+H2<<16, 2, 0x01000000+H2<<16, 2, 0x02000000+H2<<16, 2, 0x03000000+H2<<16, 2, 0x04000000+H2<<16, 2, Ter, 1};
 ;long int A2[]={0x01000000, 0, 0x02000000, 0, 0x03000000, 0, 0x04000000, 0, 0x05000000, 3, Ter, 2};
 ;long int A3[]={0x00000000, 0, Ter, 3};
 ;
@@ -1346,10 +1365,10 @@ __GLOBAL_INI_END:
 ;///////////////////////
 ;
 ;/// Time variables ///
-;char H = 0; //hour
-;char Z = 0; //day
-;char M = 0; //minutes
-;char S = 0; //seconds
+;long int Z = 0; //day
+;long int H = 0; //hour
+;long int M = 0; //minutes
+;long int S = 0; //seconds
 ;/////////////////////
 ;
 ;
@@ -1359,6 +1378,10 @@ __GLOBAL_INI_END:
 ;
 ;char S_PULSE;
 ;
+;// Working mode ///
+;// 0 -> range on; 1 -> range off
+;char MODE = 0;
+;///////////////////
 ;
 ;////// Global variables ////////
 ;// PULSE
@@ -1367,10 +1390,12 @@ __GLOBAL_INI_END:
 ;// State variables ( Q -> consumption range,
 ;// S1 -> consumption counting state,
 ;// S3 -> display state)
-;char Q, S3;
+;char Q, Q1, S3;
 ;
 ;// Consumption array
-;char CONSUM[] = {0, 0, 0, 0};
+;//            0 - H1   H1 - H2   H2 - 0   Sat - Sun   Total
+;//              ^         ^         ^         ^         ^
+;int CONSUM[] = {21,        0,        0,        0,        0};
 ;
 ;// Total consumption
 ;char TOTAL_CONS = 0;
@@ -1380,6 +1405,9 @@ __GLOBAL_INI_END:
 ;
 ;// CA
 ;char CA;
+;
+;// Power level
+;int PowerLevel = 0;
 ;
 ;// Digit patterns (CLC)
 ;const char DIGITS[] = {
@@ -1396,6 +1424,15 @@ __GLOBAL_INI_END:
 ;};
 ;///////////////////////////////
 ;
+;// Power Level (CLC) ///
+;// char CLC_LEVEL[] = {0x00, 0x10, 0x30, 0x70, 0xF0};  // 4 levels
+;char CLC_LEVEL[] = {0x00, 0x20, 0x60, 0xE0};           // 3 levels
+;////////////////////////
+;
+;// Consumption range output (CLC) //
+;char CLC_RANGE_OUTPUT[] = {0x01, 0x02, 0x03, 0x00};
+;///////////////////////////////////
+;
 ;// Pulses contor
 ;char cntP = 0;
 ;char cntMockPulse = 0;
@@ -1407,6 +1444,9 @@ __GLOBAL_INI_END:
 ;void DisplayDigit(char currentDisplay, char digit);
 ;void UpdateTime();
 ;void CLS();
+;void DisplayInfo();
+;void DisplayPowerLevel();
+;void DisplayConsumptionDisplayMode();
 ;void MockPULSE();
 ;/////////////////////////
 ;
@@ -1414,7 +1454,7 @@ __GLOBAL_INI_END:
 ;/////// SCI ///////
 ;// Timer 0 overflow interrupt service routine
 ;interrupt [TIM0_OVF] void timer0_ovf_isr(void)
-; 0000 0079 {
+; 0000 008E {
 
 	.CSEG
 _timer0_ovf_isr:
@@ -1431,29 +1471,31 @@ _timer0_ovf_isr:
 	ST   -Y,R31
 	IN   R30,SREG
 	ST   -Y,R30
-; 0000 007A     // Reinitialize Timer 0 value
-; 0000 007B     TCNT0=0x3C;
+; 0000 008F     // Reinitialize Timer 0 value
+; 0000 0090     TCNT0=0x3C;
 	LDI  R30,LOW(60)
 	OUT  0x26,R30
-; 0000 007C 
-; 0000 007D     // Update CA
-; 0000 007E     CA = (PORTD & 0x20) >> 5;
-	IN   R30,0xB
-	ANDI R30,LOW(0x20)
+; 0000 0091 
+; 0000 0092     // Read CA
+; 0000 0093     CA = (PIND & 0x80) >> 7;
+	IN   R30,0x9
+	ANDI R30,LOW(0x80)
 	LDI  R31,0
-	ASR  R31
-	ROR  R30
+	CALL __ASRW3
 	CALL __ASRW4
 	STS  _CA,R30
-; 0000 007F 
-; 0000 0080     // Update mock pulse
-; 0000 0081     MockPULSE();
-	RCALL _MockPULSE
-; 0000 0082 
-; 0000 0083     // Check for pulses coming from ADSP
-; 0000 0084     UpdateConsumption();
+; 0000 0094 
+; 0000 0095     // DisplayInfo
+; 0000 0096     DisplayInfo();
+	RCALL _DisplayInfo
+; 0000 0097 
+; 0000 0098     // Update mock pulse
+; 0000 0099     // MockPULSE();
+; 0000 009A 
+; 0000 009B     // Check for pulses coming from ADSP
+; 0000 009C     UpdateConsumption();
 	RCALL _UpdateConsumption
-; 0000 0085 }
+; 0000 009D }
 	LD   R30,Y+
 	OUT  SREG,R30
 	LD   R31,Y+
@@ -1471,715 +1513,735 @@ _timer0_ovf_isr:
 ;///////////////////
 ;
 ;void main(void)
-; 0000 0089 {
+; 0000 00A1 {
 _main:
-; 0000 008A // Declare your local variables here
-; 0000 008B 
-; 0000 008C // Crystal Oscillator division factor: 1
-; 0000 008D #pragma optsize-
-; 0000 008E CLKPR=(1<<CLKPCE);
+; 0000 00A2 // Declare your local variables here
+; 0000 00A3 
+; 0000 00A4 // Crystal Oscillator division factor: 1
+; 0000 00A5 #pragma optsize-
+; 0000 00A6 CLKPR=(1<<CLKPCE);
 	LDI  R30,LOW(128)
 	STS  97,R30
-; 0000 008F CLKPR=(0<<CLKPCE) | (0<<CLKPS3) | (0<<CLKPS2) | (0<<CLKPS1) | (0<<CLKPS0);
+; 0000 00A7 CLKPR=(0<<CLKPCE) | (0<<CLKPS3) | (0<<CLKPS2) | (0<<CLKPS1) | (0<<CLKPS0);
 	LDI  R30,LOW(0)
 	STS  97,R30
-; 0000 0090 #ifdef _OPTIMIZE_SIZE_
-; 0000 0091 #pragma optsize+
-; 0000 0092 #endif
-; 0000 0093 
-; 0000 0094 // Input/Output Ports initialization
-; 0000 0095 // Port A initialization
-; 0000 0096 // Function: Bit7=Out Bit6=In Bit5=In Bit4=In Bit3=In Bit2=In Bit1=In Bit0=In
-; 0000 0097 DDRA=(1<<DDA7) | (0<<DDA6) | (0<<DDA5) | (0<<DDA4) | (0<<DDA3) | (0<<DDA2) | (0<<DDA1) | (0<<DDA0);
+; 0000 00A8 #ifdef _OPTIMIZE_SIZE_
+; 0000 00A9 #pragma optsize+
+; 0000 00AA #endif
+; 0000 00AB 
+; 0000 00AC // Input/Output Ports initialization
+; 0000 00AD // Port A initialization
+; 0000 00AE // Function: Bit7=Out Bit6=In Bit5=In Bit4=In Bit3=In Bit2=In Bit1=In Bit0=In
+; 0000 00AF DDRA=(1<<DDA7) | (0<<DDA6) | (0<<DDA5) | (0<<DDA4) | (0<<DDA3) | (0<<DDA2) | (0<<DDA1) | (0<<DDA0);
 	LDI  R30,LOW(128)
 	OUT  0x1,R30
-; 0000 0098 // State: Bit7=1 Bit6=P Bit5=P Bit4=P Bit3=P Bit2=P Bit1=P Bit0=P
-; 0000 0099 PORTA=(1<<PORTA7) | (1<<PORTA6) | (1<<PORTA5) | (1<<PORTA4) | (1<<PORTA3) | (1<<PORTA2) | (1<<PORTA1) | (1<<PORTA0);
+; 0000 00B0 // State: Bit7=1 Bit6=P Bit5=P Bit4=P Bit3=P Bit2=P Bit1=P Bit0=P
+; 0000 00B1 PORTA=(1<<PORTA7) | (1<<PORTA6) | (1<<PORTA5) | (1<<PORTA4) | (1<<PORTA3) | (1<<PORTA2) | (1<<PORTA1) | (1<<PORTA0);
 	LDI  R30,LOW(255)
 	OUT  0x2,R30
-; 0000 009A 
-; 0000 009B // Port B initialization
-; 0000 009C // Function: Bit7=Out Bit6=Out Bit5=Out Bit4=Out Bit3=Out Bit2=Out Bit1=Out Bit0=Out
-; 0000 009D DDRB=(1<<DDB7) | (1<<DDB6) | (1<<DDB5) | (1<<DDB4) | (1<<DDB3) | (1<<DDB2) | (1<<DDB1) | (1<<DDB0);
+; 0000 00B2 
+; 0000 00B3 // Port B initialization
+; 0000 00B4 // Function: Bit7=Out Bit6=Out Bit5=Out Bit4=Out Bit3=Out Bit2=Out Bit1=Out Bit0=Out
+; 0000 00B5 DDRB=(1<<DDB7) | (1<<DDB6) | (1<<DDB5) | (1<<DDB4) | (1<<DDB3) | (1<<DDB2) | (1<<DDB1) | (1<<DDB0);
 	OUT  0x4,R30
-; 0000 009E // State: Bit7=1 Bit6=1 Bit5=1 Bit4=1 Bit3=1 Bit2=1 Bit1=1 Bit0=1
-; 0000 009F PORTB=(1<<PORTB7) | (1<<PORTB6) | (1<<PORTB5) | (1<<PORTB4) | (1<<PORTB3) | (1<<PORTB2) | (1<<PORTB1) | (1<<PORTB0);
+; 0000 00B6 // State: Bit7=1 Bit6=1 Bit5=1 Bit4=1 Bit3=1 Bit2=1 Bit1=1 Bit0=1
+; 0000 00B7 PORTB=(1<<PORTB7) | (1<<PORTB6) | (1<<PORTB5) | (1<<PORTB4) | (1<<PORTB3) | (1<<PORTB2) | (1<<PORTB1) | (1<<PORTB0);
 	OUT  0x5,R30
-; 0000 00A0 
-; 0000 00A1 // Port C initialization
-; 0000 00A2 // Function: Bit7=Out Bit6=Out Bit5=Out Bit4=Out Bit3=Out Bit2=Out Bit1=Out Bit0=Out
-; 0000 00A3 DDRC=(1<<DDC7) | (1<<DDC6) | (1<<DDC5) | (1<<DDC4) | (1<<DDC3) | (1<<DDC2) | (1<<DDC1) | (1<<DDC0);
+; 0000 00B8 
+; 0000 00B9 // Port C initialization
+; 0000 00BA // Function: Bit7=Out Bit6=Out Bit5=Out Bit4=Out Bit3=Out Bit2=Out Bit1=Out Bit0=Out
+; 0000 00BB DDRC=(1<<DDC7) | (1<<DDC6) | (1<<DDC5) | (1<<DDC4) | (1<<DDC3) | (1<<DDC2) | (1<<DDC1) | (1<<DDC0);
 	OUT  0x7,R30
-; 0000 00A4 // State: Bit7=1 Bit6=1 Bit5=1 Bit4=1 Bit3=1 Bit2=1 Bit1=1 Bit0=1
-; 0000 00A5 PORTC=(1<<PORTC7) | (1<<PORTC6) | (1<<PORTC5) | (1<<PORTC4) | (1<<PORTC3) | (1<<PORTC2) | (1<<PORTC1) | (1<<PORTC0);
+; 0000 00BC // State: Bit7=1 Bit6=1 Bit5=1 Bit4=1 Bit3=1 Bit2=1 Bit1=1 Bit0=1
+; 0000 00BD PORTC=(1<<PORTC7) | (1<<PORTC6) | (1<<PORTC5) | (1<<PORTC4) | (1<<PORTC3) | (1<<PORTC2) | (1<<PORTC1) | (1<<PORTC0);
 	OUT  0x8,R30
-; 0000 00A6 
-; 0000 00A7 // Port D initialization
-; 0000 00A8 // Function: Bit7=In Bit6=In Bit5=Out Bit4=Out Bit3=Out Bit2=Out Bit1=Out Bit0=Out
-; 0000 00A9 DDRD=(0<<DDD7) | (0<<DDD6) | (1<<DDD5) | (1<<DDD4) | (1<<DDD3) | (1<<DDD2) | (1<<DDD1) | (1<<DDD0);
-	LDI  R30,LOW(63)
+; 0000 00BE 
+; 0000 00BF // Port D initialization
+; 0000 00C0 // Function: Bit7=In Bit6=In Bit5=Out Bit4=In Bit3=Out Bit2=Out Bit1=Out Bit0=Out
+; 0000 00C1 DDRD=(0<<DDD7) | (0<<DDD6) | (0<<DDD5) | (0<<DDD4) | (1<<DDD3) | (1<<DDD2) | (1<<DDD1) | (1<<DDD0);
+	LDI  R30,LOW(15)
 	OUT  0xA,R30
-; 0000 00AA // State: Bit7=T Bit6=T Bit5=1 Bit4=1 Bit3=1 Bit2=1 Bit1=1 Bit0=1
-; 0000 00AB PORTD=(0<<PORTD7) | (0<<PORTD6) | (1<<PORTD5) | (1<<PORTD4) | (1<<PORTD3) | (1<<PORTD2) | (1<<PORTD1) | (1<<PORTD0);
+; 0000 00C2 // State: Bit7=T Bit6=T Bit5=1 Bit4=0 Bit3=1 Bit2=1 Bit1=1 Bit0=1
+; 0000 00C3 PORTD=(1<<PORTD7) | (1<<PORTD6) | (1<<PORTD5) | (1<<PORTD4) | (1<<PORTD3) | (1<<PORTD2) | (1<<PORTD1) | (1<<PORTD0);
+	LDI  R30,LOW(255)
 	OUT  0xB,R30
-; 0000 00AC 
-; 0000 00AD // Timer/Counter 0 initialization
-; 0000 00AE // Clock source: System Clock
-; 0000 00AF // Clock value: 9.766 kHz
-; 0000 00B0 // Mode: Normal top=0xFF
-; 0000 00B1 // OC0A output: Disconnected
-; 0000 00B2 // OC0B output: Disconnected
-; 0000 00B3 // Timer Period: 20.07 ms
-; 0000 00B4 TCCR0A=(0<<COM0A1) | (0<<COM0A0) | (0<<COM0B1) | (0<<COM0B0) | (0<<WGM01) | (0<<WGM00);
+; 0000 00C4 
+; 0000 00C5 // Timer/Counter 0 initialization
+; 0000 00C6 // Clock source: System Clock
+; 0000 00C7 // Clock value: 9.766 kHz
+; 0000 00C8 // Mode: Normal top=0xFF
+; 0000 00C9 // OC0A output: Disconnected
+; 0000 00CA // OC0B output: Disconnected
+; 0000 00CB // Timer Period: 20.07 ms
+; 0000 00CC TCCR0A=(0<<COM0A1) | (0<<COM0A0) | (0<<COM0B1) | (0<<COM0B0) | (0<<WGM01) | (0<<WGM00);
 	LDI  R30,LOW(0)
 	OUT  0x24,R30
-; 0000 00B5 TCCR0B=(0<<WGM02) | (1<<CS02) | (0<<CS01) | (1<<CS00);
+; 0000 00CD TCCR0B=(0<<WGM02) | (1<<CS02) | (0<<CS01) | (1<<CS00);
 	LDI  R30,LOW(5)
 	OUT  0x25,R30
-; 0000 00B6 TCNT0=0x3C;
+; 0000 00CE TCNT0=0x3C;
 	LDI  R30,LOW(60)
 	OUT  0x26,R30
-; 0000 00B7 OCR0A=0x00;
+; 0000 00CF OCR0A=0x00;
 	LDI  R30,LOW(0)
 	OUT  0x27,R30
-; 0000 00B8 OCR0B=0x00;
+; 0000 00D0 OCR0B=0x00;
 	OUT  0x28,R30
-; 0000 00B9 
-; 0000 00BA // Timer/Counter 1 initialization
-; 0000 00BB // Clock source: System Clock
-; 0000 00BC // Clock value: Timer1 Stopped
-; 0000 00BD // Mode: Normal top=0xFFFF
-; 0000 00BE // OC1A output: Disconnected
-; 0000 00BF // OC1B output: Disconnected
-; 0000 00C0 // Noise Canceler: Off
-; 0000 00C1 // Input Capture on Falling Edge
-; 0000 00C2 // Timer1 Overflow Interrupt: Off
-; 0000 00C3 // Input Capture Interrupt: Off
-; 0000 00C4 // Compare A Match Interrupt: Off
-; 0000 00C5 // Compare B Match Interrupt: Off
-; 0000 00C6 TCCR1A=(0<<COM1A1) | (0<<COM1A0) | (0<<COM1B1) | (0<<COM1B0) | (0<<WGM11) | (0<<WGM10);
+; 0000 00D1 
+; 0000 00D2 // Timer/Counter 1 initialization
+; 0000 00D3 // Clock source: System Clock
+; 0000 00D4 // Clock value: Timer1 Stopped
+; 0000 00D5 // Mode: Normal top=0xFFFF
+; 0000 00D6 // OC1A output: Disconnected
+; 0000 00D7 // OC1B output: Disconnected
+; 0000 00D8 // Noise Canceler: Off
+; 0000 00D9 // Input Capture on Falling Edge
+; 0000 00DA // Timer1 Overflow Interrupt: Off
+; 0000 00DB // Input Capture Interrupt: Off
+; 0000 00DC // Compare A Match Interrupt: Off
+; 0000 00DD // Compare B Match Interrupt: Off
+; 0000 00DE TCCR1A=(0<<COM1A1) | (0<<COM1A0) | (0<<COM1B1) | (0<<COM1B0) | (0<<WGM11) | (0<<WGM10);
 	STS  128,R30
-; 0000 00C7 TCCR1B=(0<<ICNC1) | (0<<ICES1) | (0<<WGM13) | (0<<WGM12) | (0<<CS12) | (0<<CS11) | (0<<CS10);
+; 0000 00DF TCCR1B=(0<<ICNC1) | (0<<ICES1) | (0<<WGM13) | (0<<WGM12) | (0<<CS12) | (0<<CS11) | (0<<CS10);
 	STS  129,R30
-; 0000 00C8 TCNT1H=0x00;
+; 0000 00E0 TCNT1H=0x00;
 	STS  133,R30
-; 0000 00C9 TCNT1L=0x00;
+; 0000 00E1 TCNT1L=0x00;
 	STS  132,R30
-; 0000 00CA ICR1H=0x00;
+; 0000 00E2 ICR1H=0x00;
 	STS  135,R30
-; 0000 00CB ICR1L=0x00;
+; 0000 00E3 ICR1L=0x00;
 	STS  134,R30
-; 0000 00CC OCR1AH=0x00;
+; 0000 00E4 OCR1AH=0x00;
 	STS  137,R30
-; 0000 00CD OCR1AL=0x00;
+; 0000 00E5 OCR1AL=0x00;
 	STS  136,R30
-; 0000 00CE OCR1BH=0x00;
+; 0000 00E6 OCR1BH=0x00;
 	STS  139,R30
-; 0000 00CF OCR1BL=0x00;
+; 0000 00E7 OCR1BL=0x00;
 	STS  138,R30
-; 0000 00D0 
-; 0000 00D1 // Timer/Counter 2 initialization
-; 0000 00D2 // Clock source: System Clock
-; 0000 00D3 // Clock value: Timer2 Stopped
-; 0000 00D4 // Mode: Normal top=0xFF
-; 0000 00D5 // OC2A output: Disconnected
-; 0000 00D6 // OC2B output: Disconnected
-; 0000 00D7 ASSR=(0<<EXCLK) | (0<<AS2);
+; 0000 00E8 
+; 0000 00E9 // Timer/Counter 2 initialization
+; 0000 00EA // Clock source: System Clock
+; 0000 00EB // Clock value: Timer2 Stopped
+; 0000 00EC // Mode: Normal top=0xFF
+; 0000 00ED // OC2A output: Disconnected
+; 0000 00EE // OC2B output: Disconnected
+; 0000 00EF ASSR=(0<<EXCLK) | (0<<AS2);
 	STS  182,R30
-; 0000 00D8 TCCR2A=(0<<COM2A1) | (0<<COM2A0) | (0<<COM2B1) | (0<<COM2B0) | (0<<WGM21) | (0<<WGM20);
+; 0000 00F0 TCCR2A=(0<<COM2A1) | (0<<COM2A0) | (0<<COM2B1) | (0<<COM2B0) | (0<<WGM21) | (0<<WGM20);
 	STS  176,R30
-; 0000 00D9 TCCR2B=(0<<WGM22) | (0<<CS22) | (0<<CS21) | (0<<CS20);
+; 0000 00F1 TCCR2B=(0<<WGM22) | (0<<CS22) | (0<<CS21) | (0<<CS20);
 	STS  177,R30
-; 0000 00DA TCNT2=0x00;
+; 0000 00F2 TCNT2=0x00;
 	STS  178,R30
-; 0000 00DB OCR2A=0x00;
+; 0000 00F3 OCR2A=0x00;
 	STS  179,R30
-; 0000 00DC OCR2B=0x00;
+; 0000 00F4 OCR2B=0x00;
 	STS  180,R30
-; 0000 00DD 
-; 0000 00DE // Timer/Counter 0 Interrupt(s) initialization
-; 0000 00DF TIMSK0=(0<<OCIE0B) | (0<<OCIE0A) | (1<<TOIE0);
+; 0000 00F5 
+; 0000 00F6 // Timer/Counter 0 Interrupt(s) initialization
+; 0000 00F7 TIMSK0=(0<<OCIE0B) | (0<<OCIE0A) | (1<<TOIE0);
 	LDI  R30,LOW(1)
 	STS  110,R30
-; 0000 00E0 
-; 0000 00E1 // Timer/Counter 1 Interrupt(s) initialization
-; 0000 00E2 TIMSK1=(0<<ICIE1) | (0<<OCIE1B) | (0<<OCIE1A) | (0<<TOIE1);
+; 0000 00F8 
+; 0000 00F9 // Timer/Counter 1 Interrupt(s) initialization
+; 0000 00FA TIMSK1=(0<<ICIE1) | (0<<OCIE1B) | (0<<OCIE1A) | (0<<TOIE1);
 	LDI  R30,LOW(0)
 	STS  111,R30
-; 0000 00E3 
-; 0000 00E4 // Timer/Counter 2 Interrupt(s) initialization
-; 0000 00E5 TIMSK2=(0<<OCIE2B) | (0<<OCIE2A) | (0<<TOIE2);
+; 0000 00FB 
+; 0000 00FC // Timer/Counter 2 Interrupt(s) initialization
+; 0000 00FD TIMSK2=(0<<OCIE2B) | (0<<OCIE2A) | (0<<TOIE2);
 	STS  112,R30
-; 0000 00E6 
-; 0000 00E7 // External Interrupt(s) initialization
-; 0000 00E8 // INT0: Off
-; 0000 00E9 // INT1: Off
-; 0000 00EA // INT2: Off
-; 0000 00EB // Interrupt on any change on pins PCINT0-7: Off
-; 0000 00EC // Interrupt on any change on pins PCINT8-15: Off
-; 0000 00ED // Interrupt on any change on pins PCINT16-23: Off
-; 0000 00EE // Interrupt on any change on pins PCINT24-31: Off
-; 0000 00EF EICRA=(0<<ISC21) | (0<<ISC20) | (0<<ISC11) | (0<<ISC10) | (0<<ISC01) | (0<<ISC00);
+; 0000 00FE 
+; 0000 00FF // External Interrupt(s) initialization
+; 0000 0100 // INT0: Off
+; 0000 0101 // INT1: Off
+; 0000 0102 // INT2: Off
+; 0000 0103 // Interrupt on any change on pins PCINT0-7: Off
+; 0000 0104 // Interrupt on any change on pins PCINT8-15: Off
+; 0000 0105 // Interrupt on any change on pins PCINT16-23: Off
+; 0000 0106 // Interrupt on any change on pins PCINT24-31: Off
+; 0000 0107 EICRA=(0<<ISC21) | (0<<ISC20) | (0<<ISC11) | (0<<ISC10) | (0<<ISC01) | (0<<ISC00);
 	STS  105,R30
-; 0000 00F0 EIMSK=(0<<INT2) | (0<<INT1) | (0<<INT0);
+; 0000 0108 EIMSK=(0<<INT2) | (0<<INT1) | (0<<INT0);
 	OUT  0x1D,R30
-; 0000 00F1 PCICR=(0<<PCIE3) | (0<<PCIE2) | (0<<PCIE1) | (0<<PCIE0);
+; 0000 0109 PCICR=(0<<PCIE3) | (0<<PCIE2) | (0<<PCIE1) | (0<<PCIE0);
 	STS  104,R30
-; 0000 00F2 
-; 0000 00F3 // USART0 initialization
-; 0000 00F4 // USART0 disabled
-; 0000 00F5 UCSR0B=(0<<RXCIE0) | (0<<TXCIE0) | (0<<UDRIE0) | (0<<RXEN0) | (0<<TXEN0) | (0<<UCSZ02) | (0<<RXB80) | (0<<TXB80);
+; 0000 010A 
+; 0000 010B // USART0 initialization
+; 0000 010C // USART0 disabled
+; 0000 010D UCSR0B=(0<<RXCIE0) | (0<<TXCIE0) | (0<<UDRIE0) | (0<<RXEN0) | (0<<TXEN0) | (0<<UCSZ02) | (0<<RXB80) | (0<<TXB80);
 	STS  193,R30
-; 0000 00F6 
-; 0000 00F7 // USART1 initialization
-; 0000 00F8 // USART1 disabled
-; 0000 00F9 UCSR1B=(0<<RXCIE1) | (0<<TXCIE1) | (0<<UDRIE1) | (0<<RXEN1) | (0<<TXEN1) | (0<<UCSZ12) | (0<<RXB81) | (0<<TXB81);
+; 0000 010E 
+; 0000 010F // USART1 initialization
+; 0000 0110 // USART1 disabled
+; 0000 0111 UCSR1B=(0<<RXCIE1) | (0<<TXCIE1) | (0<<UDRIE1) | (0<<RXEN1) | (0<<TXEN1) | (0<<UCSZ12) | (0<<RXB81) | (0<<TXB81);
 	STS  201,R30
-; 0000 00FA 
-; 0000 00FB // Analog Comparator initialization
-; 0000 00FC // Analog Comparator: Off
-; 0000 00FD // The Analog Comparator's positive input is
-; 0000 00FE // connected to the AIN0 pin
-; 0000 00FF // The Analog Comparator's negative input is
-; 0000 0100 // connected to the AIN1 pin
-; 0000 0101 ACSR=(1<<ACD) | (0<<ACBG) | (0<<ACO) | (0<<ACI) | (0<<ACIE) | (0<<ACIC) | (0<<ACIS1) | (0<<ACIS0);
+; 0000 0112 
+; 0000 0113 // Analog Comparator initialization
+; 0000 0114 // Analog Comparator: Off
+; 0000 0115 // The Analog Comparator's positive input is
+; 0000 0116 // connected to the AIN0 pin
+; 0000 0117 // The Analog Comparator's negative input is
+; 0000 0118 // connected to the AIN1 pin
+; 0000 0119 ACSR=(1<<ACD) | (0<<ACBG) | (0<<ACO) | (0<<ACI) | (0<<ACIE) | (0<<ACIC) | (0<<ACIS1) | (0<<ACIS0);
 	LDI  R30,LOW(128)
 	OUT  0x30,R30
-; 0000 0102 ADCSRB=(0<<ACME);
+; 0000 011A ADCSRB=(0<<ACME);
 	LDI  R30,LOW(0)
 	STS  123,R30
-; 0000 0103 // Digital input buffer on AIN0: On
-; 0000 0104 // Digital input buffer on AIN1: On
-; 0000 0105 DIDR1=(0<<AIN0D) | (0<<AIN1D);
+; 0000 011B // Digital input buffer on AIN0: On
+; 0000 011C // Digital input buffer on AIN1: On
+; 0000 011D DIDR1=(0<<AIN0D) | (0<<AIN1D);
 	STS  127,R30
-; 0000 0106 
-; 0000 0107 // ADC initialization
-; 0000 0108 // ADC disabled
-; 0000 0109 ADCSRA=(0<<ADEN) | (0<<ADSC) | (0<<ADATE) | (0<<ADIF) | (0<<ADIE) | (0<<ADPS2) | (0<<ADPS1) | (0<<ADPS0);
+; 0000 011E 
+; 0000 011F // ADC initialization
+; 0000 0120 // ADC disabled
+; 0000 0121 ADCSRA=(0<<ADEN) | (0<<ADSC) | (0<<ADATE) | (0<<ADIF) | (0<<ADIE) | (0<<ADPS2) | (0<<ADPS1) | (0<<ADPS0);
 	STS  122,R30
-; 0000 010A 
-; 0000 010B // SPI initialization
-; 0000 010C // SPI disabled
-; 0000 010D SPCR=(0<<SPIE) | (0<<SPE) | (0<<DORD) | (0<<MSTR) | (0<<CPOL) | (0<<CPHA) | (0<<SPR1) | (0<<SPR0);
+; 0000 0122 
+; 0000 0123 // SPI initialization
+; 0000 0124 // SPI disabled
+; 0000 0125 SPCR=(0<<SPIE) | (0<<SPE) | (0<<DORD) | (0<<MSTR) | (0<<CPOL) | (0<<CPHA) | (0<<SPR1) | (0<<SPR0);
 	OUT  0x2C,R30
-; 0000 010E 
-; 0000 010F // TWI initialization
-; 0000 0110 // TWI disabled
-; 0000 0111 TWCR=(0<<TWEA) | (0<<TWSTA) | (0<<TWSTO) | (0<<TWEN) | (0<<TWIE);
+; 0000 0126 
+; 0000 0127 // TWI initialization
+; 0000 0128 // TWI disabled
+; 0000 0129 TWCR=(0<<TWEA) | (0<<TWSTA) | (0<<TWSTO) | (0<<TWEN) | (0<<TWIE);
 	STS  188,R30
-; 0000 0112 
-; 0000 0113 // Globally enable interrupts
-; 0000 0114 #asm("sei")
+; 0000 012A 
+; 0000 012B // Globally enable interrupts
+; 0000 012C #asm("sei")
 	sei
-; 0000 0115 
-; 0000 0116 // Initialize the device
-; 0000 0117 Init();
+; 0000 012D 
+; 0000 012E // Initialize the device
+; 0000 012F Init();
 	RCALL _Init
-; 0000 0118 
-; 0000 0119 while (1)
-_0x9:
-; 0000 011A       {
-; 0000 011B       // Display the consumption
-; 0000 011C       DisplayConsumption();
-	RCALL _DisplayConsumption
-; 0000 011D 
-; 0000 011E       // Wait for interruptions
-; 0000 011F       }
-	RJMP _0x9
-; 0000 0120 }
+; 0000 0130 
+; 0000 0131 while (1)
 _0xC:
+; 0000 0132       {
+; 0000 0133       // Display the consumption
+; 0000 0134       DisplayConsumption();
+	RCALL _DisplayConsumption
+; 0000 0135 
+; 0000 0136       // Wait for interruptions
+; 0000 0137       }
 	RJMP _0xC
+; 0000 0138 }
+_0xF:
+	RJMP _0xF
 ;
 ;///// Function definitions /////
 ;void Init()
-; 0000 0124 {
+; 0000 013C {
 _Init:
-; 0000 0125     // Setting initial states = 0
-; 0000 0126     Q = S1 = S2 = S3 = S_PULSE = 0;
+; 0000 013D     // Setting initial states = 0
+; 0000 013E     Q = Q1 = S1 = S2 = S3 = S_PULSE = 0;
 	LDI  R30,LOW(0)
-	MOV  R12,R30
-	MOV  R13,R30
-	MOV  R9,R30
+	MOV  R8,R30
+	MOV  R11,R30
+	MOV  R5,R30
 	MOV  R4,R30
-	MOV  R14,R30
-; 0000 0127 
-; 0000 0128     // Turn off displays
-; 0000 0129     PORTC = 0xff;
-	LDI  R30,LOW(255)
-	OUT  0x8,R30
-; 0000 012A     PORTD = 0xff;
-	OUT  0xB,R30
-; 0000 012B     PORTB = 0xff;
-	OUT  0x5,R30
-; 0000 012C }
+	MOV  R12,R30
+	MOV  R9,R30
+; 0000 013F 
+; 0000 0140     // Setting the working mode
+; 0000 0141     MODE = 1;
+	LDI  R30,LOW(1)
+	MOV  R7,R30
+; 0000 0142 }
 	RET
 ;
 ;void UpdateConsumption()
-; 0000 012F {
+; 0000 0145 {
 _UpdateConsumption:
-; 0000 0130     // Identify PULSE
-; 0000 0131     // PULSE = PINA & 0x01;
-; 0000 0132 
-; 0000 0133     /* switch(S2)
-; 0000 0134     {
-; 0000 0135         case 0:
-; 0000 0136         {
-; 0000 0137             char cntP = 0;
-; 0000 0138 
-; 0000 0139             // PD6 -> Sending request from ADSP
-; 0000 013A             // PD7 -> Reading ack from ATmega164A
-; 0000 013B 
-; 0000 013C             // Check if sending request flag is up
-; 0000 013D             // (Receiving sending request on PD6)
-; 0000 013E             if (PORTD && 0x40)
-; 0000 013F             {
-; 0000 0140                 // Send reading ack
-; 0000 0141                 // (Sending ack on PD7)
-; 0000 0142                 PORTD |= 0x80;
-; 0000 0143 
-; 0000 0144                 // Going further to reading the pulses
-; 0000 0145                 S2 = 1;
-; 0000 0146             }
-; 0000 0147             break;
-; 0000 0148         }
-; 0000 0149         case 1:
-; 0000 014A         {
-; 0000 014B             // If PULSE is on, start counting
-; 0000 014C             if (PULSE)
-; 0000 014D             {
-; 0000 014E                 // Increment cntP
-; 0000 014F                 cntP += 1;
-; 0000 0150 
-; 0000 0151                 // Reset reading flag
-; 0000 0152                 PORTD &= 0x7f;
-; 0000 0153 
-; 0000 0154                 // Go further if the pulse period has passed,
-; 0000 0155                 // otherwise go back wait for sensding ack again.
-; 0000 0156                 S2 = (cntP == DP) ? 2 : 1;
-; 0000 0157             }
-; 0000 0158             break;
-; 0000 0159         }
-; 0000 015A         case 2:
-; 0000 015B         {
-; 0000 015C             if (~PULSE)
-; 0000 015D             {
-; 0000 015E                 // Update current consumption range
-; 0000 015F                 Q = CLS();
-; 0000 0160 
-; 0000 0161                 // Increment consumption
-; 0000 0162                 CONS[Q] += 1;
-; 0000 0163 
-; 0000 0164                 // Wait for another pulse
-; 0000 0165                 S2 = 0;
-; 0000 0166             }
-; 0000 0167             break;
-; 0000 0168         }
-; 0000 0169     } */
-; 0000 016A 
-; 0000 016B     switch(S2)
-	MOV  R30,R9
+; 0000 0146     // Identify PULSE
+; 0000 0147     // PULSE = PINA & 0x01;
+; 0000 0148 
+; 0000 0149     /* switch(S2)
+; 0000 014A     {
+; 0000 014B         case 0:
+; 0000 014C         {
+; 0000 014D             char cntP = 0;
+; 0000 014E 
+; 0000 014F             // PD6 -> Sending request from ADSP
+; 0000 0150             // PD7 -> Reading ack from ATmega164A
+; 0000 0151 
+; 0000 0152             // Check if sending request flag is up
+; 0000 0153             // (Receiving sending request on PD6)
+; 0000 0154             if (PORTD && 0x40)
+; 0000 0155             {
+; 0000 0156                 // Send reading ack
+; 0000 0157                 // (Sending ack on PD7)
+; 0000 0158                 PORTD |= 0x80;
+; 0000 0159 
+; 0000 015A                 // Going further to reading the pulses
+; 0000 015B                 S2 = 1;
+; 0000 015C             }
+; 0000 015D             break;
+; 0000 015E         }
+; 0000 015F         case 1:
+; 0000 0160         {
+; 0000 0161             // If PULSE is on, start counting
+; 0000 0162             if (PULSE)
+; 0000 0163             {
+; 0000 0164                 // Increment cntP
+; 0000 0165                 cntP += 1;
+; 0000 0166 
+; 0000 0167                 // Reset reading flag
+; 0000 0168                 PORTD &= 0x7f;
+; 0000 0169 
+; 0000 016A                 // Go further if the pulse period has passed,
+; 0000 016B                 // otherwise go back wait for sensding ack again.
+; 0000 016C                 S2 = (cntP == DP) ? 2 : 1;
+; 0000 016D             }
+; 0000 016E             break;
+; 0000 016F         }
+; 0000 0170         case 2:
+; 0000 0171         {
+; 0000 0172             if (~PULSE)
+; 0000 0173             {
+; 0000 0174                 // Update current consumption range
+; 0000 0175                 Q = CLS();
+; 0000 0176 
+; 0000 0177                 // Increment consumption
+; 0000 0178                 CONS[Q] += 1;
+; 0000 0179 
+; 0000 017A                 // Wait for another pulse
+; 0000 017B                 S2 = 0;
+; 0000 017C             }
+; 0000 017D             break;
+; 0000 017E         }
+; 0000 017F     } */
+; 0000 0180 
+; 0000 0181 
+; 0000 0182     // Read power level
+; 0000 0183     PowerLevel = (PINA & 0xfe) >> 1;
+	IN   R30,0x0
+	ANDI R30,0xFE
 	LDI  R31,0
-; 0000 016C     {
-; 0000 016D         case 0:
+	ASR  R31
+	ROR  R30
+	STS  _PowerLevel,R30
+	STS  _PowerLevel+1,R31
+; 0000 0184 
+; 0000 0185     // For testing purposes, we will assume PowerLevel = 6 kW
+; 0000 0186     PowerLevel = 6;
+	LDI  R30,LOW(6)
+	LDI  R31,HIGH(6)
+	STS  _PowerLevel,R30
+	STS  _PowerLevel+1,R31
+; 0000 0187 
+; 0000 0188     switch(S2)
+	MOV  R30,R5
+	LDI  R31,0
+; 0000 0189     {
+; 0000 018A         case 0:
 	SBIW R30,0
-	BRNE _0x10
-; 0000 016E         {
-; 0000 016F             // If PULSE is on, start counting
-; 0000 0170             if (PULSE)
-	TST  R11
-	BREQ _0x11
-; 0000 0171             {
-; 0000 0172                 // Increment cntP
-; 0000 0173                 cntP += 1;
+	BRNE _0x13
+; 0000 018B         {
+; 0000 018C             PULSE = PINA & 0x01;
+	IN   R30,0x0
+	ANDI R30,LOW(0x1)
+	MOV  R10,R30
+; 0000 018D             // If PULSE is on, start counting
+; 0000 018E             if (PULSE)
+	TST  R10
+	BREQ _0x14
+; 0000 018F             {
+; 0000 0190                 // Increment cntP
+; 0000 0191                 cntP += 1;
 	LDS  R30,_cntP
 	SUBI R30,-LOW(1)
 	STS  _cntP,R30
-; 0000 0174 
-; 0000 0175                 // Reset reading flag
-; 0000 0176                 PORTD &= 0x7f;
-	CBI  0xB,7
-; 0000 0177 
-; 0000 0178                 // Go further if the pulse period has passed,
-; 0000 0179                 // otherwise go back wait for sensding ack again.
-; 0000 017A                 S2 = (cntP == DP) ? 1 : 0;
+; 0000 0192 
+; 0000 0193                 // Reset reading flag
+; 0000 0194                 // PORTD &= 0x7f;
+; 0000 0195 
+; 0000 0196                 // Go further if the pulse period has passed,
+; 0000 0197                 // otherwise go back wait for sensding ack again.
+; 0000 0198                 S2 = (cntP == DP) ? 1 : 0;
 	LDS  R26,_cntP
 	CPI  R26,LOW(0x1)
-	BRNE _0x12
+	BRNE _0x15
 	LDI  R30,LOW(1)
-	RJMP _0x13
-_0x12:
+	RJMP _0x16
+_0x15:
 	LDI  R30,LOW(0)
+_0x16:
+	MOV  R5,R30
+; 0000 0199             }
+; 0000 019A             break;
+_0x14:
+	RJMP _0x12
+; 0000 019B         }
+; 0000 019C         case 1:
 _0x13:
-	MOV  R9,R30
-; 0000 017B             }
-; 0000 017C             break;
-_0x11:
-	RJMP _0xF
-; 0000 017D         }
-; 0000 017E         case 1:
-_0x10:
 	CPI  R30,LOW(0x1)
 	LDI  R26,HIGH(0x1)
 	CPC  R31,R26
-	BRNE _0xF
-; 0000 017F         {
-; 0000 0180             if (~PULSE)
-	MOV  R30,R11
+	BRNE _0x12
+; 0000 019D         {
+; 0000 019E             PULSE = PINA & 0x01;
+	IN   R30,0x0
+	ANDI R30,LOW(0x1)
+	MOV  R10,R30
+; 0000 019F             if (~PULSE)
+	MOV  R30,R10
 	COM  R30
 	CPI  R30,0
-	BREQ _0x16
-; 0000 0181             {
-; 0000 0182                 // Update current consumption range
-; 0000 0183                 CLS();
+	BREQ _0x19
+; 0000 01A0             {
+; 0000 01A1                 // Update current consumption range
+; 0000 01A2                 CLS();
 	RCALL _CLS
-; 0000 0184 
-; 0000 0185                 // Increment consumption
-; 0000 0186                 CONSUM[Q] += 1;
-	MOV  R26,R14
-	LDI  R27,0
-	SUBI R26,LOW(-_CONSUM)
-	SBCI R27,HIGH(-_CONSUM)
-	LD   R30,X
-	SUBI R30,-LOW(1)
-	ST   X,R30
-; 0000 0187 
-; 0000 0188                 // Wait for another pulse
-; 0000 0189                 S2 = 0;
-	CLR  R9
-; 0000 018A                 cntP = 0;
+; 0000 01A3 
+; 0000 01A4                 // Increment consumption
+; 0000 01A5                 if (MODE == 0)
+	TST  R7
+	BRNE _0x1A
+; 0000 01A6                 {
+; 0000 01A7                     CONSUM[Q] += 1;    // Working range on
+	MOV  R30,R9
+	RCALL SUBOPT_0x0
+	LD   R30,X+
+	LD   R31,X+
+	ADIW R30,1
+	ST   -X,R31
+	ST   -X,R30
+; 0000 01A8                 }
+; 0000 01A9                 else
+	RJMP _0x1B
+_0x1A:
+; 0000 01AA                 {
+; 0000 01AB                     CONSUM[4] += 1;    // Working range off
+	__GETW1MN _CONSUM,8
+	ADIW R30,1
+	__PUTW1MN _CONSUM,8
+; 0000 01AC                 }
+_0x1B:
+; 0000 01AD 
+; 0000 01AE                 // Wait for another pulse
+; 0000 01AF                 S2 = 0;
+	CLR  R5
+; 0000 01B0                 cntP = 0;
 	LDI  R30,LOW(0)
 	STS  _cntP,R30
-; 0000 018B             }
-; 0000 018C             break;
-_0x16:
-; 0000 018D         }
-; 0000 018E     }
-_0xF:
-; 0000 018F }
+; 0000 01B1             }
+; 0000 01B2             break;
+_0x19:
+; 0000 01B3         }
+; 0000 01B4     }
+_0x12:
+; 0000 01B5 }
 	RET
 ;
 ;
 ;// Mocks the PULSE coming from ADSP2181 (PF0) -> ATMega164A (PINA0)
 ;void MockPULSE()
-; 0000 0194 {
-_MockPULSE:
-; 0000 0195      switch(S_PULSE)
-	MOV  R30,R12
-	LDI  R31,0
-; 0000 0196      {
-; 0000 0197         case 0:
-	SBIW R30,0
-	BRNE _0x1A
-; 0000 0198         {
-; 0000 0199             cntMockPulse = 0;
-	LDI  R30,LOW(0)
-	STS  _cntMockPulse,R30
-; 0000 019A             PULSE = 1;
-	LDI  R30,LOW(1)
-	MOV  R11,R30
-; 0000 019B             S_PULSE = 1;
-	MOV  R12,R30
-; 0000 019C             break;
-	RJMP _0x19
-; 0000 019D         }
-; 0000 019E         case 1:
-_0x1A:
-	CPI  R30,LOW(0x1)
-	LDI  R26,HIGH(0x1)
-	CPC  R31,R26
-	BRNE _0x19
-; 0000 019F         {
-; 0000 01A0             cntMockPulse += 1;
-	LDS  R30,_cntMockPulse
-	SUBI R30,-LOW(1)
-	STS  _cntMockPulse,R30
-; 0000 01A1             PULSE = 0;
-	CLR  R11
-; 0000 01A2             if (cntMockPulse == 49)
-	LDS  R26,_cntMockPulse
-	CPI  R26,LOW(0x31)
-	BRNE _0x1C
-; 0000 01A3                 S_PULSE = 0;
-	CLR  R12
-; 0000 01A4             break;
-_0x1C:
-; 0000 01A5         }
-; 0000 01A6      }
-_0x19:
-; 0000 01A7 }
-	RET
+; 0000 01BA {
+; 0000 01BB      switch(S_PULSE)
+; 0000 01BC      {
+; 0000 01BD         case 0:
+; 0000 01BE         {
+; 0000 01BF             cntMockPulse = 0;
+; 0000 01C0             PULSE = 1;
+; 0000 01C1             S_PULSE = 1;
+; 0000 01C2             break;
+; 0000 01C3         }
+; 0000 01C4         case 1:
+; 0000 01C5         {
+; 0000 01C6             cntMockPulse += 1;
+; 0000 01C7             PULSE = 0;
+; 0000 01C8             if (cntMockPulse == 49)
+; 0000 01C9                 S_PULSE = 0;
+; 0000 01CA             break;
+; 0000 01CB         }
+; 0000 01CC      }
+; 0000 01CD }
 ;
 ;void DisplayConsumption()
-; 0000 01AA {
+; 0000 01D0 {
 _DisplayConsumption:
-; 0000 01AB     // We assume:
-; 0000 01AC     // PORTC: PC0 - PC6 -> 7 segments (A-G)
-; 0000 01AD     // PORTD: PD0 - PD3 -> select the common cathode for each digit (multiplexing)
-; 0000 01AE               // PD3 - C4, PD2 - C3, PD1 - C2, PD0 - C1
-; 0000 01AF     // Q - consumption range:
-; 0000 01B0         // 0 -> 00:00 - H1:00
-; 0000 01B1         // 1 -> H1:00 - H2:00               (MON - FRI)
-; 0000 01B2         // 2 -> H2:00 - 00:00 (next day)
-; 0000 01B3         // 3 -> SAT - SUN
-; 0000 01B4 
-; 0000 01B5     // The actual approach:
-; 0000 01B6     // Each main loop iteration we multiplex the digits and display one at a time
-; 0000 01B7 
-; 0000 01B8     // If CA is pressed -> display total consumption,
-; 0000 01B9     // else -> display consumption based on current range.
-; 0000 01BA     char cons;
-; 0000 01BB     CA = 1;
+; 0000 01D1     // We assume:
+; 0000 01D2     // PORTC: PC0 - PC6 -> 7 segments (A-G)
+; 0000 01D3     // PORTD: PD0 - PD3 -> select the common cathode for each digit (multiplexing)
+; 0000 01D4               // PD3 - C4, PD2 - C3, PD1 - C2, PD0 - C1
+; 0000 01D5     // Q - consumption range:
+; 0000 01D6         // 0 -> 00:00 - H1:00
+; 0000 01D7         // 1 -> H1:00 - H2:00               (MON - FRI)
+; 0000 01D8         // 2 -> H2:00 - 00:00 (next day)
+; 0000 01D9         // 3 -> SAT - SUN
+; 0000 01DA 
+; 0000 01DB     // The actual approach:
+; 0000 01DC     // Each main loop iteration we multiplex the digits and display one at a time
+; 0000 01DD 
+; 0000 01DE     // If MODE = 1 -> display total consumption,
+; 0000 01DF     // else -> display consumption based on current range.
+; 0000 01E0     int cons = (MODE) ?  CONSUM[4] : CONSUM[Q1];
+; 0000 01E1 
+; 0000 01E2     // Compute and display C4
+; 0000 01E3     C4 = cons / 1000;
 	ST   -Y,R17
-;	cons -> R17
-	LDI  R30,LOW(1)
-	STS  _CA,R30
-; 0000 01BC     cons = (!CA) ? TOTAL_CONS : CONSUM[Q];
-	CPI  R30,0
-	BRNE _0x1D
-	LDS  R30,_TOTAL_CONS
-	RJMP _0x1E
-_0x1D:
-	MOV  R30,R14
+	ST   -Y,R16
+;	cons -> R16,R17
+	MOV  R30,R7
 	LDI  R31,0
-	SUBI R30,LOW(-_CONSUM)
-	SBCI R31,HIGH(-_CONSUM)
-	LD   R30,Z
-_0x1E:
-	MOV  R17,R30
-; 0000 01BD 
-; 0000 01BE     // Compute and display C4
-; 0000 01BF     C4 = cons / 1000;
-	MOV  R26,R17
-	LDI  R27,0
+	SBIW R30,0
+	BREQ _0x22
+	__GETW1MN _CONSUM,8
+	RJMP _0x23
+_0x22:
+	MOV  R30,R12
+	RCALL SUBOPT_0x0
+	CALL __GETW1P
+_0x23:
+	MOVW R16,R30
+	MOVW R26,R16
 	LDI  R30,LOW(1000)
 	LDI  R31,HIGH(1000)
 	CALL __DIVW21
-	STS  _C4,R30
-; 0000 01C0     cons %= 1000;
-	MOV  R26,R17
-	CLR  R27
+	MOV  R13,R30
+; 0000 01E4     cons %= 1000;
+	MOVW R26,R16
 	LDI  R30,LOW(1000)
 	LDI  R31,HIGH(1000)
 	CALL __MODW21
-	MOV  R17,R30
-; 0000 01C1     DisplayDigit(4, C4);
+	MOVW R16,R30
+; 0000 01E5     DisplayDigit(4, C4);
 	LDI  R30,LOW(4)
 	ST   -Y,R30
-	LDS  R26,_C4
+	MOV  R26,R13
 	RCALL _DisplayDigit
-; 0000 01C2 
-; 0000 01C3     // Compute and display C3
-; 0000 01C4     C3 = cons / 100;
-	MOV  R26,R17
-	LDI  R27,0
+; 0000 01E6 
+; 0000 01E7     // Compute and display C3
+; 0000 01E8     C3 = cons / 100;
+	MOVW R26,R16
 	LDI  R30,LOW(100)
 	LDI  R31,HIGH(100)
 	CALL __DIVW21
 	STS  _C3,R30
-; 0000 01C5     cons %= 100;
-	MOV  R26,R17
-	CLR  R27
+; 0000 01E9     cons %= 100;
+	MOVW R26,R16
 	LDI  R30,LOW(100)
 	LDI  R31,HIGH(100)
 	CALL __MODW21
-	MOV  R17,R30
-; 0000 01C6     DisplayDigit(3, C3);
+	MOVW R16,R30
+; 0000 01EA     DisplayDigit(3, C3);
 	LDI  R30,LOW(3)
 	ST   -Y,R30
 	LDS  R26,_C3
 	RCALL _DisplayDigit
-; 0000 01C7 
-; 0000 01C8     // Compute and display C2
-; 0000 01C9     C2 = cons / 10;
-	MOV  R26,R17
-	LDI  R27,0
+; 0000 01EB 
+; 0000 01EC     // Compute and display C2
+; 0000 01ED     C2 = cons / 10;
+	MOVW R26,R16
 	LDI  R30,LOW(10)
 	LDI  R31,HIGH(10)
 	CALL __DIVW21
 	STS  _C2,R30
-; 0000 01CA     DisplayDigit(2, C2);
+; 0000 01EE     DisplayDigit(2, C2);
 	LDI  R30,LOW(2)
 	ST   -Y,R30
 	LDS  R26,_C2
 	RCALL _DisplayDigit
-; 0000 01CB 
-; 0000 01CC     // Compute and display C1
-; 0000 01CD     C1 = cons % 10;
-	MOV  R26,R17
-	CLR  R27
+; 0000 01EF 
+; 0000 01F0     // Compute and display C1
+; 0000 01F1     C1 = cons % 10;
+	MOVW R26,R16
 	LDI  R30,LOW(10)
 	LDI  R31,HIGH(10)
 	CALL __MODW21
 	STS  _C1,R30
-; 0000 01CE     DisplayDigit(1, C1);
+; 0000 01F2     DisplayDigit(1, C1);
 	LDI  R30,LOW(1)
 	ST   -Y,R30
 	LDS  R26,_C1
 	RCALL _DisplayDigit
-; 0000 01CF }
+; 0000 01F3 }
+	LD   R16,Y+
 	LD   R17,Y+
 	RET
 ;
 ;void DisplayDigit(char currentDisplay, char digit)
-; 0000 01D2 {
+; 0000 01F6 {
 _DisplayDigit:
-; 0000 01D3     // Select the desired display (turn on the pin
-; 0000 01D4     // corresponding to the desired digit (C4/C3/C2/C1)
-; 0000 01D5     char output = 0xff;
-; 0000 01D6 
-; 0000 01D7     // Set PORTC pins to the corresponding digit
-; 0000 01D8     // PORTC = DIGITS[digit];
-; 0000 01D9 
-; 0000 01DA     switch (currentDisplay)
+; 0000 01F7     // Select the desired display (turn on the pin
+; 0000 01F8     // corresponding to the desired digit (C4/C3/C2/C1)
+; 0000 01F9     char output;
+; 0000 01FA 
+; 0000 01FB     // Set PORTC pins to the corresponding digit
+; 0000 01FC     // PORTC = DIGITS[digit];
+; 0000 01FD 
+; 0000 01FE     switch (currentDisplay)
 	ST   -Y,R26
 	ST   -Y,R17
 ;	currentDisplay -> Y+2
 ;	digit -> Y+1
 ;	output -> R17
-	LDI  R17,255
 	LDD  R30,Y+2
 	LDI  R31,0
-; 0000 01DB     {
-; 0000 01DC         case 4:
+; 0000 01FF     {
+; 0000 0200         case 4:
 	CPI  R30,LOW(0x4)
 	LDI  R26,HIGH(0x4)
 	CPC  R31,R26
-	BRNE _0x23
-; 0000 01DD             // Turn PD3 on
-; 0000 01DE             //output &= 0b11110111;
-; 0000 01DF             output &= 0b11111000;
-	ANDI R17,LOW(248)
-; 0000 01E0             break;
-	RJMP _0x22
-; 0000 01E1         case 3:
-_0x23:
+	BRNE _0x28
+; 0000 0201             // Turn PD3 on
+; 0000 0202             //output &= 0b00000111;
+; 0000 0203             output = 0x08;
+	LDI  R17,LOW(8)
+; 0000 0204             break;
+	RJMP _0x27
+; 0000 0205         case 3:
+_0x28:
 	CPI  R30,LOW(0x3)
 	LDI  R26,HIGH(0x3)
 	CPC  R31,R26
-	BRNE _0x24
-; 0000 01E2             // Turn PD2 on
-; 0000 01E3             // output &= 0b11111011;
-; 0000 01E4             output &= 0b11110100;
-	ANDI R17,LOW(244)
-; 0000 01E5             break;
-	RJMP _0x22
-; 0000 01E6         case 2:
-_0x24:
+	BRNE _0x29
+; 0000 0206             // Turn PD2 on
+; 0000 0207             // output &= 0b00001011;
+; 0000 0208             output = 0x04;
+	LDI  R17,LOW(4)
+; 0000 0209             break;
+	RJMP _0x27
+; 0000 020A         case 2:
+_0x29:
 	CPI  R30,LOW(0x2)
 	LDI  R26,HIGH(0x2)
 	CPC  R31,R26
-	BRNE _0x25
-; 0000 01E7             // Turn PD1 on
-; 0000 01E8             output &= 0b11110010;
-	ANDI R17,LOW(242)
-; 0000 01E9             break;
-	RJMP _0x22
-; 0000 01EA         case 1:
-_0x25:
+	BRNE _0x2A
+; 0000 020B             // Turn PD1 on
+; 0000 020C             output = 0x02;
+	LDI  R17,LOW(2)
+; 0000 020D             break;
+	RJMP _0x27
+; 0000 020E         case 1:
+_0x2A:
 	CPI  R30,LOW(0x1)
 	LDI  R26,HIGH(0x1)
 	CPC  R31,R26
-	BRNE _0x22
-; 0000 01EB             // Turn PD0 on
-; 0000 01EC             output &= 0b11110001;
-	ANDI R17,LOW(241)
-; 0000 01ED             break;
-; 0000 01EE     }
-_0x22:
-; 0000 01EF 
-; 0000 01F0     // Assign output to PORTC in order to select the desired display;
-; 0000 01F1     PORTD = output;
-	OUT  0xB,R17
-; 0000 01F2 
-; 0000 01F3     // Set PORTC pins to the corresponding digit
-; 0000 01F4     PORTC = DIGITS[digit];
+	BRNE _0x27
+; 0000 020F             // Turn PD0 on
+; 0000 0210             output = 0x01;
+	LDI  R17,LOW(1)
+; 0000 0211             break;
+; 0000 0212     }
+_0x27:
+; 0000 0213 
+; 0000 0214     // Delete PD0-3
+; 0000 0215     PORTD &= 0xF0;
+	IN   R30,0xB
+	ANDI R30,LOW(0xF0)
+	OUT  0xB,R30
+; 0000 0216 
+; 0000 0217     // Assign output to PORTC in order to select the desired display;
+; 0000 0218     PORTD |= output;
+	IN   R30,0xB
+	OR   R30,R17
+	OUT  0xB,R30
+; 0000 0219 
+; 0000 021A     // Set PORTC pins to the corresponding digit
+; 0000 021B     PORTC = DIGITS[digit];
 	LDD  R30,Y+1
 	LDI  R31,0
 	SUBI R30,LOW(-_DIGITS*2)
 	SBCI R31,HIGH(-_DIGITS*2)
 	LPM  R0,Z
 	OUT  0x8,R0
-; 0000 01F5 
-; 0000 01F6     // Add delay (10 us)
-; 0000 01F7     // _display_us(10);
-; 0000 01F8 }
+; 0000 021C 
+; 0000 021D     // Add delay (10 us)
+; 0000 021E     // _display_us(10);
+; 0000 021F }
 	LDD  R17,Y+0
 	ADIW R28,3
 	RET
 ;
 ;
 ;void UpdateTime(){
-; 0000 01FB void UpdateTime(){
-; 0000 01FC     cnt_time += 1; //incrementare contor de timp
-; 0000 01FD     if(cnt_time != T_SEC) return;
-; 0000 01FE 
-; 0000 01FF     cnt_time = 0; // se reseteaza contorul
-; 0000 0200     S+=1;  //incrementeaza contor secunde
-; 0000 0201 
-; 0000 0202     if(S!=60) return;
-; 0000 0203     S = 0;//se reseteaza nr de secunde
-; 0000 0204     M += 1; //incrementeaza contor minute
-; 0000 0205 
-; 0000 0206     if(M!=60) return;
-; 0000 0207     M = 0;
-; 0000 0208     H += 1;
-; 0000 0209 
-; 0000 020A     if(H!=24) return;
-; 0000 020B     H = 0;
-; 0000 020C     Z += 1;
-; 0000 020D 
-; 0000 020E     if (Z == 7) Z = 0;
-; 0000 020F     return;
-; 0000 0210 }
+; 0000 0222 void UpdateTime(){
+; 0000 0223     cnt_time += 1; //incrementare contor de timp
+; 0000 0224     if(cnt_time != T_SEC) return;
+; 0000 0225 
+; 0000 0226     cnt_time = 0; // se reseteaza contorul
+; 0000 0227     S+=1;  //incrementeaza contor secunde
+; 0000 0228 
+; 0000 0229     if(S!=60) return;
+; 0000 022A     S = 0;//se reseteaza nr de secunde
+; 0000 022B     M += 1; //incrementeaza contor minute
+; 0000 022C 
+; 0000 022D     if(M!=60) return;
+; 0000 022E     M = 0;
+; 0000 022F     H += 1;
+; 0000 0230 
+; 0000 0231     if(H!=24) return;
+; 0000 0232     H = 0;
+; 0000 0233     Z += 1;
+; 0000 0234 
+; 0000 0235     if (Z == 7) Z = 0;
+; 0000 0236     return;
+; 0000 0237 }
 ;
 ;void CLS()
-; 0000 0213 {
+; 0000 023A {
 _CLS:
-; 0000 0214     char out;
-; 0000 0215 
-; 0000 0216     //exemplu
-; 0000 0217     // Ziua 3, ora 8, min 6, sec 3
-; 0000 0218     // 0x03080603
-; 0000 0219     int now = (Z<<24) | (H<<16) | (M<<8) | S;
-; 0000 021A 
-; 0000 021B     long int *adr = TABA[Q];
-; 0000 021C     char ready = 0;
-; 0000 021D     int i = 0;
-; 0000 021E 
-; 0000 021F     while (!ready)
-	SBIW R28,2
-	LDI  R30,LOW(0)
-	ST   Y,R30
-	STD  Y+1,R30
+; 0000 023B     char out;
+; 0000 023C 
+; 0000 023D     //exemplu
+; 0000 023E     // Ziua 3, ora 8, min 6, sec 3
+; 0000 023F     // 0x03080603
+; 0000 0240     long int now = (Z<<24) | (H<<16) | (M<<8) | S;
+; 0000 0241 
+; 0000 0242     long int *adr = TABA[Q];
+; 0000 0243     char ready = 0;
+; 0000 0244     int i = 0;
+; 0000 0245 
+; 0000 0246     while (!ready)
+	SBIW R28,4
 	CALL __SAVELOCR6
 ;	out -> R17
-;	now -> R18,R19
-;	*adr -> R20,R21
+;	now -> Y+6
+;	*adr -> R18,R19
 ;	ready -> R16
-;	i -> Y+6
-	MOV  R26,R6
-	LDI  R27,0
+;	i -> R20,R21
+	LDS  R26,_Z
+	LDS  R27,_Z+1
+	LDS  R24,_Z+2
+	LDS  R25,_Z+3
 	LDI  R30,LOW(24)
-	CALL __LSLW12
-	MOVW R22,R30
-	MOV  R26,R3
-	LDI  R27,0
-	LDI  R30,LOW(16)
-	CALL __LSLW12
-	OR   R30,R22
-	OR   R31,R23
+	CALL __LSLD12
 	MOVW R26,R30
-	MOV  R31,R5
-	LDI  R30,LOW(0)
-	OR   R30,R26
-	OR   R31,R27
-	MOVW R26,R30
-	MOV  R30,R8
-	LDI  R31,0
-	OR   R30,R26
-	OR   R31,R27
-	MOVW R18,R30
-	MOV  R30,R14
+	MOVW R24,R22
+	LDS  R30,_H
+	LDS  R31,_H+1
+	LDS  R22,_H+2
+	LDS  R23,_H+3
+	CALL __LSLD16
+	CALL __ORD12
+	PUSH R23
+	PUSH R22
+	PUSH R31
+	PUSH R30
+	LDS  R26,_M
+	LDS  R27,_M+1
+	LDS  R24,_M+2
+	LDS  R25,_M+3
+	LDI  R30,LOW(8)
+	CALL __LSLD12
+	POP  R26
+	POP  R27
+	POP  R24
+	POP  R25
+	CALL __ORD12
+	LDS  R26,_S
+	LDS  R27,_S+1
+	LDS  R24,_S+2
+	LDS  R25,_S+3
+	CALL __ORD12
+	__PUTD1S 6
+	MOV  R30,R9
 	LDI  R26,LOW(_TABA)
 	LDI  R27,HIGH(_TABA)
 	LDI  R31,0
@@ -2188,62 +2250,379 @@ _CLS:
 	ADD  R26,R30
 	ADC  R27,R31
 	CALL __GETW1P
-	MOVW R20,R30
+	MOVW R18,R30
 	LDI  R16,0
-_0x2C:
+	__GETWRN 20,21,0
+_0x31:
 	CPI  R16,0
-	BRNE _0x2E
-; 0000 0220     {
-; 0000 0221         if (now == adr[i]) {
-	RCALL SUBOPT_0x0
-	MOVW R26,R18
-	CALL __CWD2
+	BRNE _0x33
+; 0000 0247     {
+; 0000 0248         if (now == adr[i]) {
+	RCALL SUBOPT_0x1
+	__GETD2S 6
 	CALL __CPD12
-	BRNE _0x2F
-; 0000 0222             Q = adr[i + 1];
-	LDD  R30,Y+6
-	LDD  R31,Y+6+1
+	BRNE _0x34
+; 0000 0249             Q = adr[i + 1];
+	MOVW R30,R20
 	ADIW R30,1
-	MOVW R26,R20
+	MOVW R26,R18
 	CALL __LSLW2
 	ADD  R26,R30
 	ADC  R27,R31
-	LD   R14,X
-; 0000 0223             ready = 1;  // ies din while
+	LD   R9,X
+; 0000 024A             ready = 1;
 	LDI  R16,LOW(1)
-; 0000 0224         }
-; 0000 0225         else if (adr[i] == T) ready = 1;
-	RJMP _0x30
-_0x2F:
-	RCALL SUBOPT_0x0
-	__CPD1N 0x5
-	BRNE _0x31
+; 0000 024B         }
+; 0000 024C         else if (adr[i] == Ter) ready = 1;
+	RJMP _0x35
+_0x34:
+	RCALL SUBOPT_0x1
+	__CPD1N 0x10000000
+	BRNE _0x36
 	LDI  R16,LOW(1)
-; 0000 0226         else i = i+2;
-	RJMP _0x32
-_0x31:
-	LDD  R30,Y+6
-	LDD  R31,Y+6+1
-	ADIW R30,2
-	STD  Y+6,R30
-	STD  Y+6+1,R31
-; 0000 0227     }
-_0x32:
-_0x30:
-	RJMP _0x2C
-_0x2E:
-; 0000 0228 
-; 0000 0229     out = Tout[Q];
-	MOV  R30,R14
+; 0000 024D         else i = i+2;
+	RJMP _0x37
+_0x36:
+	__ADDWRN 20,21,2
+; 0000 024E     }
+_0x37:
+_0x35:
+	RJMP _0x31
+_0x33:
+; 0000 024F 
+; 0000 0250     out = Tout[Q];
+	MOV  R30,R9
 	LDI  R31,0
 	SUBI R30,LOW(-_Tout)
 	SBCI R31,HIGH(-_Tout)
 	LD   R17,Z
-; 0000 022A }
+; 0000 0251 }
 	CALL __LOADLOCR6
-	ADIW R28,8
+	ADIW R28,10
 	RET
 ;
+;void DisplayInfo()
+; 0000 0254 {
+_DisplayInfo:
+; 0000 0255     DisplayConsumptionDisplayMode();
+	RCALL _DisplayConsumptionDisplayMode
+; 0000 0256     DisplayPowerLevel();
+	RCALL _DisplayPowerLevel
+; 0000 0257 }
+	RET
+;
+;void DisplayPowerLevel()
+; 0000 025A {
+_DisplayPowerLevel:
+; 0000 025B    char out;
+; 0000 025C 
+; 0000 025D //   if (!PowerLevel)          PowerLevel = 0 kW
+; 0000 025E //   {
+; 0000 025F //        out = CLC_LEVEL[0];
+; 0000 0260 //   }
+; 0000 0261 //   else if (PowerLevel < 2.5)    0 < PowerLevel < 2.5 kW
+; 0000 0262 //   {
+; 0000 0263 //        out = CLC_LEVEL[1];
+; 0000 0264 //   }
+; 0000 0265 //   else if (PowerLevel < 5)      2.5 <= PowerLevel < 5 kW
+; 0000 0266 //   {
+; 0000 0267 //        out = CLC_LEVEL[2];
+; 0000 0268 //   }
+; 0000 0269 //   else if (PowerLevel < 7.5)    5 <= PowerLevel < 7.5 kW
+; 0000 026A //   {
+; 0000 026B //        out = CLC_LEVEL[3];
+; 0000 026C //   }
+; 0000 026D //   else                          PowerLvel >= 7.5 kW
+; 0000 026E //   {
+; 0000 026F //        out = CLC_LEVEL[4];
+; 0000 0270 //   }
+; 0000 0271 
+; 0000 0272    if (!PowerLevel)         // PowerLevel = 0 kW
+	ST   -Y,R17
+;	out -> R17
+	LDS  R30,_PowerLevel
+	LDS  R31,_PowerLevel+1
+	SBIW R30,0
+	BRNE _0x38
+; 0000 0273    {
+; 0000 0274         out = CLC_LEVEL[0];
+	LDS  R17,_CLC_LEVEL
+; 0000 0275    }
+; 0000 0276    else if (PowerLevel < 3)   // 0 < PowerLevel < 3 kW
+	RJMP _0x39
+_0x38:
+	LDS  R26,_PowerLevel
+	LDS  R27,_PowerLevel+1
+	SBIW R26,3
+	BRGE _0x3A
+; 0000 0277    {
+; 0000 0278         out = CLC_LEVEL[1];
+	__GETBRMN 17,_CLC_LEVEL,1
+; 0000 0279    }
+; 0000 027A    else if (PowerLevel < 6)     // 3 <= PowerLevel < 6 kW
+	RJMP _0x3B
+_0x3A:
+	LDS  R26,_PowerLevel
+	LDS  R27,_PowerLevel+1
+	SBIW R26,6
+	BRGE _0x3C
+; 0000 027B    {
+; 0000 027C         out = CLC_LEVEL[2];
+	__GETBRMN 17,_CLC_LEVEL,2
+; 0000 027D    }
+; 0000 027E    else                         // PowerLvel >= 6 kW
+	RJMP _0x3D
+_0x3C:
+; 0000 027F    {
+; 0000 0280         out = CLC_LEVEL[3];
+	__GETBRMN 17,_CLC_LEVEL,3
+; 0000 0281    }
+_0x3D:
+_0x3B:
+_0x39:
+; 0000 0282 
+; 0000 0283    // Delete PB7-PB5
+; 0000 0284    PORTB &= 0x1f;
+	IN   R30,0x5
+	ANDI R30,LOW(0x1F)
+	RJMP _0x2000002
+; 0000 0285 
+; 0000 0286    // Display out on PB7-PB5
+; 0000 0287    PORTB |= out;
+; 0000 0288 }
+;
+;void DisplayConsumptionDisplayMode()
+; 0000 028B {
+_DisplayConsumptionDisplayMode:
+; 0000 028C     char out;
+; 0000 028D 
+; 0000 028E     if (MODE == 1)  // Working without ranges
+	ST   -Y,R17
+;	out -> R17
+	LDI  R30,LOW(1)
+	CP   R30,R7
+	BRNE _0x3E
+; 0000 028F     {
+; 0000 0290         // Clear PB4-0
+; 0000 0291         PORTB &= 0xE0;
+	IN   R30,0x5
+	ANDI R30,LOW(0xE0)
+	OUT  0x5,R30
+; 0000 0292 
+; 0000 0293         // Display on PB4-0
+; 0000 0294         PORTB |= 0x10;
+	SBI  0x5,4
+; 0000 0295 
+; 0000 0296         return;
+	RJMP _0x2000001
+; 0000 0297     }
+; 0000 0298 
+; 0000 0299     switch(S3)
+_0x3E:
+	MOV  R30,R11
+	LDI  R31,0
+; 0000 029A     {
+; 0000 029B         case 0:
+	SBIW R30,0
+	BRNE _0x42
+; 0000 029C         {
+; 0000 029D             if (CA == 0)            // Pressed CA
+	LDS  R30,_CA
+	CPI  R30,0
+	BRNE _0x43
+; 0000 029E             {
+; 0000 029F                 S3 = 1;
+	LDI  R30,LOW(1)
+	MOV  R11,R30
+; 0000 02A0             }
+; 0000 02A1             break;
+_0x43:
+	RJMP _0x41
+; 0000 02A2         }
+; 0000 02A3         case 1:                 // Released CA
+_0x42:
+	CPI  R30,LOW(0x1)
+	LDI  R26,HIGH(0x1)
+	CPC  R31,R26
+	BRNE _0x44
+; 0000 02A4         {
+; 0000 02A5             if (CA)
+	LDS  R30,_CA
+	CPI  R30,0
+	BREQ _0x45
+; 0000 02A6             {
+; 0000 02A7                 S3 = 2;
+	LDI  R30,LOW(2)
+	MOV  R11,R30
+; 0000 02A8                 Q1 = 1;
+	LDI  R30,LOW(1)
+	MOV  R12,R30
+; 0000 02A9             }
+; 0000 02AA             break;
+_0x45:
+	RJMP _0x41
+; 0000 02AB         }
+; 0000 02AC         case 2:                //  Pressed CA
+_0x44:
+	CPI  R30,LOW(0x2)
+	LDI  R26,HIGH(0x2)
+	CPC  R31,R26
+	BRNE _0x46
+; 0000 02AD         {
+; 0000 02AE             if (CA == 0)
+	LDS  R30,_CA
+	CPI  R30,0
+	BRNE _0x47
+; 0000 02AF             {
+; 0000 02B0                 S3 = 3;
+	LDI  R30,LOW(3)
+	MOV  R11,R30
+; 0000 02B1             }
+; 0000 02B2             break;
+_0x47:
+	RJMP _0x41
+; 0000 02B3         }
+; 0000 02B4         case 3:                // Released CA
+_0x46:
+	CPI  R30,LOW(0x3)
+	LDI  R26,HIGH(0x3)
+	CPC  R31,R26
+	BRNE _0x48
+; 0000 02B5         {
+; 0000 02B6             if (CA)
+	LDS  R30,_CA
+	CPI  R30,0
+	BREQ _0x49
+; 0000 02B7             {
+; 0000 02B8                 S3 = 4;
+	LDI  R30,LOW(4)
+	MOV  R11,R30
+; 0000 02B9                 Q1 = 2;
+	LDI  R30,LOW(2)
+	MOV  R12,R30
+; 0000 02BA             }
+; 0000 02BB             break;
+_0x49:
+	RJMP _0x41
+; 0000 02BC         }
+; 0000 02BD         case 4:
+_0x48:
+	CPI  R30,LOW(0x4)
+	LDI  R26,HIGH(0x4)
+	CPC  R31,R26
+	BRNE _0x4A
+; 0000 02BE         {
+; 0000 02BF             if (CA == 0)
+	LDS  R30,_CA
+	CPI  R30,0
+	BRNE _0x4B
+; 0000 02C0             {
+; 0000 02C1                 S3 = 5;
+	LDI  R30,LOW(5)
+	MOV  R11,R30
+; 0000 02C2             }
+; 0000 02C3             break;
+_0x4B:
+	RJMP _0x41
+; 0000 02C4         }
+; 0000 02C5         case 5:
+_0x4A:
+	CPI  R30,LOW(0x5)
+	LDI  R26,HIGH(0x5)
+	CPC  R31,R26
+	BRNE _0x4C
+; 0000 02C6         {
+; 0000 02C7             if (CA)
+	LDS  R30,_CA
+	CPI  R30,0
+	BREQ _0x4D
+; 0000 02C8             {
+; 0000 02C9                 S3 = 6;
+	LDI  R30,LOW(6)
+	MOV  R11,R30
+; 0000 02CA                 Q1 = 3;
+	LDI  R30,LOW(3)
+	MOV  R12,R30
+; 0000 02CB             }
+; 0000 02CC             break;
+_0x4D:
+	RJMP _0x41
+; 0000 02CD         }
+; 0000 02CE         case 6:
+_0x4C:
+	CPI  R30,LOW(0x6)
+	LDI  R26,HIGH(0x6)
+	CPC  R31,R26
+	BRNE _0x4E
+; 0000 02CF         {
+; 0000 02D0             if (CA == 0)
+	LDS  R30,_CA
+	CPI  R30,0
+	BRNE _0x4F
+; 0000 02D1             {
+; 0000 02D2                 S3 = 7;
+	LDI  R30,LOW(7)
+	MOV  R11,R30
+; 0000 02D3             }
+; 0000 02D4             break;
+_0x4F:
+	RJMP _0x41
+; 0000 02D5         }
+; 0000 02D6         case 7:
+_0x4E:
+	CPI  R30,LOW(0x7)
+	LDI  R26,HIGH(0x7)
+	CPC  R31,R26
+	BRNE _0x41
+; 0000 02D7         {
+; 0000 02D8             if (CA)
+	LDS  R30,_CA
+	CPI  R30,0
+	BREQ _0x51
+; 0000 02D9             {
+; 0000 02DA                 S3 = 0;
+	CLR  R11
+; 0000 02DB                 Q1 = 0;
+	CLR  R12
+; 0000 02DC             }
+; 0000 02DD             break;
+_0x51:
+; 0000 02DE         }
+; 0000 02DF     }
+_0x41:
+; 0000 02E0 
+; 0000 02E1     out = CLC_RANGE_OUTPUT[Q1] | (CLC_RANGE_OUTPUT[Q] << 2);
+	MOV  R30,R12
+	LDI  R31,0
+	SUBI R30,LOW(-_CLC_RANGE_OUTPUT)
+	SBCI R31,HIGH(-_CLC_RANGE_OUTPUT)
+	LD   R26,Z
+	MOV  R30,R9
+	LDI  R31,0
+	SUBI R30,LOW(-_CLC_RANGE_OUTPUT)
+	SBCI R31,HIGH(-_CLC_RANGE_OUTPUT)
+	LD   R30,Z
+	LSL  R30
+	LSL  R30
+	OR   R30,R26
+	MOV  R17,R30
+; 0000 02E2 
+; 0000 02E3     // Delete PB4-PB0
+; 0000 02E4     PORTB &= 0xE0;
+	IN   R30,0x5
+	ANDI R30,LOW(0xE0)
+_0x2000002:
+	OUT  0x5,R30
+; 0000 02E5 
+; 0000 02E6     // Display out on PB3-PB0
+; 0000 02E7     PORTB |= out;
+	IN   R30,0x5
+	OR   R30,R17
+	OUT  0x5,R30
+; 0000 02E8 }
+_0x2000001:
+	LD   R17,Y+
+	RET
 ;////////////////////////////////////////
 
 	.DSEG
@@ -2259,12 +2638,16 @@ _Tout:
 	.BYTE 0x4
 _TABA:
 	.BYTE 0x8
-_CONSUM:
+_Z:
 	.BYTE 0x4
-_TOTAL_CONS:
-	.BYTE 0x1
-_C4:
-	.BYTE 0x1
+_H:
+	.BYTE 0x4
+_M:
+	.BYTE 0x4
+_S:
+	.BYTE 0x4
+_CONSUM:
+	.BYTE 0xA
 _C3:
 	.BYTE 0x1
 _C2:
@@ -2273,17 +2656,33 @@ _C1:
 	.BYTE 0x1
 _CA:
 	.BYTE 0x1
+_PowerLevel:
+	.BYTE 0x2
+_CLC_LEVEL:
+	.BYTE 0x4
+_CLC_RANGE_OUTPUT:
+	.BYTE 0x4
 _cntP:
 	.BYTE 0x1
 _cntMockPulse:
 	.BYTE 0x1
 
 	.CSEG
-;OPTIMIZER ADDED SUBROUTINE, CALLED 2 TIMES, CODE SIZE REDUCTION:4 WORDS
+;OPTIMIZER ADDED SUBROUTINE, CALLED 2 TIMES, CODE SIZE REDUCTION:2 WORDS
 SUBOPT_0x0:
-	LDD  R30,Y+6
-	LDD  R31,Y+6+1
-	MOVW R26,R20
+	LDI  R26,LOW(_CONSUM)
+	LDI  R27,HIGH(_CONSUM)
+	LDI  R31,0
+	LSL  R30
+	ROL  R31
+	ADD  R26,R30
+	ADC  R27,R31
+	RET
+
+;OPTIMIZER ADDED SUBROUTINE, CALLED 2 TIMES, CODE SIZE REDUCTION:3 WORDS
+SUBOPT_0x1:
+	MOVW R30,R20
+	MOVW R26,R18
 	CALL __LSLW2
 	ADD  R26,R30
 	ADC  R27,R31
@@ -2292,23 +2691,33 @@ SUBOPT_0x0:
 
 
 	.CSEG
+__ORD12:
+	OR   R30,R26
+	OR   R31,R27
+	OR   R22,R24
+	OR   R23,R25
+	RET
+
 __ANEGW1:
 	NEG  R31
 	NEG  R30
 	SBCI R31,0
 	RET
 
-__LSLW12:
+__LSLD12:
 	TST  R30
 	MOV  R0,R30
 	MOVW R30,R26
-	BREQ __LSLW12R
-__LSLW12L:
+	MOVW R22,R24
+	BREQ __LSLD12R
+__LSLD12L:
 	LSL  R30
 	ROL  R31
+	ROL  R22
+	ROL  R23
 	DEC  R0
-	BRNE __LSLW12L
-__LSLW12R:
+	BRNE __LSLD12L
+__LSLD12R:
 	RET
 
 __LSLW2:
@@ -2331,11 +2740,11 @@ __ASRW2:
 	ROR  R30
 	RET
 
-__CWD2:
-	MOV  R24,R27
-	ADD  R24,R24
-	SBC  R24,R24
-	MOV  R25,R24
+__LSLD16:
+	MOV  R22,R30
+	MOV  R23,R31
+	LDI  R30,0
+	LDI  R31,0
 	RET
 
 __DIVW21U:

@@ -159,12 +159,13 @@
 .var PulsesNumber;	// Pulses number / KWh
 .var PulsesNumberIndex;
 .var dTIndex;
-.var noCycles = 5;// No of interrupts to cover 20ms
+.var noCycles = 800;// No of interrupts to cover 20ms
 .var cntCycles = 0; // Cycles counter 
 .var SUB_MSB;
 .var SUB_LSB;
 
 .var TAB_PULSES[4] = {1, 2, 4, 8};	// Number of pulses/kWh -> 1/2/4/8;
+.var TAB_THRESHOLDS[8] = {0xD, 0xBBA0, 0x6, 0xDD0, 0x3, 0x6EE8, 0x1, 0xB774};
 .var TAB_SAMPLING_PERIODS[4] = {50, 3000, 30000, 60000};	// 1s/1m/5m/10m
 .SECTION/PM		pm_da;
 
@@ -481,16 +482,16 @@ dm(PulsesNumber) = ax0;	// Pulses / kWh
 
 // COMPUTE_THRESHOLD:
 ena m_mode;
-ax1 = dm(PulsesNumber);	// Pulses/kWh
-// af = PASS 0;
+si = dm(PulsesNumber);	// Pulses/kWh
+ax1 = TAB_THRESHOLDS;
+ay1 = si;
+ar = ax1 + ay1;
+ax1 = dm(ar);
+dm(Threshold) = ax1;
+// dm(Threshold) = TAB_THRESHOLDS[si + 1];
 
-/*
-ax0 = astat;
-ay0 = 0xbf;
-ar = ax0 and ay0;
-ASTAT = ar;
-*/
-
+/* // Computing the hard way
+ax1 = dm(PulsesNumber);
 ay0 = 3600;				// ay0 = 1kWh = 3600 kWs
 ay1 = 0;
 
@@ -509,7 +510,8 @@ my0 = 1000;				// Get the result in Ws
 mr = mx0 * my0 (uu);
 	
 dm(Threshold) = mr0;
-dm(Threshold + 1) = mr1;	
+dm(Threshold + 1) = mr1; */
+
 
 
 /* wait for char to go out */

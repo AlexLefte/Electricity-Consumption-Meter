@@ -1,5 +1,10 @@
+<<<<<<< Updated upstream
 VERSION:3 SOURCE_TIMESTAMP:56950038
 NODE:I LEVEL:0 LINE:24 "D:\Cursuri\An3\uC\codevisionavr\inc\mega164a.h"
+=======
+VERSION:3 SOURCE_TIMESTAMP:5694BE39
+NODE:I LEVEL:0 LINE:24 "C:\cvavreval\inc\mega164a.h"
+>>>>>>> Stashed changes
 NODE:M LEVEL:0 LINE:30 "T"
 NODE:M LEVEL:0 LINE:34 "DP"
 NODE:V LEVEL:0 LINE:37 "S1 -> R4"

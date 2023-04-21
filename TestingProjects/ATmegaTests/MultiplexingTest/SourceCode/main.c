@@ -384,7 +384,7 @@ void UpdateConsumption()
                 
     
     // Read power level
-    // PowerLevel = (PINA & 0xfe) >> 1;  
+    PowerLevel = (PINA & 0xfe) >> 1;  
     
     // For testing purposes, we will assume PowerLevel = 6 kW
     PowerLevel = 6;
