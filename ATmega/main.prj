@@ -141,8 +141,8 @@ DisplayCodeSizeError=1
 UseBootAppXmega=0
 RebuildAll=0
 LinkageInformationPresent=1
-COFFileTimeStamp=1450875656
-Build=5
+COFFileTimeStamp=1452848162
+Build=11
 GlobalVarAddr=707
 EEPROMVarAddr=0
 [DefinedSymbolsDebug]
@@ -254,7 +254,7 @@ UseBootAppXmega=0
 RebuildAll=0
 LinkageInformationPresent=1
 COFFileTimeStamp=-1
-Build=5
+Build=11
 [DefinedSymbols]
 Count=0
 [CompilerAdvanced]
@@ -454,8 +454,8 @@ L13=Enhanced function parameters passing: Mode 2
 L14=Automatic register allocation: Yes
 L15=Smart register allocation: Yes
 L16=
-L17=Build: 5
-L18=1767 line(s) compiled
+L17=Build: 11
+L18=1778 line(s) compiled
 L19=No errors
 L20=5 warning(s)
 L21=
@@ -475,19 +475,19 @@ L34=Heap size: 0 byte(s)
 L35=
 Lines=38
 L36=EEPROM usage: 0 byte(s), 0.0% of EEPROM
-L37=Program size: 937 words (1874 bytes), 11.4% of FLASH
-L38=14 words (28 bytes), 1.5% reduced by Code Compression
+L37=Program size: 969 words (1938 bytes), 11.8% of FLASH
+L38=32 words (64 bytes), 3.2% reduced by Code Compression
 [BuildInfoAssembler]
 Lines=12
 L1=AVRASM: AVR macro assembler 2.1.30 (build 592 Nov  7 2008 12:38:17)
 L2=Copyright (C) 1995-2008 ATMEL Corporation
 L3=
-L4=F:\AN 3 SEM 2\P2-ZOICAN\chestii alexutu\Electricity-Consumption-Meter\ATmega\Debug\List\main.asm(3013): No EEPROM data, deleting F:\AN 3 SEM 2\P2-ZOICAN\chestii alexutu\Electricity-Consumption-Meter\ATmega\Debug\Exe\main.eep
+L4=F:\AN 3 SEM 2\P2-ZOICAN\chestii alexutu\Electricity-Consumption-Meter\ATmega\Debug\List\main.asm(3058): No EEPROM data, deleting F:\AN 3 SEM 2\P2-ZOICAN\chestii alexutu\Electricity-Consumption-Meter\ATmega\Debug\Exe\main.eep
 L5=
 L6=ATmega164A memory use summary [bytes]:
 L7=Segment   Begin    End      Code   Data   Used    Size   Use%
 L8=---------------------------------------------------------------
-L9=[.cseg] 0x000000 0x000752   1632    242   1874   16384  11.4%
+L9=[.cseg] 0x000000 0x000792   1696    242   1938   16384  11.8%
 L10=[.dseg] 0x000100 0x0002c3      0    195    195    1024  19.0%
 L11=[.eseg] 0x000000 0x000000      0      0      0     512   0.0%
 L12=
@@ -507,14 +507,14 @@ BK6=-1
 BK7=-1
 BK8=-1
 BK9=-1
-[HeadersList]
-Files=1
-F1=D:\GithubRepos\Electricity-Consumption-Meter\ATmega\main.c
-[Header1]
-Files=2
-F1=C:\cvavreval\inc\mega164a.h
-F2=C:\cvavreval\inc\mega324_bits.h
 [FoldedCode3]
 Blocks=0
 [FoldedCode5]
 Blocks=0
+[HeadersList]
+Files=1
+F1=F:\AN 3 SEM 2\P2-ZOICAN\chestii alexutu\Electricity-Consumption-Meter\ATmega\main.c
+[Header1]
+Files=2
+F1=C:\cvavreval\inc\mega164a.h
+F2=C:\cvavreval\inc\mega324_bits.h

@@ -321,7 +321,10 @@ void Init()
 }
 
 void UpdateConsumption()
-{                
+{         
+
+    // !!!!! TODO !!!!!! ack 
+            
     // Identify PULSE    
     /*
     PULSE = PINA & 0x01;
@@ -425,11 +428,18 @@ void UpdateConsumption()
                 // Increment consumption 
                 if (MODE == 0)
                 {
-                    CONSUM[Q] += 1;    // Working range on
+                    CONSUM[Q] += 1;    // Working range on            
+                    
+                    if(CONSUM[Q]%6 == 0) CONSUM[Q] +=1;
                 }
                 else
                 {
-                    CONSUM[4] += 1;    // Working range off   
+                    CONSUM[4] += 1;    // Working range off  
+                   
+                  
+                    if(CONSUM[4]%6 == 0)   CONSUM[4] +=1;
+                           
+                    
                 }
                 
                 // Wait for another pulse

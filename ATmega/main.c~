@@ -31,7 +31,7 @@ Data Stack size         : 256
 
 // Numar de perioade necesare
 // duratei unui puls pozitiv (cu durata 20 ms)
-#define DP 2   
+#define DP 1
 
 /// CLS definitions ///
 char S1 = 0; // CLS state
@@ -425,11 +425,17 @@ void UpdateConsumption()
                 // Increment consumption 
                 if (MODE == 0)
                 {
-                    CONSUM[Q] += 1;    // Working range on
+                    CONSUM[Q] += 1;    // Working range on            
+                    
+                    if(CONSUM[Q]%6 == 0) CONSUM[Q] +=1;
                 }
                 else
                 {
-                    CONSUM[4] += 1;    // Working range off   
+                    CONSUM[4] += 1;    // Working range off  
+                     
+                    if(CONSUM[4]%6 == 0)   CONSUM[4] +=1;
+                           
+                    
                 }
                 
                 // Wait for another pulse
