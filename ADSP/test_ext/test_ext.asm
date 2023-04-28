@@ -19,8 +19,8 @@
 #define PORT_IN 0x1FF
 
 // DP and T
-#define DP 5
-#define T 25
+#define DP 1
+#define T 5
 
 .SECTION/DM		buf_var1;
 .var    rx_buf[3];      /* Status + L data + R data */
@@ -147,6 +147,7 @@
 
 .var cntP = 0; 		// period counter
 .var dT;  			// Sampling period
+.var cntDT; 		// Sampling period counter
 .var MODE = 0;		// Working mode (0 -> with working ranges)
 .var U;				// Voltage
 .var I;				// Current
@@ -159,14 +160,15 @@
 .var PulsesNumber;	// Pulses number / KWh
 .var PulsesNumberIndex;
 .var dTIndex;
-.var noCycles = 800;// No of interrupts to cover 20ms
-.var cntCycles = 0; // Cycles counter 
+.var noInterr = 80;  // No of interrupts to cover the sampling rate
+.var cntInterr = 0;  // Interr counter 
 .var SUB_MSB;
 .var SUB_LSB;
 
 .var TAB_PULSES[4] = {1, 2, 4, 8};	// Number of pulses/kWh -> 1/2/4/8;
-.var TAB_THRESHOLDS[8] = {0xD, 0xBBA0, 0x6, 0xDD0, 0x3, 0x6EE8, 0x1, 0xB774};
-.var TAB_SAMPLING_PERIODS[4] = {50, 3000, 30000, 60000};	// 1s/1m/5m/10m
+.var TAB_THRESHOLDS[8] = {0, 0x5A, 0, 0x5A, 0x3, 0x6EE8, 0x1, 0xB774};
+.var TAB_SAMPLING_PERIODS_INT[4] = {50, 3000, 30000, 60000}; // Necessary interrupts to cover: 1s/1m/5m/10m
+.var TAB_SAMPLING_PERIODS[4] = {1, 60, 300, 600}; // Time in seconds
 .SECTION/PM		pm_da;
 
 
@@ -440,14 +442,16 @@ dm(Dm_Wait_Reg)=si;
 // call init;
 
 // PF ports
-si=0x00ff;
-dm(Prog_Flag_Comp_Sel_Ctrl)=si; // PF0-7 outputs 
+si = 0x007f;
+dm(Prog_Flag_Comp_Sel_Ctrl) = si; // PF7 - Input && PF0-6 outputs 
 
 ena m_mode;
 ax0 = 0;
-dm(MODE) = ax0;			// Mode 0 => working range on
+dm(MODE) = ax0;		// Mode 0 => working range on
 ax0 = 50;
-dm(dT) = ax0; 			// Interr -> every 20ms => dT = 50
+dm(cntDT) = ax0; 	// Interr -> every 20ms => cntDT = 50
+ax0 = 1;
+dm(dT) = ax0; 
 ax0 = 4;
 dm(PulsesNumber) = ax0;	// Pulses / kWh
 
@@ -473,7 +477,7 @@ dm(PulsesNumber) = ax0;	// Pulses / kWh
 	ar = dm(i3, m3);
 	dm(PulsesNumber) = ar;
 	
-	i3 = TAB_SAMPLING_PERIODS;
+	i3 = TAB_SAMPLING_PERIODS_INT;
 	l3 = 4;
 	m3 = dm(dTIndex)
 	ar = dm(i3, m3);
@@ -482,13 +486,21 @@ dm(PulsesNumber) = ax0;	// Pulses / kWh
 
 // COMPUTE_THRESHOLD:
 ena m_mode;
-si = dm(PulsesNumber);	// Pulses/kWh
-ax1 = TAB_THRESHOLDS;
-ay1 = si;
-ar = ax1 + ay1;
-ax1 = dm(ar);
-dm(Threshold) = ax1;
-// dm(Threshold) = TAB_THRESHOLDS[si + 1];
+i4 = TAB_THRESHOLDS;
+m4 = 2;
+l4 = 0;
+ax0 = 1;					// PulseIndex
+dm(PulsesNumberIndex) = ax0;
+
+cntr = dm(PulsesNumberIndex);
+do sop until ce;
+sop: modify(i4, m4);
+
+m4 = 1;
+mr0 = dm(i4, m4);
+dm(Threshold) = mr0;
+mr0 = dm(i4, m4);
+dm(Threshold + 1) = mr0;
 
 /* // Computing the hard way
 ax1 = dm(PulsesNumber);
@@ -513,7 +525,6 @@ dm(Threshold) = mr0;
 dm(Threshold + 1) = mr1; */
 
 
-
 /* wait for char to go out */
 wt:
 
@@ -529,19 +540,12 @@ wt:
  
 sci:
         ena sec_reg;                /* use shadow register bank */      
-        /*
+        
         // Implementing a counter in order to sync with ATmega 
         // (which has timing interrupts at every 20ms;
-        ay0 = dm(cntCycles);		// Read current cycles counter
-        ar = ay0 + 1;				// Increment the cycles counter
-        dm(cntCycles) = ar;
-        ax0 = ar;
-        ay0 = dm(noCycles);			// Get the necessary cycles number
-        ar = ax0 - ay0;				// Compute cntCycles - noCycles
-        if ne rti;					// If not equal => return  
-        ax0 = 0;
-        dm(cntCycles) = ax0;			// Restart counting cntCycles = 0
-        */
+        ay0 = dm(cntP);		// Read current interrupts counter
+        ar = ay0 + 1;		// Increment the interrupts counter
+        dm(cntP) = ar;		// Save the result
         
         ay0 = dm(Q);		// Read current state
         ar = PASS ay0;		// ar = 0 + Q
@@ -568,38 +572,25 @@ sci:
         rti;
         
 Q0:
-		// Implementing a counter in order to sync with ATmega 
-        // (which has timing interrupts at every 20ms;
-        ay0 = dm(cntCycles);		// Read current cycles counter
-        ar = ay0 + 1;				// Increment the cycles counter
-        dm(cntCycles) = ar;
-        ax0 = ar;
-        ay0 = dm(noCycles);			// Get the necessary cycles number
-        af = ax0 - ay0;				// Compute cntCycles - noCycles
-        if lt jump GO_Q0;				// If not equal => return
-    	ax1 = 1; 
-        dm(Q) = ax1;
-        rti;
+		// Here we check whether the sampling rate was
+		// acomplished.
+        ax0 = dm(cntDT);		// Get the interrupts counter value
+        ay0 = dm(cntP);			// Get the necessary interrupts number
+        af = ax0 - ay0;			// Compute cntInterrupts - cntInterrupts
+        if le jump GO_Q1;		// If not cntDT - cntP <= 0 => read new samples
+    	rti;					// Otherwise => return
         
-        GO_Q0:
+        GO_Q1:
         ax1 = 0;
+        dm(cntP) = ax1;			// Reset cntP
+        ax1 = 1; 
         dm(Q) = ax1;
         rti;
 ///////////////////////////////////////////////////       
         
 //////////////////// Q = 1 ////////////////////////
 Q1:        
-        // Check if the sampling period is complete
-        ay1 = dm(cntP);		// ay1 = cntP
-        ar = ay1 + 1;		// ar = cntP + 1
-        dm(cntP) = ar;		// cntP = ar = cntP + 1
-        ax1 = dm(dT);		// ax1 = dT
-        ay1 = dm(cntP);		// Refresh: ay1 = cntP (incremented)
-        ar = ax1 - ay1;		// ar = dT - cntP
-        if gt rti;			// if dT > cntP => return
-        ax1 = 0;
-        dm(cntP) = ax1;		// Restart counting
-        
+        // Compute consumption:      
         ax1 = 0;					// Write PULSE = 0 at 0xFF
         IO(PORT_OUT) = ax1;
         
@@ -607,25 +598,25 @@ Q1:
         mx0 = dm (rx_buf + 2); 	// Citeste senzorii de tensiune & curent
         my0 = dm (rx_buf + 1);
         
-        mx0 = 200;                 // U
-        my0 = 10;				   // I
+        // mx0 = 1000;         // U * I = 1000 V * 900 A = 
+        // my0 = 450;			// = 900,000 Ws (not realistic) 
         
         // Compute dE
         mr = mx0 * my0 (uu);	// mr = U * I
         dm(P) = mr0;			// P (power) = U * I
         mx1 = dm(dT);			// mx1 = dT
         my1 = mr0;				// my1 = U * I
-        mr0 = dm(E);			// mr = E
-        mr1 = dm(E + 1);
+        mr1 = dm(E);			// mr = E
+        mr0 = dm(E + 1);
         mr =  mr + mx1 * my1 (uu); 	// mr = E + U * I * dT = E + dE 			
-        dm(E) = mr0;				// Save E = E'
-        dm(E + 1) = mr1;
+        dm(E) = mr1;				// Save E = E'
+        dm(E + 1) = mr0;
         
-        ax0 = dm(E);
-        ax1 = dm(E + 1);
+        ax1 = dm(E);
+        ax0 = dm(E + 1);
         
-        ay0 = dm(Threshold);
-        ay1 = dm(Threshold + 1);
+        ay1 = dm(Threshold);
+        ay0 = dm(Threshold + 1);
         
         DIS AR_SAT;
 		ar = ax0 - ay0;
@@ -639,8 +630,8 @@ Q1:
         // ax1 ax0 -> E
         // ay1 ay0 -> TH
         // Save last iteration's result:
-        dm(E) = ax0;
-        dm(E + 1) = ax1;
+        dm(E) = ax1;
+        dm(E + 1) = ax0;
         
         DIS AR_SAT;
 		ar = ax0 - ay0;
@@ -687,7 +678,7 @@ Q3:
         // ar = ax1 or ay1;		
         
         ax1 = 1;				
-        // dm(Prog_Flag_Data) = ax1;	// PF = PPPP PPP1 (PULSE = 1)
+        // dm(Prog_Flag_Data) = ax1;	// PF = RPPP PPP1 (PULSE = 1)
         IO(PORT_OUT) = ax1;		// Write PULSE = 1 at 0xFF
         ay1 = dm(cntG);
         ar = ay1 + 1;           // Increment cnt
@@ -717,19 +708,19 @@ Q4:
         ay1 = ar;
         af = ax1 - ay1;				// Check whether cnt = T
         ar = 4;
-        if eq ar = ar + 1;		// If so, go to Q = 4
+        if eq ar = ar + 1;		// If so, go to Q = 5
         dm(Q) = ar;
         rti;
 //////////////////////////////
  
 
-      
 //////////// Q = 5 ///////////
 Q5:
 		ax0 = 0;
 		dm(cntG) = ax0;
         ay1 = dm(n);
         ar = ay1 - 1;
+        dm(n) = ar;
         if gt jump GO_TO_Q3;
         // if le jump UPDATE_INFO;
         ax0 = 0;
