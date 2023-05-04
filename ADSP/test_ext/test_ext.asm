@@ -654,7 +654,10 @@ Q1:
     
 ///////////// Q = 2 ///////////
 Q2:
-        ax0 = 1;
+        // Compute consumption:      
+        ax1 = 0;					// Write PULSE = 0 at 0xFF
+        IO(PORT_OUT) = ax1;
+		ax0 = 1;
         ax1 = 3;
         ay0 = 0;
 		ay1 = dm(n);			// ay0 = n 
@@ -716,6 +719,9 @@ Q4:
 
 //////////// Q = 5 ///////////
 Q5:
+		// Compute consumption:      
+        ax1 = 0;					// Write PULSE = 0 at 0xFF
+        IO(PORT_OUT) = ax1;
 		ax0 = 0;
 		dm(cntG) = ax0;
         ay1 = dm(n);
