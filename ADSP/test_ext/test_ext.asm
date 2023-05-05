@@ -435,7 +435,6 @@ check_aci2:
 skip: imask = 0x200;
 
 // wait states
-
 si=0xFFFF;
 dm(Dm_Wait_Reg)=si;
 
@@ -500,6 +499,12 @@ m4 = 1;
 mr0 = dm(i4, m4);
 dm(Threshold) = mr0;
 mr0 = dm(i4, m4);
+dm(Threshold + 1) = mr0;
+
+// Threshold = 360 Ws (Testing purposes)
+mr0 = 0;
+dm(Threshold) = mr0;
+mr0 = 360;
 dm(Threshold + 1) = mr0;
 
 /* // Computing the hard way
@@ -572,6 +577,11 @@ sci:
         rti;
         
 Q0:
+		// For testing purposes write 0 to the
+		// output port:
+		ax1 = 0;
+		IO(PORT_OUT) = ax1;		
+
 		// Here we check whether the sampling rate was
 		// acomplished.
         ax0 = dm(cntDT);		// Get the interrupts counter value
@@ -590,16 +600,17 @@ Q0:
         
 //////////////////// Q = 1 ////////////////////////
 Q1:        
-        // Compute consumption:      
+        // Write 0 to the output port, for testing purposes    
         ax1 = 0;					// Write PULSE = 0 at 0xFF
         IO(PORT_OUT) = ax1;
         
+        // Compute consumption:  
 		// Read U & I    
         mx0 = dm (rx_buf + 2); 	// Citeste senzorii de tensiune & curent
         my0 = dm (rx_buf + 1);
         
-        // mx0 = 1000;         // U * I = 1000 V * 900 A = 
-        // my0 = 450;			// = 900,000 Ws (not realistic) 
+        // mx0 = 225;         // U * I = 1000 V * 900 A = 
+        // my0 = 2;			// = 900,000 Ws (not realistic) 
         
         // Compute dE
         mr = mx0 * my0 (uu);	// mr = U * I
