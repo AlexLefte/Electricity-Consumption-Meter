@@ -31,7 +31,7 @@ Data Stack size         : 256
 
 // Numar de perioade necesare
 // duratei unui puls pozitiv (cu durata 20 ms)
-#define DP 1   
+#define DP 1
 
 /// CLS definitions ///
 char S1 = 0; // CLS state
@@ -140,6 +140,8 @@ interrupt [TIM0_OVF] void timer0_ovf_isr(void)
 {
     // Reinitialize Timer 0 value
     TCNT0=0x3C; 
+    //Update current time
+    UpdateTime();
     
     // Update CA
     CA = (PORTD & 0x20) >> 5; 
@@ -319,7 +321,10 @@ void Init()
 }
 
 void UpdateConsumption()
-{                
+{         
+
+    // !!!!! TODO !!!!!! ack 
+            
     // Identify PULSE    
     /*
     PULSE = PINA & 0x01;
@@ -385,7 +390,8 @@ void UpdateConsumption()
     // M   P O W   E E R PU //
     
     // Reading the power level
-    PowerLevel = (PINA & 0x7E) >> 1;  
+    PowerLevel = (PINA & 0x7E) >> 1;   
+    PULSE = PINA & 0x01;
     
      switch(S2) 
     {
@@ -408,7 +414,7 @@ void UpdateConsumption()
                 
                 // Go further if the pulse period has passed,
                 // otherwise go back wait for sensding ack again.
-                S2 = (cntP == DP) ? 1 : 0;
+                S2 = (cntP >= DP) ? 1 : 0;
             }
             break;
         }
@@ -422,11 +428,18 @@ void UpdateConsumption()
                 // Increment consumption 
                 if (MODE == 0)
                 {
-                    CONSUM[Q] += 1;    // Working range on
+                    CONSUM[Q] += 1;    // Working range on            
+                    
+                   // if(CONSUM[Q]%6 == 0 && CONSUM[4]%8 == 0) CONSUM[Q] +=1;
                 }
                 else
                 {
-                    CONSUM[4] += 1;    // Working range off   
+                    CONSUM[4] += 1;    // Working range off  
+                   
+                  
+                   // if(CONSUM[4]%6 == 0 && CONSUM[4]%8 == 0)   CONSUM[4] +=1;
+                           
+                    
                 }
                 
                 // Wait for another pulse

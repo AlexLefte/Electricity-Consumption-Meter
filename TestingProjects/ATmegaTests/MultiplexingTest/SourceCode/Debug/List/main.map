@@ -45,14 +45,13 @@ C4                                                                              
 FLASH Allocation [words]
 Function                                                                          Address   Size
 ------------------------------------------------------------------------------------------------
-timer0_ovf_isr                                                                    0x000E9     39
-main                                                                              0x00110     93
-Init                                                                              0x0016D      9
-UpdateConsumption                                                                 0x00176     54
-MockPULSE                                                                         0x001AC     27
-DisplayConsumption                                                                0x001C7     60
-DisplayDigit                                                                      0x00203     43
-CLS                                                                               0x0022E    117
-DisplayInfo                                                                       0x002A3      3
-DisplayPowerLevel                                                                 0x002A6     27
-DisplayConsumptionDisplayMode                                                     0x002C1    124
+timer0_ovf_isr                                                                    0x000ED     38
+main                                                                              0x00113     93
+Init                                                                              0x00170     10
+UpdateConsumption                                                                 0x0017A     57
+DisplayConsumption                                                                0x001B3     60
+DisplayDigit                                                                      0x001EF     43
+CLS                                                                               0x0021A    117
+DisplayInfo                                                                       0x0028F      3
+DisplayPowerLevel                                                                 0x00292     27
+DisplayConsumptionDisplayMode                                                     0x002AD    124

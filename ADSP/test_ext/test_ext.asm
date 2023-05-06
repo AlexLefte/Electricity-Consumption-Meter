@@ -18,6 +18,9 @@
 // Input port
 #define PORT_IN 0x1FF
 
+// DP and T
+#define DP 1
+#define T 5
 
 .SECTION/DM		buf_var1;
 .var    rx_buf[3];      /* Status + L data + R data */
@@ -25,7 +28,6 @@
 .SECTION/DM		buf_var2;
 .var    	tx_buf[3] = 0xc000, 0x0000, 0x0000;      /* Cmd + L data + R data    */
 
-// Programming words?
 .SECTION/DM		buf_var3;
 .var    init_cmds[13] = 0xc002,     /*
                         				Left input control reg
@@ -143,17 +145,38 @@
 .var 	PF_input;
 .var 	PF_output;
 
+.var cntP = 0; 		// period counter
+.var dT;  			// Sampling period
+.var cntDT; 		// Sampling period counter
+.var MODE = 0;		// Working mode (0 -> with working ranges)
+.var U;				// Voltage
+.var I;				// Current
+.var E[2] = {0, 0};	// Energy (Ws)
+.var n;				// Number of pulses to send
+.var Q;  			// PS state
+.var cntG;          // Pulse generator counter
+.var P;				// Power
+.var Threshold[2] = {0, 0};		// Power threshold to generate a pulse 
+.var PulsesNumber;	// Pulses number / KWh
+.var PulsesNumberIndex;
+.var dTIndex;
+.var noInterr = 80;  // No of interrupts to cover the sampling rate
+.var cntInterr = 0;  // Interr counter 
+.var SUB_MSB;
+.var SUB_LSB;
 
+.var TAB_PULSES[4] = {1, 2, 4, 8};	// Number of pulses/kWh -> 1/2/4/8;
+.var TAB_THRESHOLDS[8] = {0, 0x5A, 0, 0x5A, 0x3, 0x6EE8, 0x1, 0xB774};
+.var TAB_SAMPLING_PERIODS_INT[4] = {50, 3000, 30000, 60000}; // Necessary interrupts to cover: 1s/1m/5m/10m
+.var TAB_SAMPLING_PERIODS[4] = {1, 60, 300, 600}; // Time in seconds
 .SECTION/PM		pm_da;
 
 
 /*** Interrupt Vector Table ***/
 .SECTION/PM     interrupts;
 		jump start;  rti; rti; rti;     /*00: reset */
-        
-		//rti;         rti; rti; rti;     /*04: IRQ2 */
-        
-		jump input_samples;         rti; rti; rti;
+      
+		jump sci;    rti; rti; rti;	/*04: IRQ2 */
 		
         rti;         rti; rti; rti;     /*08: IRQL1 */
         rti;         rti; rti; rti;     /*0c: IRQL0 */
@@ -161,7 +184,7 @@
         ar = pass ar;
         if eq rti;
         jump next_cmd;
-        jump input_samples;             /*14: SPORT0 rx */
+        jump sci;             /*14: SPORT0 rx */
                      rti; rti; rti;
         rti;         rti; rti; rti;     /*18: IRQE */
         rti;         rti; rti; rti;     /*1c: BDMA */
@@ -315,6 +338,20 @@ start:
 
 //
 
+// si = IO(PORT_IN);
+
+// Read the working mode
+// AR = si;
+// AY0 = 0x0001;
+// AR = AR AND AY0;
+// dm(MODE) = AR;
+
+// Read the sampling rate
+// AR = si;
+// AY0 = 0x0002;
+// AR = AR AND AY0;
+// dm(dT) = AR;
+
 jump skip;
 
 //
@@ -380,7 +417,7 @@ check_aci2:
         ifc = b#00000011111110;     /* clear any pending interrupt */
         nop;
 
-		imask = b#0001100001;       /* enable rx0 interrupt */
+		imask = b#0001110001;       /* enable rx0 interrupt */
             /*    |||||||||+ | timer
                   ||||||||+- | SPORT1 rec or IRQ0
                   |||||||+-- | SPORT1 trx or IRQ1
@@ -398,14 +435,100 @@ check_aci2:
 skip: imask = 0x200;
 
 // wait states
-
 si=0xFFFF;
 dm(Dm_Wait_Reg)=si;
 
-// PF ports
+// call init;
 
-si=0x00f0;
-dm(Prog_Flag_Comp_Sel_Ctrl)=si; // PF0-3 inputs , PF4-7 outputs 
+// PF ports
+si = 0x007f;
+dm(Prog_Flag_Comp_Sel_Ctrl) = si; // PF7 - Input && PF0-6 outputs 
+
+ena m_mode;
+ax0 = 0;
+dm(MODE) = ax0;		// Mode 0 => working range on
+ax0 = 50;
+dm(cntDT) = ax0; 	// Interr -> every 20ms => cntDT = 50
+ax0 = 1;
+dm(dT) = ax0; 
+ax0 = 4;
+dm(PulsesNumber) = ax0;	// Pulses / kWh
+
+	/*
+	// Get input data
+    ay0 = IO(PORT_IN);
+	ax0 = 0x0003;
+	ar = ax0 and ay0;
+	dm(PulsesNumberIndex) = ar;
+	ax0 = 0x000a;
+	ar = ax0 and ay0;
+	sr = LSHIFT ar BY (-2) (LO); 
+	dm(dTIndex) = sr;
+	ax0 = 0x0010;
+	ar = ax0 and ayo;
+	sr = LSHIFT ar BY (-4) (LO);
+	dm(MODE) = sr;
+	
+	// Get Pulses number & Sampling rate
+	i3 = TAB_PULSES;
+	l3 = 4;
+	m3 = dm(PulsesNumberIndex)
+	ar = dm(i3, m3);
+	dm(PulsesNumber) = ar;
+	
+	i3 = TAB_SAMPLING_PERIODS_INT;
+	l3 = 4;
+	m3 = dm(dTIndex)
+	ar = dm(i3, m3);
+	dm(dT) = ar;	
+	*/
+
+// COMPUTE_THRESHOLD:
+ena m_mode;
+i4 = TAB_THRESHOLDS;
+m4 = 2;
+l4 = 0;
+ax0 = 1;					// PulseIndex
+dm(PulsesNumberIndex) = ax0;
+
+cntr = dm(PulsesNumberIndex);
+do sop until ce;
+sop: modify(i4, m4);
+
+m4 = 1;
+mr0 = dm(i4, m4);
+dm(Threshold) = mr0;
+mr0 = dm(i4, m4);
+dm(Threshold + 1) = mr0;
+
+// Threshold = 360 Ws (Testing purposes)
+mr0 = 0;
+dm(Threshold) = mr0;
+mr0 = 360;
+dm(Threshold + 1) = mr0;
+
+/* // Computing the hard way
+ax1 = dm(PulsesNumber);
+ay0 = 3600;				// ay0 = 1kWh = 3600 kWs
+ay1 = 0;
+
+DIVS ay1, ax1; 
+DIVQ ax1; DIVQ ax1; 
+DIVQ ax1; DIVQ ax1; 
+DIVQ ax1; DIVQ ax1; 
+DIVQ ax1; DIVQ ax1; 
+DIVQ ax1; DIVQ ax1; 
+DIVQ ax1; DIVQ ax1; 
+DIVQ ax1; DIVQ ax1; 
+DIVQ ax1; DIVQ ax1;
+
+mx0 = ay0;
+my0 = 1000;				// Get the result in Ws
+mr = mx0 * my0 (uu);
+	
+dm(Threshold) = mr0;
+dm(Threshold + 1) = mr1; */
+
 
 /* wait for char to go out */
 wt:
@@ -419,17 +542,250 @@ wt:
  -  SPORT0 interrupt handler
  -
  ------------------------------------------------------------------------------*/
+ 
+sci:
+        ena sec_reg;                /* use shadow register bank */      
+        
+        // Implementing a counter in order to sync with ATmega 
+        // (which has timing interrupts at every 20ms;
+        ay0 = dm(cntP);		// Read current interrupts counter
+        ar = ay0 + 1;		// Increment the interrupts counter
+        dm(cntP) = ar;		// Save the result
+        
+        ay0 = dm(Q);		// Read current state
+        ar = PASS ay0;		// ar = 0 + Q
+        if eq jump Q0;		// If ar = Q = 0 => jump towards Q0
+        
+        ar = ay0 - 1;		// ar = Q - 1
+        if eq jump Q1;		// If ar = 0 => jump towards Q1
+        
+        ax0 = 2;		
+        ar = ay0 - ax0;		// ar = Q - 2
+        if eq jump Q2;		// If ar = 0 => jump towards Q2
+        
+        ax0 = 3;
+        ar = ay0 - ax0;		// ar = Q - 3
+        if eq jump Q3;	// If ar = 0 => jump towards Q3
+        
+        ax0 = 4;
+        ar = ay0 - ax0;		// ar = Q - 4
+        if eq jump Q4;	// If ar = 0 => jump towards Q4
+        
+        ax0 = 5;
+        ar = ay0 - ax0;		// ar = Q - 5
+        if eq jump Q5;	// If ar = 0 => jump towards Q5
+        rti;
+        
+Q0:
+		// For testing purposes write 0 to the
+		// output port:
+		ax1 = 0;
+		// IO(PORT_OUT) = ax1;
+		// dm(Prog_Flag_Data) = ax1;
+		dm(PF_output) = ax1;	
 
-input_samples:
-        ena sec_reg;                /* use shadow register bank */
+		// Here we check whether the sampling rate was
+		// acomplished.
+        ax0 = dm(cntDT);		// Get the interrupts counter value
+        ay0 = dm(cntP);			// Get the necessary interrupts number
+        af = ax0 - ay0;			// Compute cntInterrupts - cntInterrupts
+        if le jump GO_Q1;		// If not cntDT - cntP <= 0 => read new samples
+    	rti;					// Otherwise => return
+        
+        GO_Q1:
+        ax1 = 0;
+        dm(cntP) = ax1;			// Reset cntP
+        ax1 = 1; 
+        dm(Q) = ax1;
+        rti;
+///////////////////////////////////////////////////       
+        
+//////////////////// Q = 1 ////////////////////////
+Q1:        
+        // Write 0 to the output port, for testing purposes    
+        ax1 = 0;					// Write PULSE = 0 at 0xFF
+        // IO(PORT_OUT) = ax1;
+        // dm(Prog_Flag_Data) = ax1;
+        dm(PF_output) = ax1;
+        
+        // Compute consumption:  
+		// Read U & I    
+        // mx0 = dm (rx_buf + 2); 	// Citeste senzorii de tensiune & curent
+        // my0 = dm (rx_buf + 1);
+        
+        mx0 = 220;         // U * I = 1000 V * 900 A = 
+        my0 = 2;			// = 900,000 Ws (not realistic) 
+        
+        // Compute dE
+        mr = mx0 * my0 (uu);	// mr = U * I
+        dm(P) = mr0;			// P (power) = U * I
+        mx1 = dm(dT);			// mx1 = dT
+        my1 = mr0;				// my1 = U * I
+        mr1 = dm(E);			// mr = E
+        mr0 = dm(E + 1);
+        mr =  mr + mx1 * my1 (uu); 	// mr = E + U * I * dT = E + dE 			
+        dm(E) = mr1;				// Save E = E'
+        dm(E + 1) = mr0;
+        
+        ax1 = dm(E);
+        ax0 = dm(E + 1);
+        
+        ay1 = dm(Threshold);
+        ay0 = dm(Threshold + 1);
+        
+        DIS AR_SAT;
+		ar = ax0 - ay0;
+		ar = ax1 - ay1 + C - 1, ax0 = ar;
+		ax1 = ar;
+        if lt rti;			
+        
+        // COMPUTE_N:      
+        si = 1;
+        DIVIDE:
+        // ax1 ax0 -> E
+        // ay1 ay0 -> TH
+        // Save last iteration's result:
+        dm(E) = ax1;
+        dm(E + 1) = ax0;
+        
+        DIS AR_SAT;
+		ar = ax0 - ay0;
+		ar = ax1 - ay1 + C - 1, ax0 = ar;
+		ax1 = ar;
+        if lt jump STOP;
+        ar = si;
+        ar = ar + 1;
+        si = ar;
+        jump DIVIDE;
+        
+        STOP:
+        dm(n) = si;      
+        ax1 = 2;
+        dm(Q) = ax1;				// Q = 2;
+        rti;
+        
+//////////////////////////////////////////////////////////
+        
+    
+///////////// Q = 2 ///////////
+Q2:
+        // Compute consumption:      
+        ax1 = 0;					// Write PULSE = 0 at 0xFF
+        // IO(PORT_OUT) = ax1;
+        // dm(Prog_Flag_Data) = ax1;
+        dm(PF_output) = ax1;
+        
+		ax0 = 1;
+        ax1 = 3;
+        ay0 = 0;
+		ay1 = dm(n);			// ay0 = n 
+        af = PASS ay1;			// ar = n 
+        if le ar = ax0 + ay0; 	// if n <= 0 => return to Q0
+        if gt ar = ax1 + ay0;	// else => return to Q1
+        dm(Q) = ar;				// Go to Q = 3
+        rti;        
+//////////////////////////////
+        
+       
+//////////// Q = 3 ///////////
+Q3:
+        // Generating the pulse //
+        /*
+        ar = dm(P);				// ax0 = P
+        sr = LSHIFT ar BY 1 (LO); 	// sr = P << 1
+        */
+        // ax1 = 1;			// Set PULSE = 1
+        // ay1 = sr0;
+        // ar = ax1 or ay1;		
+        
+        ax1 = 1;				
+        // dm(Prog_Flag_Data) = ax1;	// PF = RPPP PPP1 (PULSE = 1)
+        // IO(PORT_OUT) = ax1;		// Write PULSE = 1 at 0xFF
+        // dm(Prog_Flag_Data) = ax1;
+        dm(PF_output) = ax1;
+        
+        ay1 = dm(cntG);
+        ar = ay1 + 1;           // Increment cnt
+        dm(cntG) = ar;
+        ax1 = ar;				// ax1 = cnt
+        ay1 = DP;				// ay1 = DP
+        af = ax1 - ay1;
+        ar = 3;				// Next state => default 3
+        if eq ar = ar + 1; 	// If cntG = DP => Go to Q4
+        dm(Q) = ar;			// Set Q state value
+		rti;
+//////////////////////////////
+               
+//////////// Q = 4 ///////////
+Q4:
+        /*
+		ar = dm(P);					// ax0 = P
+        sr = LSHIFT ar BY 1; 		// sr = P << 1		
+        dm(Prog_Flag_Data) = sr;	// PORTF = PPPP PPP0 (PULSE = 0)
+        */
+        ax1 = 0;					// Write PULSE = 0 at 0xFF
+        // IO(PORT_OUT) = ax1;
+        // dm(Prog_Flag_Data) = ax1;
+        dm(PF_output) = ax1;
+        
+        ay1 = dm(cntG);
+        ar = ay1 + 1;				// Increment cnt
+        dm(cntG) = ar;
+        ax1 = T;
+        ay1 = ar;
+        af = ax1 - ay1;				// Check whether cnt = T
+        ar = 4;
+        if eq ar = ar + 1;		// If so, go to Q = 5
+        dm(Q) = ar;
+        rti;
+//////////////////////////////
+ 
 
-        sr1 = dm (rx_buf + 2); /* get new sample from SPORT0 (from codec) */
+//////////// Q = 5 ///////////
+Q5:
+		// Compute consumption:      
+        ax1 = 0;					// Write PULSE = 0 at 0xFF
+        // IO(PORT_OUT) = ax1;
+		// dm(Prog_Flag_Data) = ax1;
+		dm(PF_output) = ax1;
+		
+        ax0 = 0;
+		dm(cntG) = ax0;
+        ay1 = dm(n);
+        ar = ay1 - 1;
+        dm(n) = ar;
+        if gt jump GO_TO_Q3;
+        // if le jump UPDATE_INFO;
+        ax0 = 0;
+        dm(Q) = ax0;
+        rti;
+        
+        GO_TO_Q3:
+        ax0 = 3;
+        dm(Q) = ax0;	  // Switch to Q = 3
+        rti;
+        
+        /*
+        UPDATE_INFO:
+        ax1 = IO(PORT_IN);		// Read input;
+        ay1 = 0x0003;
+        ar = ax1 and ay1;		// Read sampling period
+        dm(dT) = ar;
+        ay1 = 0x000A0;
+        ar = ax1 and ay1;
+        sr = LSHIFT ar BY (-2) (LO);  // Shift towards right >> 2
+        dm(PulsesNumber) = sr0;		  // Read pulses number / KWh
+        ax0 = 0;
+        dm(Q) = ax0;					  // 
+        rti;
+        */
+//////////////////////////////
 
 nofilt: /*sr=ashift sr1 by -1 (hi);*/   /* save the audience's ears from damage */
         mr1=sr1;
         
-        si=IO(PORT_IN);
-        IO(PORT_OUT)=si;
+        // si=IO(PORT_IN);
+        // IO(PORT_OUT)=si;
 output:
         dm (tx_buf + 1) = mr1;      /* filtered output to SPORT (to spkr) */
         dm (tx_buf + 2) = mr1;      /* filtered output to SPORT (to spkr) */
@@ -446,11 +802,9 @@ output:
 		ar=dm(PF_output);
 		sr=lshift ar by 4 (hi);
 		ax0=sr1;
-		dm(Prog_Flag_Data)=ax0;
-        
-        //
-        
+		dm(Prog_Flag_Data)=ax0;     
         rti;
+		
 /*------------------------------------------------------------------------------
  -
  -  transmit interrupt used for Codec initialization

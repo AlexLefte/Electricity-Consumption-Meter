@@ -80,7 +80,7 @@ char Q, Q1, S3;
 // Consumption array
 //            0 - H1   H1 - H2   H2 - 0   Sat - Sun   Total 
 //              ^         ^         ^         ^         ^
-int CONSUM[] = {0,        0,        0,        0,        0};
+int CONSUM[] = {21,        0,        0,        0,        0};
 
 // Total consumption
 char TOTAL_CONS = 0;
@@ -150,7 +150,7 @@ interrupt [TIM0_OVF] void timer0_ovf_isr(void)
     DisplayInfo();
                                     
     // Update mock pulse
-    MockPULSE();
+    // MockPULSE();
     
     // Check for pulses coming from ADSP
     UpdateConsumption();
@@ -324,7 +324,7 @@ void Init()
 void UpdateConsumption()
 {                
     // Identify PULSE
-    // PULSE = PINA & 0x01;
+    PULSE = PINA & 0x01;
     
     /* switch(S2) 
     {
@@ -384,7 +384,7 @@ void UpdateConsumption()
                 
     
     // Read power level
-    // PowerLevel = (PINA & 0xfe) >> 1;  
+    PowerLevel = (PINA & 0xfe) >> 1;  
     
     // For testing purposes, we will assume PowerLevel = 6 kW
     PowerLevel = 6;
@@ -392,7 +392,7 @@ void UpdateConsumption()
     switch(S2) 
     {
         case 0:
-        {          
+        {         
             // If PULSE is on, start counting
             if (PULSE)
             {   
@@ -409,7 +409,7 @@ void UpdateConsumption()
             break;
         }
         case 1:
-        {
+        {      
             if (~PULSE)
             {   
                 // Update current consumption range

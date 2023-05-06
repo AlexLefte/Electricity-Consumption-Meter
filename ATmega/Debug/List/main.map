@@ -42,13 +42,14 @@ Q                                                                               
 FLASH Allocation [words]
 Function                                                                          Address   Size
 ------------------------------------------------------------------------------------------------
-timer0_ovf_isr                                                                    0x000E6     39
-main                                                                              0x0010D     92
-Init                                                                              0x00169     13
-UpdateConsumption                                                                 0x00176     64
-DisplayConsumption                                                                0x001B6     63
-DisplayDigit                                                                      0x001F5     39
-CLS                                                                               0x0021C     84
-DisplayInfo                                                                       0x00270      3
-DisplayPowerLevel                                                                 0x00273     27
-DisplayConsumptionDisplayMode                                                     0x0028E    139
+timer0_ovf_isr                                                                    0x000E6     40
+main                                                                              0x0010E     92
+Init                                                                              0x0016A     13
+UpdateConsumption                                                                 0x00177     67
+DisplayConsumption                                                                0x001BA     63
+DisplayDigit                                                                      0x001F9     39
+UpdateTime                                                                        0x00220     29
+CLS                                                                               0x0023D     84
+DisplayInfo                                                                       0x00291      3
+DisplayPowerLevel                                                                 0x00294     27
+DisplayConsumptionDisplayMode                                                     0x002AF    139
