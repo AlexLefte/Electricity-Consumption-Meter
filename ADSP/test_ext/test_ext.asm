@@ -580,9 +580,9 @@ Q0:
 		// For testing purposes write 0 to the
 		// output port:
 		ax1 = 0;
-		// IO(PORT_OUT) = ax1;
+		IO(PORT_OUT) = ax1;
 		// dm(Prog_Flag_Data) = ax1;
-		dm(PF_output) = ax1;	
+		// dm(PF_output) = ax1;	
 
 		// Here we check whether the sampling rate was
 		// acomplished.
@@ -604,17 +604,17 @@ Q0:
 Q1:        
         // Write 0 to the output port, for testing purposes    
         ax1 = 0;					// Write PULSE = 0 at 0xFF
-        // IO(PORT_OUT) = ax1;
+        IO(PORT_OUT) = ax1;
         // dm(Prog_Flag_Data) = ax1;
-        dm(PF_output) = ax1;
+        // dm(PF_output) = ax1;
         
         // Compute consumption:  
 		// Read U & I    
-        // mx0 = dm (rx_buf + 2); 	// Citeste senzorii de tensiune & curent
-        // my0 = dm (rx_buf + 1);
+        mx0 = dm (rx_buf + 2); 	// Citeste senzorii de tensiune & curent
+        my0 = dm (rx_buf + 1);
         
-        mx0 = 220;         // U * I = 1000 V * 900 A = 
-        my0 = 2;			// = 900,000 Ws (not realistic) 
+        // mx0 = 220;         // U * I = 1000 V * 900 A = 
+        // my0 = 2;			// = 900,000 Ws (not realistic) 
         
         // Compute dE
         mr = mx0 * my0 (uu);	// mr = U * I
@@ -671,9 +671,9 @@ Q1:
 Q2:
         // Compute consumption:      
         ax1 = 0;					// Write PULSE = 0 at 0xFF
-        // IO(PORT_OUT) = ax1;
+        IO(PORT_OUT) = ax1;
         // dm(Prog_Flag_Data) = ax1;
-        dm(PF_output) = ax1;
+        // dm(PF_output) = ax1;
         
 		ax0 = 1;
         ax1 = 3;
@@ -700,9 +700,9 @@ Q3:
         
         ax1 = 1;				
         // dm(Prog_Flag_Data) = ax1;	// PF = RPPP PPP1 (PULSE = 1)
-        // IO(PORT_OUT) = ax1;		// Write PULSE = 1 at 0xFF
+        IO(PORT_OUT) = ax1;		// Write PULSE = 1 at 0xFF
         // dm(Prog_Flag_Data) = ax1;
-        dm(PF_output) = ax1;
+        // dm(PF_output) = ax1;
         
         ay1 = dm(cntG);
         ar = ay1 + 1;           // Increment cnt
@@ -724,9 +724,9 @@ Q4:
         dm(Prog_Flag_Data) = sr;	// PORTF = PPPP PPP0 (PULSE = 0)
         */
         ax1 = 0;					// Write PULSE = 0 at 0xFF
-        // IO(PORT_OUT) = ax1;
+        IO(PORT_OUT) = ax1;
         // dm(Prog_Flag_Data) = ax1;
-        dm(PF_output) = ax1;
+        // dm(PF_output) = ax1;
         
         ay1 = dm(cntG);
         ar = ay1 + 1;				// Increment cnt
@@ -745,9 +745,9 @@ Q4:
 Q5:
 		// Compute consumption:      
         ax1 = 0;					// Write PULSE = 0 at 0xFF
-        // IO(PORT_OUT) = ax1;
+        IO(PORT_OUT) = ax1;
 		// dm(Prog_Flag_Data) = ax1;
-		dm(PF_output) = ax1;
+		// dm(PF_output) = ax1;
 		
         ax0 = 0;
 		dm(cntG) = ax0;
