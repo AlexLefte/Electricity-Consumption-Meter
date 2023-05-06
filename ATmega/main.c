@@ -414,7 +414,7 @@ void UpdateConsumption()
                 
                 // Go further if the pulse period has passed,
                 // otherwise go back wait for sensding ack again.
-                S2 = (cntP == DP) ? 1 : 0;
+                S2 = (cntP >= DP) ? 1 : 0;
             }
             break;
         }
@@ -430,14 +430,14 @@ void UpdateConsumption()
                 {
                     CONSUM[Q] += 1;    // Working range on            
                     
-                    if(CONSUM[Q]%6 == 0) CONSUM[Q] +=1;
+                   // if(CONSUM[Q]%6 == 0 && CONSUM[4]%8 == 0) CONSUM[Q] +=1;
                 }
                 else
                 {
                     CONSUM[4] += 1;    // Working range off  
                    
                   
-                    if(CONSUM[4]%6 == 0)   CONSUM[4] +=1;
+                   // if(CONSUM[4]%6 == 0 && CONSUM[4]%8 == 0)   CONSUM[4] +=1;
                            
                     
                 }
