@@ -169,6 +169,7 @@
 .var TAB_THRESHOLDS[8] = {0, 0x5A, 0, 0x5A, 0x3, 0x6EE8, 0x1, 0xB774};
 .var TAB_SAMPLING_PERIODS_INT[4] = {50, 3000, 30000, 60000}; // Necessary interrupts to cover: 1s/1m/5m/10m
 .var TAB_SAMPLING_PERIODS[4] = {1, 60, 300, 600}; // Time in seconds
+.var TAB_U[6] = {200 ,210, 220, 230, 240, 250}; // Voltages
 .SECTION/PM		pm_da;
 
 
@@ -610,11 +611,52 @@ Q1:
         
         // Compute consumption:  
 		// Read U & I    
-        mx0 = dm (rx_buf + 2); 	// Citeste senzorii de tensiune & curent
-        my0 = dm (rx_buf + 1);
+		/*
+		READ_U:
+        ax0 = dm (rx_buf + 2); 	// Citeste senzorii de tensiune (U)      
+        ax0 = mx0;
+        ay0 = 0.83r;
+        ax1 = 1;
+        ar = ax0 - ay0;
+        if lt jump READ_I;
         
-        // mx0 = 220;         // U * I = 1000 V * 900 A = 
-        // my0 = 2;			// = 900,000 Ws (not realistic) 
+        ay0 = 0.87r;
+        ax1 = 1;
+        ar = ax0 - ay0;
+        if lt jump READ_I;
+        
+        ay0 = 0.91r;
+        ax1 = 2;
+        ar = ax0 - ay0;
+        if lt jump READ_I;
+        
+        ay0 = 0.95r;
+        ax1 = 3;
+        ar = ax0 - ay0;
+        if lt jump READ_I;  
+        
+        ay0 = 0.95r;
+        ax1 = 4;
+        ar = ax0 - ay0;
+        if lt jump READ_I;  
+                       
+        ax1 = 5;       
+        
+        READ_I:
+        i4 = TAB_THRESHOLDS;
+		m4 = 1;
+		l4 = 0;
+        cntr = ax1;
+		do sop1 until ce;
+		sop1: modify(i4, m4);
+		mr0 = dm(i4, m4);
+		
+        jump READ_U;
+        my0 = dm (rx_buf + 1);
+        */
+        
+        mx0 = 225;
+        my0 = 2;
         
         // Compute dE
         mr = mx0 * my0 (uu);	// mr = U * I
