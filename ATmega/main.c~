@@ -420,7 +420,7 @@ void UpdateConsumption()
     
     // Reading the power level
     PowerLevel = (PINA & 0x7E) >> 1;   
-    // PULSE = PINA & 0x01;
+    PULSE = PINA & 0x01;
     
      switch(S2) 
     {
