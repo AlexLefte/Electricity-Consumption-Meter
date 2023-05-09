@@ -410,7 +410,7 @@ void UpdateConsumption()
         }
         case 1:
         {      
-            if (~PULSE)
+            if (PULSE == 0)
             {   
                 // Update current consumption range
                 CLS();

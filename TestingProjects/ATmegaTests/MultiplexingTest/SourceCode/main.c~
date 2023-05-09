@@ -384,7 +384,7 @@ void UpdateConsumption()
                 
     
     // Read power level
-    // PowerLevel = (PINA & 0xfe) >> 1;  
+    PowerLevel = (PINA & 0xfe) >> 1;  
     
     // For testing purposes, we will assume PowerLevel = 6 kW
     PowerLevel = 6;
@@ -392,8 +392,7 @@ void UpdateConsumption()
     switch(S2) 
     {
         case 0:
-        {      
-            PULSE = PINA & 0x01;    
+        {         
             // If PULSE is on, start counting
             if (PULSE)
             {   
@@ -411,7 +410,6 @@ void UpdateConsumption()
         }
         case 1:
         {      
-            PULSE = PINA & 0x01;
             if (~PULSE)
             {   
                 // Update current consumption range

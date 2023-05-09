@@ -64,6 +64,8 @@ char S2; //starea de contorizare a PS-ului
 ////// Global variables //////// 
 // PULSE
 char PULSE;
+char S_PULSE;
+char cntMockPulse;
 
 // Working mode ///
 // 0 -> range on 
@@ -131,6 +133,7 @@ void CLS();
 void DisplayPowerLevel();
 void DisplayConsumptionDisplayMode();
 void DisplayInfo();
+void MockPULSE();
 /////////////////////////
 
 
@@ -144,10 +147,13 @@ interrupt [TIM0_OVF] void timer0_ovf_isr(void)
     UpdateTime();
     
     // Update CA
-    CA = (PORTD & 0x20) >> 5; 
+    CA = (PORTD & 0x80) >> 7; 
     
     //DisplayInfo
     DisplayInfo();
+    
+    // Update mock pulse
+    MockPULSE();                 
     
     // Check for pulses coming from ADSP
     UpdateConsumption();
@@ -320,6 +326,29 @@ void Init()
     PORTB = 0xff;
 }
 
+// Mocks the PULSE coming from ADSP2181 (PF0) -> ATMega164A (PINA0) 
+void MockPULSE()
+{
+     switch(S_PULSE)
+     {   
+        case 0:
+        {
+            cntMockPulse = 0;
+            PULSE = 1;
+            S_PULSE = 1;
+            break;
+        }  
+        case 1:
+        {   
+            cntMockPulse += 1;
+            PULSE = 0;    
+            if (cntMockPulse == 49)
+                S_PULSE = 0;
+            break;
+        }
+     }
+}
+
 void UpdateConsumption()
 {         
 
@@ -391,7 +420,7 @@ void UpdateConsumption()
     
     // Reading the power level
     PowerLevel = (PINA & 0x7E) >> 1;   
-    PULSE = PINA & 0x01;
+    // PULSE = PINA & 0x01;
     
      switch(S2) 
     {
@@ -414,7 +443,7 @@ void UpdateConsumption()
                 
                 // Go further if the pulse period has passed,
                 // otherwise go back wait for sensding ack again.
-                S2 = (cntP >= DP) ? 1 : 0;
+                S2 = (cntP == DP) ? 1 : 0;
             }
             break;
         }
@@ -497,7 +526,8 @@ void DisplayDigit(char currentDisplay, char digit)
     
     // Select the desired display (turn on the pin
     // corresponding to the desired digit (C4/C3/C2/C1) 
-    char output = 0xff;
+    // char output = 0xff;
+    char output;
          
     switch (currentDisplay)
     {
@@ -520,7 +550,10 @@ void DisplayDigit(char currentDisplay, char digit)
             output = 0x01;     
             break;
     }
-            
+     
+    // Delete PD0-3 
+    PORTD &= 0xF0; 
+           
     // Assign output to PORTC in order to select the desired display;
     PORTD = output;  
     
@@ -572,12 +605,13 @@ void CLS()
     while (!ready)
     {
         if (now == adr[i]) {
-            S1 = adr[i + 1];
+            Q = adr[i + 1];
             ready = 1;  // Stop iterating through while
         }
         else if (adr[i] == T) ready = 1;
         else i = i+2;
-    }
+    }   
+    out = Tout[Q];
 }
 
 void DisplayInfo()

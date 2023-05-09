@@ -1133,7 +1133,7 @@ _DIGITS:
 ;GLOBAL REGISTER VARIABLES INITIALIZATION
 __REG_VARS:
 	.DB  0x0,0x0,0x0,0x0
-	.DB  0x0,0x0,0x0,0x0
+	.DB  0x1,0x0,0x0,0x0
 	.DB  0x0,0x0,0x0,0x0
 
 _0x3:
@@ -1380,7 +1380,7 @@ __GLOBAL_INI_END:
 ;
 ;// Working mode ///
 ;// 0 -> range on; 1 -> range off
-;char MODE = 0;
+;char MODE = 1;
 ;///////////////////
 ;
 ;////// Global variables ////////
@@ -1758,7 +1758,10 @@ _Init:
 ; 0000 0145 {
 _UpdateConsumption:
 ; 0000 0146     // Identify PULSE
-; 0000 0147     // PULSE = PINA & 0x01;
+; 0000 0147     PULSE = PINA & 0x01;
+	IN   R30,0x0
+	ANDI R30,LOW(0x1)
+	MOV  R10,R30
 ; 0000 0148 
 ; 0000 0149     /* switch(S2)
 ; 0000 014A     {
@@ -1842,27 +1845,23 @@ _UpdateConsumption:
 	SBIW R30,0
 	BRNE _0x13
 ; 0000 018B         {
-; 0000 018C             PULSE = PINA & 0x01;
-	IN   R30,0x0
-	ANDI R30,LOW(0x1)
-	MOV  R10,R30
-; 0000 018D             // If PULSE is on, start counting
-; 0000 018E             if (PULSE)
+; 0000 018C             // If PULSE is on, start counting
+; 0000 018D             if (PULSE)
 	TST  R10
 	BREQ _0x14
-; 0000 018F             {
-; 0000 0190                 // Increment cntP
-; 0000 0191                 cntP += 1;
+; 0000 018E             {
+; 0000 018F                 // Increment cntP
+; 0000 0190                 cntP += 1;
 	LDS  R30,_cntP
 	SUBI R30,-LOW(1)
 	STS  _cntP,R30
-; 0000 0192 
-; 0000 0193                 // Reset reading flag
-; 0000 0194                 // PORTD &= 0x7f;
-; 0000 0195 
-; 0000 0196                 // Go further if the pulse period has passed,
-; 0000 0197                 // otherwise go back wait for sensding ack again.
-; 0000 0198                 S2 = (cntP == DP) ? 1 : 0;
+; 0000 0191 
+; 0000 0192                 // Reset reading flag
+; 0000 0193                 // PORTD &= 0x7f;
+; 0000 0194 
+; 0000 0195                 // Go further if the pulse period has passed,
+; 0000 0196                 // otherwise go back wait for sensding ack again.
+; 0000 0197                 S2 = (cntP == DP) ? 1 : 0;
 	LDS  R26,_cntP
 	CPI  R26,LOW(0x1)
 	BRNE _0x15
@@ -1872,38 +1871,32 @@ _0x15:
 	LDI  R30,LOW(0)
 _0x16:
 	MOV  R5,R30
-; 0000 0199             }
-; 0000 019A             break;
+; 0000 0198             }
+; 0000 0199             break;
 _0x14:
 	RJMP _0x12
-; 0000 019B         }
-; 0000 019C         case 1:
+; 0000 019A         }
+; 0000 019B         case 1:
 _0x13:
 	CPI  R30,LOW(0x1)
 	LDI  R26,HIGH(0x1)
 	CPC  R31,R26
 	BRNE _0x12
-; 0000 019D         {
-; 0000 019E             PULSE = PINA & 0x01;
-	IN   R30,0x0
-	ANDI R30,LOW(0x1)
-	MOV  R10,R30
-; 0000 019F             if (~PULSE)
-	MOV  R30,R10
-	COM  R30
-	CPI  R30,0
-	BREQ _0x19
-; 0000 01A0             {
-; 0000 01A1                 // Update current consumption range
-; 0000 01A2                 CLS();
+; 0000 019C         {
+; 0000 019D             if (PULSE == 0)
+	TST  R10
+	BRNE _0x19
+; 0000 019E             {
+; 0000 019F                 // Update current consumption range
+; 0000 01A0                 CLS();
 	RCALL _CLS
-; 0000 01A3 
-; 0000 01A4                 // Increment consumption
-; 0000 01A5                 if (MODE == 0)
+; 0000 01A1 
+; 0000 01A2                 // Increment consumption
+; 0000 01A3                 if (MODE == 0)
 	TST  R7
 	BRNE _0x1A
-; 0000 01A6                 {
-; 0000 01A7                     CONSUM[Q] += 1;    // Working range on
+; 0000 01A4                 {
+; 0000 01A5                     CONSUM[Q] += 1;    // Working range on
 	MOV  R30,R9
 	RCALL SUBOPT_0x0
 	LD   R30,X+
@@ -1911,79 +1904,79 @@ _0x13:
 	ADIW R30,1
 	ST   -X,R31
 	ST   -X,R30
-; 0000 01A8                 }
-; 0000 01A9                 else
+; 0000 01A6                 }
+; 0000 01A7                 else
 	RJMP _0x1B
 _0x1A:
-; 0000 01AA                 {
-; 0000 01AB                     CONSUM[4] += 1;    // Working range off
+; 0000 01A8                 {
+; 0000 01A9                     CONSUM[4] += 1;    // Working range off
 	__GETW1MN _CONSUM,8
 	ADIW R30,1
 	__PUTW1MN _CONSUM,8
-; 0000 01AC                 }
+; 0000 01AA                 }
 _0x1B:
-; 0000 01AD 
-; 0000 01AE                 // Wait for another pulse
-; 0000 01AF                 S2 = 0;
+; 0000 01AB 
+; 0000 01AC                 // Wait for another pulse
+; 0000 01AD                 S2 = 0;
 	CLR  R5
-; 0000 01B0                 cntP = 0;
+; 0000 01AE                 cntP = 0;
 	LDI  R30,LOW(0)
 	STS  _cntP,R30
-; 0000 01B1             }
-; 0000 01B2             break;
+; 0000 01AF             }
+; 0000 01B0             break;
 _0x19:
-; 0000 01B3         }
-; 0000 01B4     }
+; 0000 01B1         }
+; 0000 01B2     }
 _0x12:
-; 0000 01B5 }
+; 0000 01B3 }
 	RET
 ;
 ;
 ;// Mocks the PULSE coming from ADSP2181 (PF0) -> ATMega164A (PINA0)
 ;void MockPULSE()
-; 0000 01BA {
-; 0000 01BB      switch(S_PULSE)
-; 0000 01BC      {
-; 0000 01BD         case 0:
-; 0000 01BE         {
-; 0000 01BF             cntMockPulse = 0;
-; 0000 01C0             PULSE = 1;
-; 0000 01C1             S_PULSE = 1;
-; 0000 01C2             break;
-; 0000 01C3         }
-; 0000 01C4         case 1:
-; 0000 01C5         {
-; 0000 01C6             cntMockPulse += 1;
-; 0000 01C7             PULSE = 0;
-; 0000 01C8             if (cntMockPulse == 49)
-; 0000 01C9                 S_PULSE = 0;
-; 0000 01CA             break;
-; 0000 01CB         }
-; 0000 01CC      }
-; 0000 01CD }
+; 0000 01B8 {
+; 0000 01B9      switch(S_PULSE)
+; 0000 01BA      {
+; 0000 01BB         case 0:
+; 0000 01BC         {
+; 0000 01BD             cntMockPulse = 0;
+; 0000 01BE             PULSE = 1;
+; 0000 01BF             S_PULSE = 1;
+; 0000 01C0             break;
+; 0000 01C1         }
+; 0000 01C2         case 1:
+; 0000 01C3         {
+; 0000 01C4             cntMockPulse += 1;
+; 0000 01C5             PULSE = 0;
+; 0000 01C6             if (cntMockPulse == 49)
+; 0000 01C7                 S_PULSE = 0;
+; 0000 01C8             break;
+; 0000 01C9         }
+; 0000 01CA      }
+; 0000 01CB }
 ;
 ;void DisplayConsumption()
-; 0000 01D0 {
+; 0000 01CE {
 _DisplayConsumption:
-; 0000 01D1     // We assume:
-; 0000 01D2     // PORTC: PC0 - PC6 -> 7 segments (A-G)
-; 0000 01D3     // PORTD: PD0 - PD3 -> select the common cathode for each digit (multiplexing)
-; 0000 01D4               // PD3 - C4, PD2 - C3, PD1 - C2, PD0 - C1
-; 0000 01D5     // Q - consumption range:
-; 0000 01D6         // 0 -> 00:00 - H1:00
-; 0000 01D7         // 1 -> H1:00 - H2:00               (MON - FRI)
-; 0000 01D8         // 2 -> H2:00 - 00:00 (next day)
-; 0000 01D9         // 3 -> SAT - SUN
-; 0000 01DA 
-; 0000 01DB     // The actual approach:
-; 0000 01DC     // Each main loop iteration we multiplex the digits and display one at a time
-; 0000 01DD 
-; 0000 01DE     // If MODE = 1 -> display total consumption,
-; 0000 01DF     // else -> display consumption based on current range.
-; 0000 01E0     int cons = (MODE) ?  CONSUM[4] : CONSUM[Q1];
-; 0000 01E1 
-; 0000 01E2     // Compute and display C4
-; 0000 01E3     C4 = cons / 1000;
+; 0000 01CF     // We assume:
+; 0000 01D0     // PORTC: PC0 - PC6 -> 7 segments (A-G)
+; 0000 01D1     // PORTD: PD0 - PD3 -> select the common cathode for each digit (multiplexing)
+; 0000 01D2               // PD3 - C4, PD2 - C3, PD1 - C2, PD0 - C1
+; 0000 01D3     // Q - consumption range:
+; 0000 01D4         // 0 -> 00:00 - H1:00
+; 0000 01D5         // 1 -> H1:00 - H2:00               (MON - FRI)
+; 0000 01D6         // 2 -> H2:00 - 00:00 (next day)
+; 0000 01D7         // 3 -> SAT - SUN
+; 0000 01D8 
+; 0000 01D9     // The actual approach:
+; 0000 01DA     // Each main loop iteration we multiplex the digits and display one at a time
+; 0000 01DB 
+; 0000 01DC     // If MODE = 1 -> display total consumption,
+; 0000 01DD     // else -> display consumption based on current range.
+; 0000 01DE     int cons = (MODE) ?  CONSUM[4] : CONSUM[Q1];
+; 0000 01DF 
+; 0000 01E0     // Compute and display C4
+; 0000 01E1     C4 = cons / 1000;
 	ST   -Y,R17
 	ST   -Y,R16
 ;	cons -> R16,R17
@@ -2004,78 +1997,78 @@ _0x23:
 	LDI  R31,HIGH(1000)
 	CALL __DIVW21
 	MOV  R13,R30
-; 0000 01E4     cons %= 1000;
+; 0000 01E2     cons %= 1000;
 	MOVW R26,R16
 	LDI  R30,LOW(1000)
 	LDI  R31,HIGH(1000)
 	CALL __MODW21
 	MOVW R16,R30
-; 0000 01E5     DisplayDigit(4, C4);
+; 0000 01E3     DisplayDigit(4, C4);
 	LDI  R30,LOW(4)
 	ST   -Y,R30
 	MOV  R26,R13
 	RCALL _DisplayDigit
-; 0000 01E6 
-; 0000 01E7     // Compute and display C3
-; 0000 01E8     C3 = cons / 100;
+; 0000 01E4 
+; 0000 01E5     // Compute and display C3
+; 0000 01E6     C3 = cons / 100;
 	MOVW R26,R16
 	LDI  R30,LOW(100)
 	LDI  R31,HIGH(100)
 	CALL __DIVW21
 	STS  _C3,R30
-; 0000 01E9     cons %= 100;
+; 0000 01E7     cons %= 100;
 	MOVW R26,R16
 	LDI  R30,LOW(100)
 	LDI  R31,HIGH(100)
 	CALL __MODW21
 	MOVW R16,R30
-; 0000 01EA     DisplayDigit(3, C3);
+; 0000 01E8     DisplayDigit(3, C3);
 	LDI  R30,LOW(3)
 	ST   -Y,R30
 	LDS  R26,_C3
 	RCALL _DisplayDigit
-; 0000 01EB 
-; 0000 01EC     // Compute and display C2
-; 0000 01ED     C2 = cons / 10;
+; 0000 01E9 
+; 0000 01EA     // Compute and display C2
+; 0000 01EB     C2 = cons / 10;
 	MOVW R26,R16
 	LDI  R30,LOW(10)
 	LDI  R31,HIGH(10)
 	CALL __DIVW21
 	STS  _C2,R30
-; 0000 01EE     DisplayDigit(2, C2);
+; 0000 01EC     DisplayDigit(2, C2);
 	LDI  R30,LOW(2)
 	ST   -Y,R30
 	LDS  R26,_C2
 	RCALL _DisplayDigit
-; 0000 01EF 
-; 0000 01F0     // Compute and display C1
-; 0000 01F1     C1 = cons % 10;
+; 0000 01ED 
+; 0000 01EE     // Compute and display C1
+; 0000 01EF     C1 = cons % 10;
 	MOVW R26,R16
 	LDI  R30,LOW(10)
 	LDI  R31,HIGH(10)
 	CALL __MODW21
 	STS  _C1,R30
-; 0000 01F2     DisplayDigit(1, C1);
+; 0000 01F0     DisplayDigit(1, C1);
 	LDI  R30,LOW(1)
 	ST   -Y,R30
 	LDS  R26,_C1
 	RCALL _DisplayDigit
-; 0000 01F3 }
+; 0000 01F1 }
 	LD   R16,Y+
 	LD   R17,Y+
 	RET
 ;
 ;void DisplayDigit(char currentDisplay, char digit)
-; 0000 01F6 {
+; 0000 01F4 {
 _DisplayDigit:
-; 0000 01F7     // Select the desired display (turn on the pin
-; 0000 01F8     // corresponding to the desired digit (C4/C3/C2/C1)
-; 0000 01F9     char output;
-; 0000 01FA 
-; 0000 01FB     // Set PORTC pins to the corresponding digit
-; 0000 01FC     // PORTC = DIGITS[digit];
-; 0000 01FD 
-; 0000 01FE     switch (currentDisplay)
+; 0000 01F5     // Select the desired display (turn on the pin
+; 0000 01F6     // corresponding to the desired digit (C4/C3/C2/C1)
+; 0000 01F7     char output;
+; 0000 01F8 
+; 0000 01F9     // Set PORTC pins to the corresponding digit
+; 0000 01FA     // PORTC = DIGITS[digit];
+; 0000 01FB 
+; 0000 01FC     switch (currentDisplay)
 	ST   -Y,R26
 	ST   -Y,R17
 ;	currentDisplay -> Y+2
@@ -2083,122 +2076,122 @@ _DisplayDigit:
 ;	output -> R17
 	LDD  R30,Y+2
 	LDI  R31,0
-; 0000 01FF     {
-; 0000 0200         case 4:
+; 0000 01FD     {
+; 0000 01FE         case 4:
 	CPI  R30,LOW(0x4)
 	LDI  R26,HIGH(0x4)
 	CPC  R31,R26
 	BRNE _0x28
-; 0000 0201             // Turn PD3 on
-; 0000 0202             //output &= 0b00000111;
-; 0000 0203             output = 0x08;
+; 0000 01FF             // Turn PD3 on
+; 0000 0200             //output &= 0b00000111;
+; 0000 0201             output = 0x08;
 	LDI  R17,LOW(8)
-; 0000 0204             break;
+; 0000 0202             break;
 	RJMP _0x27
-; 0000 0205         case 3:
+; 0000 0203         case 3:
 _0x28:
 	CPI  R30,LOW(0x3)
 	LDI  R26,HIGH(0x3)
 	CPC  R31,R26
 	BRNE _0x29
-; 0000 0206             // Turn PD2 on
-; 0000 0207             // output &= 0b00001011;
-; 0000 0208             output = 0x04;
+; 0000 0204             // Turn PD2 on
+; 0000 0205             // output &= 0b00001011;
+; 0000 0206             output = 0x04;
 	LDI  R17,LOW(4)
-; 0000 0209             break;
+; 0000 0207             break;
 	RJMP _0x27
-; 0000 020A         case 2:
+; 0000 0208         case 2:
 _0x29:
 	CPI  R30,LOW(0x2)
 	LDI  R26,HIGH(0x2)
 	CPC  R31,R26
 	BRNE _0x2A
-; 0000 020B             // Turn PD1 on
-; 0000 020C             output = 0x02;
+; 0000 0209             // Turn PD1 on
+; 0000 020A             output = 0x02;
 	LDI  R17,LOW(2)
-; 0000 020D             break;
+; 0000 020B             break;
 	RJMP _0x27
-; 0000 020E         case 1:
+; 0000 020C         case 1:
 _0x2A:
 	CPI  R30,LOW(0x1)
 	LDI  R26,HIGH(0x1)
 	CPC  R31,R26
 	BRNE _0x27
-; 0000 020F             // Turn PD0 on
-; 0000 0210             output = 0x01;
+; 0000 020D             // Turn PD0 on
+; 0000 020E             output = 0x01;
 	LDI  R17,LOW(1)
-; 0000 0211             break;
-; 0000 0212     }
+; 0000 020F             break;
+; 0000 0210     }
 _0x27:
-; 0000 0213 
-; 0000 0214     // Delete PD0-3
-; 0000 0215     PORTD &= 0xF0;
+; 0000 0211 
+; 0000 0212     // Delete PD0-3
+; 0000 0213     PORTD &= 0xF0;
 	IN   R30,0xB
 	ANDI R30,LOW(0xF0)
 	OUT  0xB,R30
-; 0000 0216 
-; 0000 0217     // Assign output to PORTC in order to select the desired display;
-; 0000 0218     PORTD |= output;
+; 0000 0214 
+; 0000 0215     // Assign output to PORTC in order to select the desired display;
+; 0000 0216     PORTD |= output;
 	IN   R30,0xB
 	OR   R30,R17
 	OUT  0xB,R30
-; 0000 0219 
-; 0000 021A     // Set PORTC pins to the corresponding digit
-; 0000 021B     PORTC = DIGITS[digit];
+; 0000 0217 
+; 0000 0218     // Set PORTC pins to the corresponding digit
+; 0000 0219     PORTC = DIGITS[digit];
 	LDD  R30,Y+1
 	LDI  R31,0
 	SUBI R30,LOW(-_DIGITS*2)
 	SBCI R31,HIGH(-_DIGITS*2)
 	LPM  R0,Z
 	OUT  0x8,R0
-; 0000 021C 
-; 0000 021D     // Add delay (10 us)
-; 0000 021E     // _display_us(10);
-; 0000 021F }
+; 0000 021A 
+; 0000 021B     // Add delay (10 us)
+; 0000 021C     // _display_us(10);
+; 0000 021D }
 	LDD  R17,Y+0
 	ADIW R28,3
 	RET
 ;
 ;
 ;void UpdateTime(){
-; 0000 0222 void UpdateTime(){
-; 0000 0223     cnt_time += 1; //incrementare contor de timp
-; 0000 0224     if(cnt_time != T_SEC) return;
-; 0000 0225 
-; 0000 0226     cnt_time = 0; // se reseteaza contorul
-; 0000 0227     S+=1;  //incrementeaza contor secunde
-; 0000 0228 
-; 0000 0229     if(S!=60) return;
-; 0000 022A     S = 0;//se reseteaza nr de secunde
-; 0000 022B     M += 1; //incrementeaza contor minute
-; 0000 022C 
-; 0000 022D     if(M!=60) return;
-; 0000 022E     M = 0;
-; 0000 022F     H += 1;
-; 0000 0230 
-; 0000 0231     if(H!=24) return;
-; 0000 0232     H = 0;
-; 0000 0233     Z += 1;
-; 0000 0234 
-; 0000 0235     if (Z == 7) Z = 0;
-; 0000 0236     return;
-; 0000 0237 }
+; 0000 0220 void UpdateTime(){
+; 0000 0221     cnt_time += 1; //incrementare contor de timp
+; 0000 0222     if(cnt_time != T_SEC) return;
+; 0000 0223 
+; 0000 0224     cnt_time = 0; // se reseteaza contorul
+; 0000 0225     S+=1;  //incrementeaza contor secunde
+; 0000 0226 
+; 0000 0227     if(S!=60) return;
+; 0000 0228     S = 0;//se reseteaza nr de secunde
+; 0000 0229     M += 1; //incrementeaza contor minute
+; 0000 022A 
+; 0000 022B     if(M!=60) return;
+; 0000 022C     M = 0;
+; 0000 022D     H += 1;
+; 0000 022E 
+; 0000 022F     if(H!=24) return;
+; 0000 0230     H = 0;
+; 0000 0231     Z += 1;
+; 0000 0232 
+; 0000 0233     if (Z == 7) Z = 0;
+; 0000 0234     return;
+; 0000 0235 }
 ;
 ;void CLS()
-; 0000 023A {
+; 0000 0238 {
 _CLS:
-; 0000 023B     char out;
-; 0000 023C 
-; 0000 023D     //exemplu
-; 0000 023E     // Ziua 3, ora 8, min 6, sec 3
-; 0000 023F     // 0x03080603
-; 0000 0240     long int now = (Z<<24) | (H<<16) | (M<<8) | S;
-; 0000 0241 
-; 0000 0242     long int *adr = TABA[Q];
-; 0000 0243     char ready = 0;
-; 0000 0244     int i = 0;
-; 0000 0245 
-; 0000 0246     while (!ready)
+; 0000 0239     char out;
+; 0000 023A 
+; 0000 023B     //exemplu
+; 0000 023C     // Ziua 3, ora 8, min 6, sec 3
+; 0000 023D     // 0x03080603
+; 0000 023E     long int now = (Z<<24) | (H<<16) | (M<<8) | S;
+; 0000 023F 
+; 0000 0240     long int *adr = TABA[Q];
+; 0000 0241     char ready = 0;
+; 0000 0242     int i = 0;
+; 0000 0243 
+; 0000 0244     while (!ready)
 	SBIW R28,4
 	CALL __SAVELOCR6
 ;	out -> R17
@@ -2256,13 +2249,13 @@ _CLS:
 _0x31:
 	CPI  R16,0
 	BRNE _0x33
-; 0000 0247     {
-; 0000 0248         if (now == adr[i]) {
+; 0000 0245     {
+; 0000 0246         if (now == adr[i]) {
 	RCALL SUBOPT_0x1
 	__GETD2S 6
 	CALL __CPD12
 	BRNE _0x34
-; 0000 0249             Q = adr[i + 1];
+; 0000 0247             Q = adr[i + 1];
 	MOVW R30,R20
 	ADIW R30,1
 	MOVW R26,R18
@@ -2270,328 +2263,328 @@ _0x31:
 	ADD  R26,R30
 	ADC  R27,R31
 	LD   R9,X
-; 0000 024A             ready = 1;
+; 0000 0248             ready = 1;
 	LDI  R16,LOW(1)
-; 0000 024B         }
-; 0000 024C         else if (adr[i] == Ter) ready = 1;
+; 0000 0249         }
+; 0000 024A         else if (adr[i] == Ter) ready = 1;
 	RJMP _0x35
 _0x34:
 	RCALL SUBOPT_0x1
 	__CPD1N 0x10000000
 	BRNE _0x36
 	LDI  R16,LOW(1)
-; 0000 024D         else i = i+2;
+; 0000 024B         else i = i+2;
 	RJMP _0x37
 _0x36:
 	__ADDWRN 20,21,2
-; 0000 024E     }
+; 0000 024C     }
 _0x37:
 _0x35:
 	RJMP _0x31
 _0x33:
-; 0000 024F 
-; 0000 0250     out = Tout[Q];
+; 0000 024D 
+; 0000 024E     out = Tout[Q];
 	MOV  R30,R9
 	LDI  R31,0
 	SUBI R30,LOW(-_Tout)
 	SBCI R31,HIGH(-_Tout)
 	LD   R17,Z
-; 0000 0251 }
+; 0000 024F }
 	CALL __LOADLOCR6
 	ADIW R28,10
 	RET
 ;
 ;void DisplayInfo()
-; 0000 0254 {
+; 0000 0252 {
 _DisplayInfo:
-; 0000 0255     DisplayConsumptionDisplayMode();
+; 0000 0253     DisplayConsumptionDisplayMode();
 	RCALL _DisplayConsumptionDisplayMode
-; 0000 0256     DisplayPowerLevel();
+; 0000 0254     DisplayPowerLevel();
 	RCALL _DisplayPowerLevel
-; 0000 0257 }
+; 0000 0255 }
 	RET
 ;
 ;void DisplayPowerLevel()
-; 0000 025A {
+; 0000 0258 {
 _DisplayPowerLevel:
-; 0000 025B    char out;
-; 0000 025C 
-; 0000 025D //   if (!PowerLevel)          PowerLevel = 0 kW
-; 0000 025E //   {
-; 0000 025F //        out = CLC_LEVEL[0];
-; 0000 0260 //   }
-; 0000 0261 //   else if (PowerLevel < 2.5)    0 < PowerLevel < 2.5 kW
-; 0000 0262 //   {
-; 0000 0263 //        out = CLC_LEVEL[1];
-; 0000 0264 //   }
-; 0000 0265 //   else if (PowerLevel < 5)      2.5 <= PowerLevel < 5 kW
-; 0000 0266 //   {
-; 0000 0267 //        out = CLC_LEVEL[2];
-; 0000 0268 //   }
-; 0000 0269 //   else if (PowerLevel < 7.5)    5 <= PowerLevel < 7.5 kW
-; 0000 026A //   {
-; 0000 026B //        out = CLC_LEVEL[3];
-; 0000 026C //   }
-; 0000 026D //   else                          PowerLvel >= 7.5 kW
-; 0000 026E //   {
-; 0000 026F //        out = CLC_LEVEL[4];
-; 0000 0270 //   }
-; 0000 0271 
-; 0000 0272    if (!PowerLevel)         // PowerLevel = 0 kW
+; 0000 0259    char out;
+; 0000 025A 
+; 0000 025B //   if (!PowerLevel)          PowerLevel = 0 kW
+; 0000 025C //   {
+; 0000 025D //        out = CLC_LEVEL[0];
+; 0000 025E //   }
+; 0000 025F //   else if (PowerLevel < 2.5)    0 < PowerLevel < 2.5 kW
+; 0000 0260 //   {
+; 0000 0261 //        out = CLC_LEVEL[1];
+; 0000 0262 //   }
+; 0000 0263 //   else if (PowerLevel < 5)      2.5 <= PowerLevel < 5 kW
+; 0000 0264 //   {
+; 0000 0265 //        out = CLC_LEVEL[2];
+; 0000 0266 //   }
+; 0000 0267 //   else if (PowerLevel < 7.5)    5 <= PowerLevel < 7.5 kW
+; 0000 0268 //   {
+; 0000 0269 //        out = CLC_LEVEL[3];
+; 0000 026A //   }
+; 0000 026B //   else                          PowerLvel >= 7.5 kW
+; 0000 026C //   {
+; 0000 026D //        out = CLC_LEVEL[4];
+; 0000 026E //   }
+; 0000 026F 
+; 0000 0270    if (!PowerLevel)         // PowerLevel = 0 kW
 	ST   -Y,R17
 ;	out -> R17
 	LDS  R30,_PowerLevel
 	LDS  R31,_PowerLevel+1
 	SBIW R30,0
 	BRNE _0x38
-; 0000 0273    {
-; 0000 0274         out = CLC_LEVEL[0];
+; 0000 0271    {
+; 0000 0272         out = CLC_LEVEL[0];
 	LDS  R17,_CLC_LEVEL
-; 0000 0275    }
-; 0000 0276    else if (PowerLevel < 3)   // 0 < PowerLevel < 3 kW
+; 0000 0273    }
+; 0000 0274    else if (PowerLevel < 3)   // 0 < PowerLevel < 3 kW
 	RJMP _0x39
 _0x38:
 	LDS  R26,_PowerLevel
 	LDS  R27,_PowerLevel+1
 	SBIW R26,3
 	BRGE _0x3A
-; 0000 0277    {
-; 0000 0278         out = CLC_LEVEL[1];
+; 0000 0275    {
+; 0000 0276         out = CLC_LEVEL[1];
 	__GETBRMN 17,_CLC_LEVEL,1
-; 0000 0279    }
-; 0000 027A    else if (PowerLevel < 6)     // 3 <= PowerLevel < 6 kW
+; 0000 0277    }
+; 0000 0278    else if (PowerLevel < 6)     // 3 <= PowerLevel < 6 kW
 	RJMP _0x3B
 _0x3A:
 	LDS  R26,_PowerLevel
 	LDS  R27,_PowerLevel+1
 	SBIW R26,6
 	BRGE _0x3C
-; 0000 027B    {
-; 0000 027C         out = CLC_LEVEL[2];
+; 0000 0279    {
+; 0000 027A         out = CLC_LEVEL[2];
 	__GETBRMN 17,_CLC_LEVEL,2
-; 0000 027D    }
-; 0000 027E    else                         // PowerLvel >= 6 kW
+; 0000 027B    }
+; 0000 027C    else                         // PowerLvel >= 6 kW
 	RJMP _0x3D
 _0x3C:
-; 0000 027F    {
-; 0000 0280         out = CLC_LEVEL[3];
+; 0000 027D    {
+; 0000 027E         out = CLC_LEVEL[3];
 	__GETBRMN 17,_CLC_LEVEL,3
-; 0000 0281    }
+; 0000 027F    }
 _0x3D:
 _0x3B:
 _0x39:
-; 0000 0282 
-; 0000 0283    // Delete PB7-PB5
-; 0000 0284    PORTB &= 0x1f;
+; 0000 0280 
+; 0000 0281    // Delete PB7-PB5
+; 0000 0282    PORTB &= 0x1f;
 	IN   R30,0x5
 	ANDI R30,LOW(0x1F)
 	RJMP _0x2000002
-; 0000 0285 
-; 0000 0286    // Display out on PB7-PB5
-; 0000 0287    PORTB |= out;
-; 0000 0288 }
+; 0000 0283 
+; 0000 0284    // Display out on PB7-PB5
+; 0000 0285    PORTB |= out;
+; 0000 0286 }
 ;
 ;void DisplayConsumptionDisplayMode()
-; 0000 028B {
+; 0000 0289 {
 _DisplayConsumptionDisplayMode:
-; 0000 028C     char out;
-; 0000 028D 
-; 0000 028E     if (MODE == 1)  // Working without ranges
+; 0000 028A     char out;
+; 0000 028B 
+; 0000 028C     if (MODE == 1)  // Working without ranges
 	ST   -Y,R17
 ;	out -> R17
 	LDI  R30,LOW(1)
 	CP   R30,R7
 	BRNE _0x3E
-; 0000 028F     {
-; 0000 0290         // Clear PB4-0
-; 0000 0291         PORTB &= 0xE0;
+; 0000 028D     {
+; 0000 028E         // Clear PB4-0
+; 0000 028F         PORTB &= 0xE0;
 	IN   R30,0x5
 	ANDI R30,LOW(0xE0)
 	OUT  0x5,R30
-; 0000 0292 
-; 0000 0293         // Display on PB4-0
-; 0000 0294         PORTB |= 0x10;
+; 0000 0290 
+; 0000 0291         // Display on PB4-0
+; 0000 0292         PORTB |= 0x10;
 	SBI  0x5,4
-; 0000 0295 
-; 0000 0296         return;
+; 0000 0293 
+; 0000 0294         return;
 	RJMP _0x2000001
-; 0000 0297     }
-; 0000 0298 
-; 0000 0299     switch(S3)
+; 0000 0295     }
+; 0000 0296 
+; 0000 0297     switch(S3)
 _0x3E:
 	MOV  R30,R11
 	LDI  R31,0
-; 0000 029A     {
-; 0000 029B         case 0:
+; 0000 0298     {
+; 0000 0299         case 0:
 	SBIW R30,0
 	BRNE _0x42
-; 0000 029C         {
-; 0000 029D             if (CA == 0)            // Pressed CA
+; 0000 029A         {
+; 0000 029B             if (CA == 0)            // Pressed CA
 	LDS  R30,_CA
 	CPI  R30,0
 	BRNE _0x43
-; 0000 029E             {
-; 0000 029F                 S3 = 1;
+; 0000 029C             {
+; 0000 029D                 S3 = 1;
 	LDI  R30,LOW(1)
 	MOV  R11,R30
-; 0000 02A0             }
-; 0000 02A1             break;
+; 0000 029E             }
+; 0000 029F             break;
 _0x43:
 	RJMP _0x41
-; 0000 02A2         }
-; 0000 02A3         case 1:                 // Released CA
+; 0000 02A0         }
+; 0000 02A1         case 1:                 // Released CA
 _0x42:
 	CPI  R30,LOW(0x1)
 	LDI  R26,HIGH(0x1)
 	CPC  R31,R26
 	BRNE _0x44
-; 0000 02A4         {
-; 0000 02A5             if (CA)
+; 0000 02A2         {
+; 0000 02A3             if (CA)
 	LDS  R30,_CA
 	CPI  R30,0
 	BREQ _0x45
-; 0000 02A6             {
-; 0000 02A7                 S3 = 2;
+; 0000 02A4             {
+; 0000 02A5                 S3 = 2;
 	LDI  R30,LOW(2)
 	MOV  R11,R30
-; 0000 02A8                 Q1 = 1;
+; 0000 02A6                 Q1 = 1;
 	LDI  R30,LOW(1)
 	MOV  R12,R30
-; 0000 02A9             }
-; 0000 02AA             break;
+; 0000 02A7             }
+; 0000 02A8             break;
 _0x45:
 	RJMP _0x41
-; 0000 02AB         }
-; 0000 02AC         case 2:                //  Pressed CA
+; 0000 02A9         }
+; 0000 02AA         case 2:                //  Pressed CA
 _0x44:
 	CPI  R30,LOW(0x2)
 	LDI  R26,HIGH(0x2)
 	CPC  R31,R26
 	BRNE _0x46
-; 0000 02AD         {
-; 0000 02AE             if (CA == 0)
+; 0000 02AB         {
+; 0000 02AC             if (CA == 0)
 	LDS  R30,_CA
 	CPI  R30,0
 	BRNE _0x47
-; 0000 02AF             {
-; 0000 02B0                 S3 = 3;
+; 0000 02AD             {
+; 0000 02AE                 S3 = 3;
 	LDI  R30,LOW(3)
 	MOV  R11,R30
-; 0000 02B1             }
-; 0000 02B2             break;
+; 0000 02AF             }
+; 0000 02B0             break;
 _0x47:
 	RJMP _0x41
-; 0000 02B3         }
-; 0000 02B4         case 3:                // Released CA
+; 0000 02B1         }
+; 0000 02B2         case 3:                // Released CA
 _0x46:
 	CPI  R30,LOW(0x3)
 	LDI  R26,HIGH(0x3)
 	CPC  R31,R26
 	BRNE _0x48
-; 0000 02B5         {
-; 0000 02B6             if (CA)
+; 0000 02B3         {
+; 0000 02B4             if (CA)
 	LDS  R30,_CA
 	CPI  R30,0
 	BREQ _0x49
-; 0000 02B7             {
-; 0000 02B8                 S3 = 4;
+; 0000 02B5             {
+; 0000 02B6                 S3 = 4;
 	LDI  R30,LOW(4)
 	MOV  R11,R30
-; 0000 02B9                 Q1 = 2;
+; 0000 02B7                 Q1 = 2;
 	LDI  R30,LOW(2)
 	MOV  R12,R30
-; 0000 02BA             }
-; 0000 02BB             break;
+; 0000 02B8             }
+; 0000 02B9             break;
 _0x49:
 	RJMP _0x41
-; 0000 02BC         }
-; 0000 02BD         case 4:
+; 0000 02BA         }
+; 0000 02BB         case 4:
 _0x48:
 	CPI  R30,LOW(0x4)
 	LDI  R26,HIGH(0x4)
 	CPC  R31,R26
 	BRNE _0x4A
-; 0000 02BE         {
-; 0000 02BF             if (CA == 0)
+; 0000 02BC         {
+; 0000 02BD             if (CA == 0)
 	LDS  R30,_CA
 	CPI  R30,0
 	BRNE _0x4B
-; 0000 02C0             {
-; 0000 02C1                 S3 = 5;
+; 0000 02BE             {
+; 0000 02BF                 S3 = 5;
 	LDI  R30,LOW(5)
 	MOV  R11,R30
-; 0000 02C2             }
-; 0000 02C3             break;
+; 0000 02C0             }
+; 0000 02C1             break;
 _0x4B:
 	RJMP _0x41
-; 0000 02C4         }
-; 0000 02C5         case 5:
+; 0000 02C2         }
+; 0000 02C3         case 5:
 _0x4A:
 	CPI  R30,LOW(0x5)
 	LDI  R26,HIGH(0x5)
 	CPC  R31,R26
 	BRNE _0x4C
-; 0000 02C6         {
-; 0000 02C7             if (CA)
+; 0000 02C4         {
+; 0000 02C5             if (CA)
 	LDS  R30,_CA
 	CPI  R30,0
 	BREQ _0x4D
-; 0000 02C8             {
-; 0000 02C9                 S3 = 6;
+; 0000 02C6             {
+; 0000 02C7                 S3 = 6;
 	LDI  R30,LOW(6)
 	MOV  R11,R30
-; 0000 02CA                 Q1 = 3;
+; 0000 02C8                 Q1 = 3;
 	LDI  R30,LOW(3)
 	MOV  R12,R30
-; 0000 02CB             }
-; 0000 02CC             break;
+; 0000 02C9             }
+; 0000 02CA             break;
 _0x4D:
 	RJMP _0x41
-; 0000 02CD         }
-; 0000 02CE         case 6:
+; 0000 02CB         }
+; 0000 02CC         case 6:
 _0x4C:
 	CPI  R30,LOW(0x6)
 	LDI  R26,HIGH(0x6)
 	CPC  R31,R26
 	BRNE _0x4E
-; 0000 02CF         {
-; 0000 02D0             if (CA == 0)
+; 0000 02CD         {
+; 0000 02CE             if (CA == 0)
 	LDS  R30,_CA
 	CPI  R30,0
 	BRNE _0x4F
-; 0000 02D1             {
-; 0000 02D2                 S3 = 7;
+; 0000 02CF             {
+; 0000 02D0                 S3 = 7;
 	LDI  R30,LOW(7)
 	MOV  R11,R30
-; 0000 02D3             }
-; 0000 02D4             break;
+; 0000 02D1             }
+; 0000 02D2             break;
 _0x4F:
 	RJMP _0x41
-; 0000 02D5         }
-; 0000 02D6         case 7:
+; 0000 02D3         }
+; 0000 02D4         case 7:
 _0x4E:
 	CPI  R30,LOW(0x7)
 	LDI  R26,HIGH(0x7)
 	CPC  R31,R26
 	BRNE _0x41
-; 0000 02D7         {
-; 0000 02D8             if (CA)
+; 0000 02D5         {
+; 0000 02D6             if (CA)
 	LDS  R30,_CA
 	CPI  R30,0
 	BREQ _0x51
-; 0000 02D9             {
-; 0000 02DA                 S3 = 0;
+; 0000 02D7             {
+; 0000 02D8                 S3 = 0;
 	CLR  R11
-; 0000 02DB                 Q1 = 0;
+; 0000 02D9                 Q1 = 0;
 	CLR  R12
-; 0000 02DC             }
-; 0000 02DD             break;
+; 0000 02DA             }
+; 0000 02DB             break;
 _0x51:
-; 0000 02DE         }
-; 0000 02DF     }
+; 0000 02DC         }
+; 0000 02DD     }
 _0x41:
-; 0000 02E0 
-; 0000 02E1     out = CLC_RANGE_OUTPUT[Q1] | (CLC_RANGE_OUTPUT[Q] << 2);
+; 0000 02DE 
+; 0000 02DF     out = CLC_RANGE_OUTPUT[Q1] | (CLC_RANGE_OUTPUT[Q] << 2);
 	MOV  R30,R12
 	LDI  R31,0
 	SUBI R30,LOW(-_CLC_RANGE_OUTPUT)
@@ -2606,20 +2599,20 @@ _0x41:
 	LSL  R30
 	OR   R30,R26
 	MOV  R17,R30
-; 0000 02E2 
-; 0000 02E3     // Delete PB4-PB0
-; 0000 02E4     PORTB &= 0xE0;
+; 0000 02E0 
+; 0000 02E1     // Delete PB4-PB0
+; 0000 02E2     PORTB &= 0xE0;
 	IN   R30,0x5
 	ANDI R30,LOW(0xE0)
 _0x2000002:
 	OUT  0x5,R30
-; 0000 02E5 
-; 0000 02E6     // Display out on PB3-PB0
-; 0000 02E7     PORTB |= out;
+; 0000 02E3 
+; 0000 02E4     // Display out on PB3-PB0
+; 0000 02E5     PORTB |= out;
 	IN   R30,0x5
 	OR   R30,R17
 	OUT  0x5,R30
-; 0000 02E8 }
+; 0000 02E6 }
 _0x2000001:
 	LD   R17,Y+
 	RET
