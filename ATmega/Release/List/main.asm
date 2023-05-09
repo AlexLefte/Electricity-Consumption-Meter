@@ -1491,8 +1491,7 @@ _timer0_ovf_isr:
 	RCALL _DisplayInfo
 ; 0000 009A 
 ; 0000 009B     // Update mock pulse
-; 0000 009C     MockPULSE();
-	RCALL _MockPULSE
+; 0000 009C     // MockPULSE();
 ; 0000 009D 
 ; 0000 009E     // Check for pulses coming from ADSP
 ; 0000 009F     UpdateConsumption();
@@ -1761,49 +1760,25 @@ _Init:
 ;// Mocks the PULSE coming from ADSP2181 (PF0) -> ATMega164A (PINA0)
 ;void MockPULSE()
 ; 0000 014B {
-_MockPULSE:
 ; 0000 014C      switch(S_PULSE)
-	MOV  R30,R11
-	LDI  R31,0
 ; 0000 014D      {
 ; 0000 014E         case 0:
-	SBIW R30,0
-	BRNE _0x13
 ; 0000 014F         {
 ; 0000 0150             cntMockPulse = 0;
-	CLR  R14
 ; 0000 0151             PULSE = 1;
-	LDI  R30,LOW(1)
-	MOV  R12,R30
 ; 0000 0152             S_PULSE = 1;
-	MOV  R11,R30
 ; 0000 0153             break;
-	RJMP _0x12
 ; 0000 0154         }
 ; 0000 0155         case 1:
-_0x13:
-	CPI  R30,LOW(0x1)
-	LDI  R26,HIGH(0x1)
-	CPC  R31,R26
-	BRNE _0x12
 ; 0000 0156         {
 ; 0000 0157             cntMockPulse += 1;
-	INC  R14
 ; 0000 0158             PULSE = 0;
-	CLR  R12
 ; 0000 0159             if (cntMockPulse == 49)
-	LDI  R30,LOW(49)
-	CP   R30,R14
-	BRNE _0x15
 ; 0000 015A                 S_PULSE = 0;
-	CLR  R11
 ; 0000 015B             break;
-_0x15:
 ; 0000 015C         }
 ; 0000 015D      }
-_0x12:
 ; 0000 015E }
-	RET
 ;
 ;void UpdateConsumption()
 ; 0000 0161 {
@@ -1883,7 +1858,10 @@ _UpdateConsumption:
 	ASR  R31
 	ROR  R30
 	STS  _PowerLevel,R30
-; 0000 01A7     // PULSE = PINA & 0x01;
+; 0000 01A7     PULSE = PINA & 0x01;
+	IN   R30,0x0
+	ANDI R30,LOW(0x1)
+	MOV  R12,R30
 ; 0000 01A8 
 ; 0000 01A9      switch(S2)
 	MOV  R30,R9
@@ -1946,11 +1924,9 @@ _0x19:
 	CPC  R31,R26
 	BRNE _0x18
 ; 0000 01C3         {
-; 0000 01C4             if (~PULSE)
-	MOV  R30,R12
-	COM  R30
-	CPI  R30,0
-	BREQ _0x20
+; 0000 01C4             if (PULSE == 0)
+	TST  R12
+	BRNE _0x20
 ; 0000 01C5             {
 ; 0000 01C6                 // Update current consumption range
 ; 0000 01C7                 CLS();
@@ -2181,8 +2157,10 @@ _0x28:
 	OUT  0xB,R30
 ; 0000 022C 
 ; 0000 022D     // Assign output to PORTC in order to select the desired display;
-; 0000 022E     PORTD = output;
-	OUT  0xB,R17
+; 0000 022E     PORTD |= output;
+	IN   R30,0xB
+	OR   R30,R17
+	OUT  0xB,R30
 ; 0000 022F 
 ; 0000 0230     // Set PORTC pins to the corresponding digit
 ; 0000 0231     PORTC = DIGITS[digit];
@@ -2273,21 +2251,16 @@ _CLS:
 ; 0000 0258     long int *adr = TABA[Q];
 ; 0000 0259     char ready = 0;
 ; 0000 025A     int i = 0;
-; 0000 025B     long int out = 0;
+; 0000 025B     char out = 0;
 ; 0000 025C 
 ; 0000 025D     while (!ready)
-	SBIW R28,8
-	LDI  R30,LOW(0)
-	ST   Y,R30
-	STD  Y+1,R30
-	STD  Y+2,R30
-	STD  Y+3,R30
+	SBIW R28,4
 	CALL __SAVELOCR6
-;	now -> Y+10
+;	now -> Y+6
 ;	*adr -> R16,R17
 ;	ready -> R19
 ;	i -> R20,R21
-;	out -> Y+6
+;	out -> R18
 	MOV  R26,R3
 	LDI  R27,0
 	LDI  R30,LOW(24)
@@ -2310,7 +2283,7 @@ _CLS:
 	OR   R30,R26
 	OR   R31,R27
 	CALL __CWD1
-	__PUTD1S 10
+	__PUTD1S 6
 	LDS  R30,_Q
 	LDI  R26,LOW(_TABA)
 	LDI  R27,HIGH(_TABA)
@@ -2323,13 +2296,14 @@ _CLS:
 	MOVW R16,R30
 	LDI  R19,0
 	__GETWRN 20,21,0
+	LDI  R18,0
 _0x32:
 	CPI  R19,0
 	BRNE _0x34
 ; 0000 025E     {
 ; 0000 025F         if (now == adr[i]) {
 	RCALL SUBOPT_0x2
-	__GETD2S 10
+	__GETD2S 6
 	CALL __CPD12
 	BRNE _0x35
 ; 0000 0260             Q = adr[i + 1];
@@ -2344,11 +2318,11 @@ _0x32:
 ; 0000 0261             ready = 1;  // Stop iterating through while
 	LDI  R19,LOW(1)
 ; 0000 0262         }
-; 0000 0263         else if (adr[i] == T) ready = 1;
+; 0000 0263         else if (adr[i] == Ter) ready = 1;
 	RJMP _0x36
 _0x35:
 	RCALL SUBOPT_0x2
-	__CPD1N 0x5
+	__CPD1N 0x10000000
 	BRNE _0x37
 	LDI  R19,LOW(1)
 ; 0000 0264         else i = i+2;
@@ -2365,14 +2339,10 @@ _0x34:
 	LDI  R31,0
 	SUBI R30,LOW(-_Tout)
 	SBCI R31,HIGH(-_Tout)
-	LD   R30,Z
-	CLR  R31
-	CLR  R22
-	CLR  R23
-	__PUTD1S 6
+	LD   R18,Z
 ; 0000 0267 }
 	CALL __LOADLOCR6
-	ADIW R28,14
+	ADIW R28,10
 	RET
 ;
 ;void DisplayInfo()

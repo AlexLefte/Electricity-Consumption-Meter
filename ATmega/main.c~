@@ -153,7 +153,7 @@ interrupt [TIM0_OVF] void timer0_ovf_isr(void)
     DisplayInfo();
     
     // Update mock pulse
-    MockPULSE();                 
+    // MockPULSE();                 
     
     // Check for pulses coming from ADSP
     UpdateConsumption();
@@ -449,7 +449,7 @@ void UpdateConsumption()
         }
         case 1:
         {
-            if (~PULSE)
+            if (PULSE == 0)
             {   
                 // Update current consumption range
                 CLS();
@@ -555,7 +555,7 @@ void DisplayDigit(char currentDisplay, char digit)
     PORTD &= 0xF0; 
            
     // Assign output to PORTC in order to select the desired display;
-    PORTD = output;  
+    PORTD |= output;  
     
     // Set PORTC pins to the corresponding digit
     PORTC = DIGITS[digit]; 
@@ -600,7 +600,7 @@ void CLS()
     long int *adr = TABA[Q];
     char ready = 0;
     int i = 0;
-    long int out = 0; 
+    char out = 0; 
     
     while (!ready)
     {
@@ -608,9 +608,10 @@ void CLS()
             Q = adr[i + 1];
             ready = 1;  // Stop iterating through while
         }
-        else if (adr[i] == T) ready = 1;
+        else if (adr[i] == Ter) ready = 1;
         else i = i+2;
-    }
+    }   
+    out = Tout[Q];
 }
 
 void DisplayInfo()
