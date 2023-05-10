@@ -170,6 +170,9 @@
 .var TAB_SAMPLING_PERIODS_INT[4] = {50, 3000, 30000, 60000}; // Necessary interrupts to cover: 1s/1m/5m/10m
 .var TAB_SAMPLING_PERIODS[4] = {1, 60, 300, 600}; // Time in seconds
 .var TAB_U[6] = {200 ,210, 220, 230, 240, 250}; // Voltages
+.var TAB_I[29] = {0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 6, 6, 6, 6, 7}; 
+.var EXP1[29] = {0, 2, 1, 2, 0, 2, 1, 2, 0, 2, 1, 2, 0, 2, 1, 2, 0, 2, 1, 2, 0, 2, 1, 2, 0, 2, 1, 2, 0};
+.var EXP2[29] = {1, 1, 1, 3, 1, 1, 1, 3, 1, 1, 1, 3, 1, 1, 1, 3, 1, 1, 1, 3, 1, 1, 1, 3, 1, 1, 1, 3, 1};
 .SECTION/PM		pm_da;
 
 
@@ -610,56 +613,208 @@ Q1:
         // dm(PF_output) = ax1;
         
         // Compute consumption:  
-		// Read U & I    
-		/*
-		READ_U:
+		// Reading the voltage (U) 
         ax0 = dm (rx_buf + 2); 	// Citeste senzorii de tensiune (U)      
-        ax0 = mx0;
-        ay0 = 0.83r;
-        ax1 = 1;
+        ay0 = 0.84r;
+        ax1 = 0;
         ar = ax0 - ay0;
-        if lt jump READ_I;
+        if lt jump READ_U;
         
         ay0 = 0.87r;
         ax1 = 1;
         ar = ax0 - ay0;
-        if lt jump READ_I;
+        if lt jump READ_U;
         
         ay0 = 0.91r;
         ax1 = 2;
         ar = ax0 - ay0;
-        if lt jump READ_I;
+        if lt jump READ_U;
         
         ay0 = 0.95r;
         ax1 = 3;
         ar = ax0 - ay0;
-        if lt jump READ_I;  
+        if lt jump READ_U;  
         
-        ay0 = 0.95r;
+        ay0 = 0.99r;
         ax1 = 4;
         ar = ax0 - ay0;
-        if lt jump READ_I;  
+        if lt jump READ_U;  
                        
         ax1 = 5;       
         
-        READ_I:
-        i4 = TAB_THRESHOLDS;
-		m4 = 1;
-		l4 = 0;
-        cntr = ax1;
-		do sop1 until ce;
-		sop1: modify(i4, m4);
-		mr0 = dm(i4, m4);
-		
-        jump READ_U;
-        my0 = dm (rx_buf + 1);
-        */
+        READ_U:
+        i4 = TAB_U;
+		m4 = ax1;
+        modify(i4, m4);
+        mx0 = dm(i4, m4);
         
-        mx0 = 225;
-        my0 = 2;
+       	// Reading the current (I)
+        ax0 = dm (rx_buf + 1);    
+        ay0 = 0.57r;
+        ax1 = 0;
+        ar = ax0 - ay0;
+        if lt jump READ_I;
+        
+        ay0 = 0.58r;
+        ax1 = 1;
+        ar = ax0 - ay0;
+        if lt jump READ_I;
+        
+        ay0 = 0.6r;
+        ax1 = 2;
+        ar = ax0 - ay0;
+        if lt jump READ_I;
+        
+        ay0 = 0.62r;
+        ax1 = 3;
+        ar = ax0 - ay0;
+        if lt jump READ_I;
+        
+        ay0 = 0.63r;
+        ax1 = 4;
+        ar = ax0 - ay0;
+        if lt jump READ_I;
+        
+        ay0 = 0.65r;
+        ax1 = 5;
+        ar = ax0 - ay0;
+        if lt jump READ_I;
+        
+        ay0 = 0.66r;
+        ax1 = 6;
+        ar = ax0 - ay0;
+        if lt jump READ_I;
+        
+        ay0 = 0.68r;
+        ax1 = 7;
+        ar = ax0 - ay0;
+        if lt jump READ_I;
+        
+        ay0 = 0.69r;
+        ax1 = 8;
+        ar = ax0 - ay0;
+        if lt jump READ_I;
+        
+        ay0 = 0.71r;
+        ax1 = 9;
+        ar = ax0 - ay0;
+        if lt jump READ_I;
+        
+        ay0 = 0.72r;
+        ax1 = 10;
+        ar = ax0 - ay0;
+        if lt jump READ_I;
+        
+        ay0 = 0.74r;
+        ax1 = 11;
+        ar = ax0 - ay0;
+        if lt jump READ_I;
+        
+        ay0 = 0.75r;
+        ax1 = 12;
+        ar = ax0 - ay0;
+        if lt jump READ_I;
+        
+        ay0 = 0.77r;
+        ax1 = 13;
+        ar = ax0 - ay0;
+        if lt jump READ_I;
+        
+        ay0 = 0.78r;
+        ax1 = 14;
+        ar = ax0 - ay0;
+        if lt jump READ_I;
+        
+        ay0 = 0.80r;
+        ax1 = 15;
+        ar = ax0 - ay0;
+        if lt jump READ_I;
+        
+        ay0 = 0.81r;
+        ax1 = 16;
+        ar = ax0 - ay0;
+        if lt jump READ_I;
+        
+        ay0 = 0.83r;
+        ax1 = 17;
+        ar = ax0 - ay0;
+        if lt jump READ_I;
+        
+        ay0 = 0.84r;
+        ax1 = 18;
+        ar = ax0 - ay0;
+        if lt jump READ_I;
+        
+        ay0 = 0.86r;
+        ax1 = 19;
+        ar = ax0 - ay0;
+        if lt jump READ_I;
+        
+        ay0 = 0.87r;
+        ax1 = 20;
+        ar = ax0 - ay0;
+        if lt jump READ_I;
+        
+        ay0 = 0.89r;
+        ax1 = 21;
+        ar = ax0 - ay0;
+        if lt jump READ_I;
+        
+        ay0 = 0.91r;
+        ax1 = 22;
+        ar = ax0 - ay0;
+        if lt jump READ_I;
+        
+        ay0 = 0.92r;
+        ax1 = 23;
+        ar = ax0 - ay0;
+        if lt jump READ_I;
+        
+        ay0 = 0.94r;
+        ax1 = 24;
+        ar = ax0 - ay0;
+        if lt jump READ_I;
+        
+        ay0 = 0.95r;
+        ax1 = 25;
+        ar = ax0 - ay0;
+        if lt jump READ_I;
+        
+        ay0 = 0.97r;
+        ax1 = 26;
+        ar = ax0 - ay0;
+        if lt jump READ_I;
+        
+        ay0 = 0.98r;
+        ax1 = 27;
+        ar = ax0 - ay0;
+        if lt jump READ_I;
+        
+        ax1 = 28;
+        
+        READ_I:
+        i4 = TAB_I;
+		m4 = ax1;
+        modify(i4, m4);
+        my0 = dm(i4, m4);
         
         // Compute dE
-        mr = mx0 * my0 (uu);	// mr = U * I
+        // mx0 = 225;
+        // my0 = 2;
+        
+        mr = mx0 * my0 (uu);	// mr = U * [I]
+        ax0 = mx0;				// ax0 = U
+        i4 = EXP_1;
+		m4 = ax1;
+        modify(i4, m4);
+        se = dm(i4, m4);		// se = exp1
+        sr = ashift ax0 (lo); 	// sr = U >> exp1
+        mx0 = sr0;				// mx0 = U >> exp1
+       	i4 = EXP_2;
+		m4 = ax1;
+        modify(i4, m4);
+        my0 = dm(i4, m4);		// my0 = exp2
+        mr = mr + mx0 * my0;	// mr = U * [I] + (U >> exp1) * exp2
         dm(P) = mr0;			// P (power) = U * I
         mx1 = dm(dT);			// mx1 = dT
         my1 = mr0;				// my1 = U * I
