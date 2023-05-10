@@ -8,7 +8,7 @@ C=
 D=3/11/2023
 Files=1
 F1=main.c
-OpenedFiles=2
+OpenedFiles=1
 OF1=main.c
 ActiveTab=1
 DebugOutputListFilesDirectory=Debug\List
@@ -142,8 +142,8 @@ DisplayCodeSizeError=1
 UseBootAppXmega=0
 RebuildAll=0
 LinkageInformationPresent=1
-COFFileTimeStamp=1453982289
-Build=119
+COFFileTimeStamp=1454021225
+Build=125
 GlobalVarAddr=726
 EEPROMVarAddr=0
 [DefinedSymbolsDebug]
@@ -256,7 +256,7 @@ RebuildAll=0
 LinkageInformationPresent=1
 COFFileTimeStamp=-1
 <<<<<<< Updated upstream
-Build=119
+Build=125
 =======
 Build=121
 >>>>>>> Stashed changes
@@ -364,7 +364,7 @@ Column=0
 ScrollPosX=0
 ScrollPosY=0
 <<<<<<< Updated upstream
-TimeStamp=1453964100
+TimeStamp=1454021349
 =======
 TimeStamp=1452588882
 >>>>>>> Stashed changes
@@ -412,10 +412,10 @@ BK9=-1
 [Bookmarks3]
 <<<<<<< Updated upstream
 TimeStamp=1453963553
-Row=134
-Column=2
+Row=82
+Column=15
 ScrollPosX=0
-ScrollPosY=39
+ScrollPosY=147
 =======
 TimeStamp=1452588601
 Row=395
@@ -452,7 +452,7 @@ L13=Enhanced function parameters passing: Mode 2
 L14=Automatic register allocation: Yes
 L15=Smart register allocation: Yes
 L16=
-L17=Build: 119
+L17=Build: 125
 L18=1788 line(s) compiled
 L19=No errors
 L20=2 warning(s)
@@ -489,14 +489,12 @@ L10=[.dseg] 0x000100 0x0002d6      0    214    214    1024  20.9%
 L11=[.eseg] 0x000000 0x000000      0      0      0     512   0.0%
 L12=
 Lines=12
-[FoldedCode3]
-Blocks=0
 [Bookmarks4]
-TimeStamp=1453964074
-Row=8
-Column=34
+TimeStamp=1454021124
+Row=78
+Column=16
 ScrollPosX=0
-ScrollPosY=78
+ScrollPosY=67
 BK0=-1
 BK1=-1
 BK2=-1
@@ -507,8 +505,6 @@ BK6=-1
 BK7=-1
 BK8=-1
 BK9=-1
-[FoldedCode4]
-Blocks=0
 [HeadersList]
 Files=1
 F1=F:\AN 3 SEM 2\P2-ZOICAN\chestii alexutu\Electricity-Consumption-Meter\TestingProjects\ATmegaTests\MultiplexingTest\SourceCode\main.c
@@ -516,3 +512,7 @@ F1=F:\AN 3 SEM 2\P2-ZOICAN\chestii alexutu\Electricity-Consumption-Meter\Testing
 Files=2
 F1=C:\cvavreval\inc\mega164a.h
 F2=C:\cvavreval\inc\mega324_bits.h
+[FoldedCode4]
+Blocks=0
+[FoldedCode3]
+Blocks=0

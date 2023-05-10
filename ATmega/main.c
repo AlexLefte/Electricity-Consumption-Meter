@@ -21,12 +21,17 @@ Data Stack size         : 256
 // #include <util/delay.h>    
 // Useful definitions    
 // Numar perioade necesare duratei unui     
-// puls intreg (100 ms)    
+// puls intreg (100 ms) 
+   
 #define T 5    
+
 // Numar de perioade necesare    
-// duratei unui puls pozitiv (cu durata 20 ms)    
-#define DP 1       
-/// CLS definitions ///    
+// duratei unui puls pozitiv (cu durata 20 ms)
+    
+#define DP 2    
+  
+/// CLS definitions /// 
+   
 char S1 = 0; // CLS state    
 const long int H1 = 8;    
 const long int H2 = 16;        
@@ -38,7 +43,7 @@ long int A2[]={0x01000000, 0, 0x02000000, 0, 0x03000000, 0, 0x04000000, 0, 0x050
 long int A3[]={0x00000000, 0, Ter, 3};
 
         
-char Tout[] = {0, 1, 2, 3};    
+   
 long int *TABA[] = {A0, A1, A2, A3};    
 ///////////////////////    
 /// Time variables ///    
@@ -65,13 +70,13 @@ char modeFlag = 1;
 ///////////////////
 
 // State variables ( Q -> consumption range, 
-// S1 -> consumption counting state, 
+// Q1 -> consumption counting state, 
 // S3 -> display state)
 char Q,Q1,S3; 
 /// Consumption array
 //            0 - H1   H1 - H2   H2 - 0   Sat - Sun   Total 
 //              ^         ^         ^         ^         ^
-int CONSUM[] = {0,        0,        0,        0,        0};
+int CONSUM[] = {0,       0,       0,        0,        0};
 
     // Digits
 char C4, C3, C2, C1;
@@ -120,23 +125,24 @@ void DisplayInfo();
 ////// SCI ///////
 // Timer 0 overflow interrupt service routine
 interrupt [TIM0_OVF] void timer0_ovf_isr(void)
-{
+{    
     // Reinitialize Timer 0 value
     TCNT0=0x3C; 
     //Update current time
     UpdateTime(); 
     
     // Update CA
-    CA = (PORTD & 0x80) >> 7; 
+    CA = (PIND & 0x80) >> 7; 
     
     //DisplayInfo
     DisplayInfo();
     
     // Update mock pulse
     // MockPULSE();                 
-    
+    CLS();    
     // Check for pulses coming from ADSP
-    UpdateConsumption();
+    UpdateConsumption();      
+    
 }
 ///////////////////
 
@@ -266,13 +272,12 @@ TWCR=(0<<TWEA) | (0<<TWSTA) | (0<<TWSTO) | (0<<TWEN) | (0<<TWIE);
 // Globally enable interrupts
 #asm("sei")
 
-/ Initialize the device
+// Initialize the device
 Init();
 while (1)
       {
       // Display the consumption
       DisplayConsumption();
-      
       // Wait for interruptions
       }
 }
@@ -280,7 +285,7 @@ while (1)
 void Init()
 {
     // Setting initial states = 0
-    Q = Q1 = S1 = S2 = S3 = S_PULSE =  0;    
+    Q = Q1 = S1 = S2 = S3 = S_PULSE =  0;   
     
     // Turn off displays
     PORTC = 0xff;
@@ -324,7 +329,7 @@ void UpdateConsumption()
             if (PULSE == 0)
             {   
                 // Update current consumption range
-                CLS();
+                //CLS();
                 
                 // Increment consumption 
                 if (MODE == 0)
@@ -369,7 +374,9 @@ void DisplayConsumption()
       
     // If MODE = 1 -> display total consumption,
     // else -> display consumption based on current range.    
-    int cons = (MODE) ?  CONSUM[4] : CONSUM[Q1];    
+    int cons = (MODE) ?  CONSUM[4] : CONSUM[Q1];
+    
+    if (modeFlag) return; //daca nu s-a trimis primul puls nu se afiseaza nimic    
      // Compute and display C4
     C4 = cons / 1000;  
     cons %= 1000;
@@ -466,8 +473,7 @@ void CLS()
     long int now = (Z<<24) | (H<<16) | (M<<8) | S;
     long int *adr = TABA[Q];
     char ready = 0;
-    int i = 0;
-    char out = 0; 
+    int i = 0;     
     
     while (!ready)
     {
@@ -477,8 +483,7 @@ void CLS()
         }
         else if (adr[i] == Ter) ready = 1;
         else i = i+2;
-    }   
-    out = Tout[Q];
+    }       
 }
 
 void DisplayInfo()
@@ -534,12 +539,18 @@ void DisplayPowerLevel()
    // Display out on PB7-PB5
    PORTB |= out;  
 }
-
-            {            
+   
+void DisplayConsumptionDisplayMode()
+{
+    char out;
+    
+    if (MODE == 1)  // Working without ranges
+    { 
+                      
         // Clear PB4-0
         PORTB &= 0xE0;
         
-        // Display on PB4-0
+        // Display on PB4
         PORTB |= 0x10; 
         
         return;

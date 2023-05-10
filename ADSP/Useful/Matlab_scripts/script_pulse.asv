@@ -9,7 +9,7 @@ end
 
 values = [];
 cnt = 0;
-unit = '1';
+unit = 'e-0 ';
 
 while ~feof(fid)  % Repetați până la sfârșitul fișierului
     line = strtrim(fgets(fid));  % Citiți un rând din fișier
@@ -25,9 +25,7 @@ else
     valoare = -1;  % Atribuiți o altă valoare (de exemplu, -1) în cazul în care linia nu este nici '0000', nici '0001'
 end
  
-%value = string(cnt) + unit + valoare;
-value = [num2str(cnt), unit, num2str(valoare)];
-
+value = string(cnt) + unit + valoare;
 cnt = cnt + 20;
 values = [values value];
 
@@ -36,8 +34,7 @@ end
 fileU = fopen('test_pulse.txt', 'wt');
 
 if fileU > 0
-    fprintf(fileU,'%s\n', char(values));
-
+    fprintf(fileU,'%s\n',values);
     fclose(fileU);
 end
 

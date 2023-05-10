@@ -1,5 +1,5 @@
 
-AVRASM ver. 2.1.30  F:\AN 3 SEM 2\P2-ZOICAN\chestii alexutu\Electricity-Consumption-Meter\TestingProjects\ATmegaTests\MultiplexingTest\SourceCode\Debug\List\main.asm Wed May 10 00:18:32 2023
+AVRASM ver. 2.1.30  F:\AN 3 SEM 2\P2-ZOICAN\chestii alexutu\Electricity-Consumption-Meter\TestingProjects\ATmegaTests\MultiplexingTest\SourceCode\Debug\List\main.asm Wed May 10 19:19:17 2023
 
 F:\AN 3 SEM 2\P2-ZOICAN\chestii alexutu\Electricity-Consumption-Meter\TestingProjects\ATmegaTests\MultiplexingTest\SourceCode\Debug\List\main.asm(1420): warning: Register r4 already defined by the .DEF directive
 F:\AN 3 SEM 2\P2-ZOICAN\chestii alexutu\Electricity-Consumption-Meter\TestingProjects\ATmegaTests\MultiplexingTest\SourceCode\Debug\List\main.asm(1421): warning: Register r3 already defined by the .DEF directive
