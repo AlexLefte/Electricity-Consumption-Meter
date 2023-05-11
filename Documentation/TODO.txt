@@ -1,0 +1,4 @@
+-> tabela de nr pulsuri/kWh in programul de lucru ATmega
+-> transmitere nivel consum de catre ADSP
+-> citire nivel consum de catre ATmega si afisare corespunzatoare
+-> check dT!!
