@@ -166,6 +166,7 @@
 .var SUB_LSB;
 .var out;
 .var init;
+.var firstPulse = 0;
 
 .var TAB_PULSES[4] = {10000, 5000, 2500, 1250};	// Number of pulses/kWh -> 1/2/4/8;
 .var TAB_THRESHOLDS[8] = {0, 0x168, 0, 0x2D0, 0, 0x5A0, 0, 0xB40};
@@ -474,11 +475,11 @@ IO(PORT_IN) = ax0;
 ay0 = IO(PORT_IN);
 ax0 = 0x03;
 ar = ax0 and ay0;
-dm(PulsesNumberIndex) = ar;
+dm(dTIndex) = ar;
 ax0 = 0x0c;
 ar = ax0 and ay0;
 sr = LSHIFT ar BY (-2) (LO); 
-dm(dTIndex) = sr0;
+dm(PulsesNumberIndex) = sr0;
 ax0 = 0x10;
 ar = ax0 and ay0;
 sr = LSHIFT ar BY (-4) (LO);
@@ -493,7 +494,6 @@ mx0 = dm(i3, m3);
 dm(PulsesNumber) = mx0;
 	
 
-//// CHECK!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!  ///
 i3 = TAB_SAMPLING_PERIODS_INTER;
 m3 = dm(dTIndex);
 modify(i3, m3);
@@ -504,27 +504,14 @@ i3 = TAB_SAMPLING_PERIODS;
 m3 = dm(dTIndex);
 modify(i3, m3);
 ax0 = dm(i3, m3);
-dm(cntDT) = ax0;	
+dm(dT) = ax0;	
 
 
 // COMPUTE_THRESHOLD:
 ena m_mode;
 i4 = TAB_THRESHOLDS;
-m4 = dm(PulsesNumberIndex);
-modify(i4, m4);
-mx0 = dm(i4, m4);
-dm(Threshold) = mx0;
-m4 = 1;
-modify(i4, m4);
-mx0 = dm(i4, m4);
-dm(Threshold + 1) = mx0;
-
-/*
-i4 = TAB_THRESHOLDS;
 m4 = 2;
 l4 = 0;
-ax0 = 1;					// PulseIndex
-dm(PulsesNumberIndex) = ax0;
 cntr = dm(PulsesNumberIndex);
 do sop until ce;
 sop: modify(i4, m4);
@@ -535,6 +522,7 @@ dm(Threshold) = mr0;
 mr0 = dm(i4, m4);
 dm(Threshold + 1) = mr0;
 
+/*
 // Threshold = 360 Ws (Testing purposes)
 mr0 = 0;
 dm(Threshold) = mr0;
@@ -623,9 +611,9 @@ Q0:
 		// For testing purposes write 0 to the
 		// output port:
 		ax1 = 0;
-		IO(PORT_OUT) = ax1;
+		// IO(PORT_OUT) = ax1;
 		dm(Prog_Flag_Data) = ax1;
-		// dm(PF_output) = ax1;	
+		dm(PF_output) = ax1;	
 
 		// Here we check whether the sampling rate was
 		// acomplished.
@@ -856,7 +844,7 @@ Q1:
         modify(i4, m4);
         my0 = dm(i4, m4);		// my0 = exp2
         mr = mr + mx0 * my0 (uu);	// mr = U * [I] + (U >> exp1) * exp2
-        // mr0 = 450;
+        mr0 = 1200;
         dm(P) = mr0;			// P (power) = U * I
         mx1 = dm(dT);			// mx1 = dT
         my1 = mr0;				// my1 = U * I
@@ -938,27 +926,22 @@ Q2:
         ax1 = 7;
         SAVE_POWER_LEVEL:
         sr0 = ax1;
-        sr = ashift sr0 by 2 (lo);
+        sr = ashift sr0 by 3 (lo);
         ax1 = sr0;
+        
+        // Save working mode
         sr0 = dm(MODE);
         sr = ashift sr0 by 1(lo);
         ay1 = sr0;
         ar = ax1 or ay1;
         dm(out) = ar;
-        rti;        
+        rti;       
 //////////////////////////////
         
        
 //////////// Q = 3 ///////////
 Q3:
-        // Generating the pulse //
-        /*
-        ar = dm(P);				// ax0 = P
-        sr = LSHIFT ar BY 1 (LO); 	// sr = P << 1
-        */
-        // ax1 = 1;			// Set PULSE = 1
-        // ay1 = sr0;
-        // ar = ax1 or ay1;		
+        // Generating the pulse //	
 		ax1 = dm(out);
         ay1 = 1;
         ar = ax1 or ay1;				
@@ -987,8 +970,17 @@ Q4:
         dm(Prog_Flag_Data) = sr;	// PORTF = PPPP PPP0 (PULSE = 0)
         */
         ax1 = dm(out);
-        ay1 = 0xfe;
+        ay1 = 0xf8;
         ar = ax1 and ay1;
+        ax1 = ar;
+        sr0 = dm(PulsesNumberIndex);
+        sr = ashift sr0 by 1(lo);
+        ay1 = sr0;
+        ar = ax1 or ay1;
+        dm(out) = ar;
+        // Append pulses number
+        
+        
         // IO(PORT_OUT) = ax1;
         dm(Prog_Flag_Data) = ar;
         dm(PF_output) = ar;
@@ -1009,9 +1001,7 @@ Q4:
 //////////// Q = 5 ///////////
 Q5:
 		// Compute consumption:      
-        ax1 = dm(out);
-        ay1 = 0xfe;
-        ar = ax1 and ay1;	// Write PULSE = 0 at 0xFF
+        ar = dm(out);
         // IO(PORT_OUT) = ax1;
 		dm(Prog_Flag_Data) = ar;
 		dm(PF_output) = ar;
