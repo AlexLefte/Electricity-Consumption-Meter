@@ -509,17 +509,17 @@ dm(dT) = ax0;
 
 // COMPUTE_THRESHOLD:
 ena m_mode;
-i4 = TAB_THRESHOLDS;
-m4 = 2;
-l4 = 0;
-cntr = dm(PulsesNumberIndex);
-do sop until ce;
-sop: modify(i4, m4);
-
-m4 = 1;
-mr0 = dm(i4, m4);
+mx0 = 2;
+my0 = dm(PulsesNumberIndex);
+mr = mx0 * my0 (uu);
+i3 = TAB_THRESHOLDS;
+m3 = mr0;
+l3 = 0;
+modify(i3, m3);
+m3 = 1;
+mr0 = dm(i3, m3);
 dm(Threshold) = mr0;
-mr0 = dm(i4, m4);
+mr0 = dm(i3, m3);
 dm(Threshold + 1) = mr0;
 
 /*
