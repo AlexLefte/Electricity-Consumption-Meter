@@ -33,41 +33,41 @@ else
 end
 
 if bitand(bitshift(line, -1), 1) == 1
-    mode1 = '5';  
+    vmode1 = '5';  
 else
-    mode1 = '0';  
+    vmode1 = '0';  
 end
 
 if bitand(bitshift(line, -2), 1) == 1
-    mode2 = '5';  
+    vmode2 = '5';  
 else 
-    mode2 = '0'; 
+    vmode2 = '0'; 
 end
 
 if bitand(bitshift(line, -3), 1) == 1
-    power1 = '5';  
+    vpower1 = '5';  
 else 
-    power1 = '0'; 
+    vpower1 = '0'; 
 end
 
 if bitand(bitshift(line, -4), 1) == 1
-    power2 = '5';  
+    vpower2 = '5';  
 else 
-    power2 = '0';  
+    vpower2 = '0';  
 end
 
 if bitand(bitshift(line, -5), 1) == 1
-    power3 = '5';  
+    vpower3 = '5';  
 else 
-    power3 = '0';  
+    vpower3 = '0';  
 end
 
 pulse = string(cnt) + unit + valoare;
-mode1 = string(cnt) + unit + mode1;
-mode2 = string(cnt) + unit + mode2;
-power1 = string(cnt) + unit + power1;
-power2 = string(cnt) + unit + power2;
-power3 = string(cnt) + unit + power3;
+mode1 = string(cnt) + unit + vmode1;
+mode2 = string(cnt) + unit + vmode2;
+power1 = string(cnt) + unit + vpower1;
+power2 = string(cnt) + unit + vpower2;
+power3 = string(cnt) + unit + vpower3;
 
 PULSES = [PULSES pulse];
 MODE1 = [MODE1 mode1];
@@ -78,11 +78,11 @@ POWER3 = [POWER3 power3];
 cnt = cnt + 19.999;
 
 pulse = string(cnt) + unit + valoare;
-mode1 = string(cnt) + unit + mode1;
-mode2 = string(cnt) + unit + mode2;
-power1 = string(cnt) + unit + power1;
-power2 = string(cnt) + unit + power2;
-power3 = string(cnt) + unit + power3;
+mode1 = string(cnt) + unit + vmode1;
+mode2 = string(cnt) + unit + vmode2;
+power1 = string(cnt) + unit + vpower1;
+power2 = string(cnt) + unit + vpower2;
+power3 = string(cnt) + unit + vpower3;
 
 PULSES = [PULSES pulse];
 MODE1 = [MODE1 mode1];

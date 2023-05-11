@@ -469,7 +469,7 @@ dm(PulsesNumber) = ax0;	// Pulses / kWh
 */
 	
 // Get input data
-ax0 = 0x04;				// MODE = 1;  dTIndex = 10; PulsesNumberIndex = 11;
+ax0 = 0x00;				// MODE = 1;  dTIndex = 10; PulsesNumberIndex = 11;
 						// 			  dT = 30000	Threshold = 2880
 IO(PORT_IN) = ax0;
 ay0 = IO(PORT_IN);
@@ -574,7 +574,8 @@ sci:
         ena sec_reg;                /* use shadow register bank */      
         
         // Wait for init
-        ar = dm(init);
+        ax0 = dm(init);
+        ar = ax0 - 0;
         if eq rti;
         
         // Implementing a counter in order to sync with ATmega 
