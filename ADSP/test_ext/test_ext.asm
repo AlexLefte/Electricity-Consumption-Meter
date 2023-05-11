@@ -165,10 +165,11 @@
 .var SUB_MSB;
 .var SUB_LSB;
 .var out;
+.var init;
 
 .var TAB_PULSES[4] = {10000, 5000, 2500, 1250};	// Number of pulses/kWh -> 1/2/4/8;
 .var TAB_THRESHOLDS[8] = {0, 0x168, 0, 0x2D0, 0, 0x5A0, 0, 0xB40};
-.var TAB_SAMPLING_PERIODS_INT[4] = {50, 3000, 30000, 60000}; // Necessary interrupts to cover: 1s/1m/5m/10m
+.var TAB_SAMPLING_PERIODS_INTER[4] = {50, 3000, 30000, 60000}; // Necessary interrupts to cover: 1s/1m/5m/10m
 .var TAB_SAMPLING_PERIODS[4] = {1, 60, 300, 600}; // Time in seconds
 .var TAB_U[6] = {200 ,210, 220, 230, 240, 250}; // Voltages
 .var TAB_I[29] = {0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5, 6, 6, 6, 6, 7}; 
@@ -444,6 +445,9 @@ si=0xFFFF;
 dm(Dm_Wait_Reg)=si;
 
 // call init;
+// Set init flag false
+ax0 = 0;
+dm(init) = ax0;
 
 // PF ports
 si = 0x007f;
@@ -464,41 +468,63 @@ dm(PulsesNumber) = ax0;	// Pulses / kWh
 */
 	
 // Get input data
-IO(PORT_IN) = 0x07;
+ax0 = 0x18;				// MODE = 1;  dTIndex = 10; PulsesNumberIndex = 11;
+						// 			  dT = 30000	Threshold = 2880
+IO(PORT_IN) = ax0;
 ay0 = IO(PORT_IN);
 ax0 = 0x03;
 ar = ax0 and ay0;
 dm(PulsesNumberIndex) = ar;
-ax0 = 0x0a;
+ax0 = 0x0c;
 ar = ax0 and ay0;
 sr = LSHIFT ar BY (-2) (LO); 
-dm(dTIndex) = sr;
+dm(dTIndex) = sr0;
 ax0 = 0x10;
-ar = ax0 and ayo;
+ar = ax0 and ay0;
 sr = LSHIFT ar BY (-4) (LO);
-dm(MODE) = sr;
+dm(MODE) = sr0;
 	
 // Get Pulses number & Sampling rate
 i3 = TAB_PULSES;
-l3 = 4;
-m3 = dm(PulsesNumberIndex)
-ar = dm(i3, m3);
-dm(PulsesNumber) = ar;
+// l4 = 1;
+m3 = dm(PulsesNumberIndex);
+modify(i3, m3);
+mx0 = dm(i3, m3);
+dm(PulsesNumber) = mx0;
 	
-i3 = TAB_SAMPLING_PERIODS_INT;
-l3 = 4;
-m3 = dm(dTIndex)
-ar = dm(i3, m3);
-dm(dT) = ar;	
-	
+
+//// CHECK!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!  ///
+i3 = TAB_SAMPLING_PERIODS_INTER;
+m3 = dm(dTIndex);
+modify(i3, m3);
+ax0 = dm(i3, m3);
+dm(cntDT) = ax0;
+
+i3 = TAB_SAMPLING_PERIODS;
+m3 = dm(dTIndex);
+modify(i3, m3);
+ax0 = dm(i3, m3);
+dm(cntDT) = ax0;	
+
+
 // COMPUTE_THRESHOLD:
 ena m_mode;
+i4 = TAB_THRESHOLDS;
+m4 = dm(PulsesNumberIndex);
+modify(i4, m4);
+mx0 = dm(i4, m4);
+dm(Threshold) = mx0;
+m4 = 1;
+modify(i4, m4);
+mx0 = dm(i4, m4);
+dm(Threshold + 1) = mx0;
+
+/*
 i4 = TAB_THRESHOLDS;
 m4 = 2;
 l4 = 0;
 ax0 = 1;					// PulseIndex
 dm(PulsesNumberIndex) = ax0;
-
 cntr = dm(PulsesNumberIndex);
 do sop until ce;
 sop: modify(i4, m4);
@@ -514,6 +540,11 @@ mr0 = 0;
 dm(Threshold) = mr0;
 mr0 = 360;
 dm(Threshold + 1) = mr0;
+*/
+
+
+ax0 = 1;
+dm(init) = ax0;
 
 /* // Computing the hard way
 ax1 = dm(PulsesNumber);
@@ -553,6 +584,10 @@ wt:
  
 sci:
         ena sec_reg;                /* use shadow register bank */      
+        
+        // Wait for init
+        ar = dm(init);
+        if eq rti;
         
         // Implementing a counter in order to sync with ATmega 
         // (which has timing interrupts at every 20ms;
@@ -890,12 +925,12 @@ Q2:
         
         // Compute power level:
         ax0 = dm(P);
-        ay0 = 3;
+        ay0 = 500;
         ax1 = 1;
         ar = ax0 - ay0;
         if lt jump SAVE_POWER_LEVEL;
         
-        ay0 = 6;
+        ay0 = 1000;
         ax1 = 3;
         ar = ax0 - ay0;
         if lt jump SAVE_POWER_LEVEL;
@@ -952,8 +987,8 @@ Q4:
         dm(Prog_Flag_Data) = sr;	// PORTF = PPPP PPP0 (PULSE = 0)
         */
         ax1 = dm(out);
-        ay1 = 0;
-        ar = ax1 or ay1;
+        ay1 = 0xfe;
+        ar = ax1 and ay1;
         // IO(PORT_OUT) = ax1;
         dm(Prog_Flag_Data) = ar;
         dm(PF_output) = ar;
@@ -975,8 +1010,8 @@ Q4:
 Q5:
 		// Compute consumption:      
         ax1 = dm(out);
-        ay1 = 0;
-        ar = ax1 or ay1;	// Write PULSE = 0 at 0xFF
+        ay1 = 0xfe;
+        ar = ax1 and ay1;	// Write PULSE = 0 at 0xFF
         // IO(PORT_OUT) = ax1;
 		dm(Prog_Flag_Data) = ar;
 		dm(PF_output) = ar;
