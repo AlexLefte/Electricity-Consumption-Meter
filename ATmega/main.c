@@ -329,7 +329,7 @@ void UpdateConsumption()
                 
                 if (modeFlag) 
                 {
-                    MODE = (PINA & 0x02) >> 2; 
+                    MODE = (PINA & 0x02) >> 1; 
                     //modeFlag = 0;
                 } 
                 
@@ -564,7 +564,9 @@ void CLS()
    
 void DisplayConsumptionDisplayMode()
 {
-    char out;
+    char out;  
+    
+    if(modeFlag) return;
     
     if (MODE == 1)  // Working without ranges
     { 
