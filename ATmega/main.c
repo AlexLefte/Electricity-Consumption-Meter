@@ -28,7 +28,7 @@ Data Stack size         : 256
 // Numar de perioade necesare    
 // duratei unui puls pozitiv (cu durata 20 ms)
     
-#define DP 2    
+#define DP 1    
   
 /// CLS definitions /// 
    
@@ -76,14 +76,14 @@ char Q,Q1,S3;
 /// Consumption array
 //            0 - H1   H1 - H2   H2 - 0   Sat - Sun   Total 
 //              ^         ^         ^         ^         ^
-int CONSUM[] = {0,       0,       0,        0,        0};
+int CONSUM[] = {21,       0,       0,        0,        0};
 
     // Digits
 char C4, C3, C2, C1;
 // CA
 char CA;
 //Power Level
-char PowerLevel = 0;
+//char PowerLevel = 0;
 // Digit patterns (CLC)
 const char DIGITS[] = {
    0b11000000, // 0
@@ -97,11 +97,14 @@ const char DIGITS[] = {
     0b10000000, // 8
     0b10010000  // 9
 };
+
+char outPower ;
+char pulsesNumber;
 ///////////////////////////////
 
 // Power Level (CLC) ///
 // char CLC_LEVEL[] = {0x00, 0x10, 0x30, 0x70, 0xF0};  // 4 levels
-char CLC_LEVEL[] = {0x00, 0x20, 0x60, 0xE0};           // 3 levels               
+//char CLC_LEVEL[] = {0x00, 0x20, 0x60, 0xE0};           // 3 levels               
 ////////////////////////
 // Consumption range output (CLC) //
 char CLC_RANGE_OUTPUT[] = {0x01, 0x02, 0x03, 0x00};
@@ -116,9 +119,9 @@ void DisplayConsumption();
 void DisplayDigit(char currentDisplay, char digit);
 void UpdateTime();
 void CLS();
-void DisplayPowerLevel();
+//void DisplayPowerLevel();
 void DisplayConsumptionDisplayMode();
-void DisplayInfo();
+//void DisplayInfo();
 
 /////////////////////////
 
@@ -135,7 +138,19 @@ interrupt [TIM0_OVF] void timer0_ovf_isr(void)
     CA = (PIND & 0x80) >> 7; 
     
     //DisplayInfo
-    DisplayInfo();
+    //DisplayInfo();    
+    
+     
+    //power from ADSP
+    outPower = (PINA & 0x38)<<2;
+    // Delete PB7-PB5
+   PORTB &= 0x1f;       
+   
+   // Display out on PB7-PB5
+   PORTB = (PORTB) | (outPower);    
+   
+   DisplayConsumptionDisplayMode();
+    
     
     // Update mock pulse
     // MockPULSE();                 
@@ -296,7 +311,7 @@ void Init()
 void UpdateConsumption()
 {         
    // Reading the power level
-    PowerLevel = (PINA & 0x7E) >> 1;   
+    //PowerLevel = (PINA & 0x1C) >> 2;   
     PULSE = PINA & 0x01;
     
      switch(S2) 
@@ -314,9 +329,9 @@ void UpdateConsumption()
                 
                 if (modeFlag) 
                 {
-                    MODE = (PINA & 0x80) >> 7; 
-                    modeFlag = 0;
-                }
+                    MODE = (PINA & 0x02) >> 2; 
+                    //modeFlag = 0;
+                } 
                 
                 // Go further if the pulse period has passed,
                 // otherwise go back wait for sensding ack again.
@@ -330,6 +345,12 @@ void UpdateConsumption()
             {   
                 // Update current consumption range
                 //CLS();
+                if (modeFlag)
+                {  
+                    pulsesNumber = (PINA & 0x06)>>1;
+                    modeFlag = 0;
+                }
+                
                 
                 // Increment consumption 
                 if (MODE == 0)
@@ -486,14 +507,15 @@ void CLS()
     }       
 }
 
-void DisplayInfo()
-{
-    DisplayConsumptionDisplayMode();
-    DisplayPowerLevel();
-}
-void DisplayPowerLevel()
-{
-   char out;
+//void DisplayInfo()
+//{
+//    DisplayConsumptionDisplayMode();
+//    DisplayPowerLevel();  //de sters asta
+//}
+
+//void DisplayPowerLevel()
+//{
+//   char out;
    
 //   if (!PowerLevel)          PowerLevel = 0 kW
 //   {
@@ -516,29 +538,29 @@ void DisplayPowerLevel()
 //        out = CLC_LEVEL[4];
 //   }    
    
-   if (!PowerLevel)         // PowerLevel = 0 kW
-   {
-        out = CLC_LEVEL[0];
-   }                       
-   else if (PowerLevel < 3)   // 0 < PowerLevel < 3 kW
-   {
-        out = CLC_LEVEL[1];
-   }  
-   else if (PowerLevel < 6)     // 3 <= PowerLevel < 6 kW
-   {
-        out = CLC_LEVEL[2];
-   }  
-   else                         // PowerLvel >= 6 kW
-   {
-        out = CLC_LEVEL[3];
-   }  
+ //  if (!PowerLevel)         // PowerLevel = 0 kW
+ //  {
+ //       out = CLC_LEVEL[0];
+ //  }                       
+ //  else if (PowerLevel < 3)   // 0 < PowerLevel < 3 kW
+ //  {
+ //       out = CLC_LEVEL[1];
+ //  }  
+ //  else if (PowerLevel < 6)     // 3 <= PowerLevel < 6 kW
+ //  {
+ //       out = CLC_LEVEL[2];
+ //  }  
+ //  else                         // PowerLvel >= 6 kW
+ //  {
+ //       out = CLC_LEVEL[3];
+ //  }  
                    
    // Delete PB7-PB5
-   PORTB &= 0x1f;       
+ //  PORTB &= 0x1f;       
    
    // Display out on PB7-PB5
-   PORTB |= out;  
-}
+  // PORTB |= out;  
+//}
    
 void DisplayConsumptionDisplayMode()
 {
@@ -628,7 +650,8 @@ void DisplayConsumptionDisplayMode()
         }      
     } 
     
-     out = CLC_RANGE_OUTPUT[Q1] | (CLC_RANGE_OUTPUT[Q] << 2);
+     out = CLC_RANGE_OUTPUT[Q1] | (CLC_RANGE_OUTPUT[Q] << 2);  
+    // out = 0x0A;
     
     // Delete PB4-PB0
     PORTB &= 0xE0;   
