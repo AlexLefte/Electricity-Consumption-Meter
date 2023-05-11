@@ -83,7 +83,7 @@ char C4, C3, C2, C1;
 // CA
 char CA;
 //Power Level
-char PowerLevel = 0;
+//char PowerLevel = 0;
 // Digit patterns (CLC)
 const char DIGITS[] = {
    0b11000000, // 0
@@ -564,7 +564,9 @@ void CLS()
    
 void DisplayConsumptionDisplayMode()
 {
-    char out;
+    char out;  
+    
+    if(modeFlag) return;
     
     if (MODE == 1)  // Working without ranges
     { 

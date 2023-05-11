@@ -46,9 +46,9 @@ Function                                                                        
 timer0_ovf_isr                                                                    0x000E1     54
 main                                                                              0x00117     92
 Init                                                                              0x00173     12
-UpdateConsumption                                                                 0x0017F     67
-DisplayConsumption                                                                0x001C2     65
-DisplayDigit                                                                      0x00203     43
-UpdateTime                                                                        0x0022E    137
-CLS                                                                               0x002B7     84
-DisplayConsumptionDisplayMode                                                     0x0030B    124
+UpdateConsumption                                                                 0x0017F     68
+DisplayConsumption                                                                0x001C3     65
+DisplayDigit                                                                      0x00204     43
+UpdateTime                                                                        0x0022F    137
+CLS                                                                               0x002B8     84
+DisplayConsumptionDisplayMode                                                     0x0030C    127

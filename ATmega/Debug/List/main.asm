@@ -1999,11 +1999,12 @@ _UpdateConsumption:
 	TST  R9
 	BREQ _0x13
 ; 0000 014B {
-; 0000 014C MODE = (PINA & 0x02) >> 2;
+; 0000 014C MODE = (PINA & 0x02) >> 1;
 	IN   R30,0x0
 	ANDI R30,LOW(0x2)
 	LDI  R31,0
-	RCALL __ASRW2
+	ASR  R31
+	ROR  R30
 	MOV  R10,R30
 ; 0000 014D //modeFlag = 0;
 ; 0000 014E }
@@ -2511,203 +2512,209 @@ _DisplayConsumptionDisplayMode:
 ; .FSTART _DisplayConsumptionDisplayMode
 ; 0000 0237 char out;
 ; 0000 0238 
-; 0000 0239 if (MODE == 1)  // Working without ranges
+; 0000 0239 if(modeFlag) return;
 	ST   -Y,R17
 ;	out -> R17
+	TST  R9
+	BREQ _0x33
+	RJMP _0x2000001
+; 0000 023A 
+; 0000 023B if (MODE == 1)  // Working without ranges
+_0x33:
 	LDI  R30,LOW(1)
 	CP   R30,R10
-	BRNE _0x33
-; 0000 023A {
-; 0000 023B 
-; 0000 023C // Clear PB4-0
-; 0000 023D PORTB &= 0xE0;
+	BRNE _0x34
+; 0000 023C {
+; 0000 023D 
+; 0000 023E // Clear PB4-0
+; 0000 023F PORTB &= 0xE0;
 	IN   R30,0x5
 	ANDI R30,LOW(0xE0)
 	OUT  0x5,R30
-; 0000 023E 
-; 0000 023F // Display on PB4
-; 0000 0240 PORTB |= 0x10;
+; 0000 0240 
+; 0000 0241 // Display on PB4
+; 0000 0242 PORTB |= 0x10;
 	SBI  0x5,4
-; 0000 0241 
-; 0000 0242 return;
+; 0000 0243 
+; 0000 0244 return;
 	RJMP _0x2000001
-; 0000 0243 }
-; 0000 0244 
-; 0000 0245 switch(S3)
-_0x33:
+; 0000 0245 }
+; 0000 0246 
+; 0000 0247 switch(S3)
+_0x34:
 	MOV  R30,R14
 	LDI  R31,0
-; 0000 0246 {
-; 0000 0247 case 0:
-	SBIW R30,0
-	BRNE _0x37
 ; 0000 0248 {
-; 0000 0249 if (CA == 0)            // Pressed CA
-	LDS  R30,_CA
-	CPI  R30,0
+; 0000 0249 case 0:
+	SBIW R30,0
 	BRNE _0x38
 ; 0000 024A {
-; 0000 024B S3 = 1;
+; 0000 024B if (CA == 0)            // Pressed CA
+	LDS  R30,_CA
+	CPI  R30,0
+	BRNE _0x39
+; 0000 024C {
+; 0000 024D S3 = 1;
 	LDI  R30,LOW(1)
 	MOV  R14,R30
-; 0000 024C }
-; 0000 024D break;
-_0x38:
-	RJMP _0x36
 ; 0000 024E }
-; 0000 024F case 1:                 // Released CA
-_0x37:
+; 0000 024F break;
+_0x39:
+	RJMP _0x37
+; 0000 0250 }
+; 0000 0251 case 1:                 // Released CA
+_0x38:
 	CPI  R30,LOW(0x1)
 	LDI  R26,HIGH(0x1)
 	CPC  R31,R26
-	BRNE _0x39
-; 0000 0250 {
-; 0000 0251 if (CA)
+	BRNE _0x3A
+; 0000 0252 {
+; 0000 0253 if (CA)
 	LDS  R30,_CA
 	CPI  R30,0
-	BREQ _0x3A
-; 0000 0252 {
-; 0000 0253 S3 = 2;
+	BREQ _0x3B
+; 0000 0254 {
+; 0000 0255 S3 = 2;
 	LDI  R30,LOW(2)
 	MOV  R14,R30
-; 0000 0254 Q1 = 1;
+; 0000 0256 Q1 = 1;
 	LDI  R30,LOW(1)
 	MOV  R11,R30
-; 0000 0255 }
-; 0000 0256 break;
-_0x3A:
-	RJMP _0x36
 ; 0000 0257 }
-; 0000 0258 case 2:                //  Pressed CA
-_0x39:
+; 0000 0258 break;
+_0x3B:
+	RJMP _0x37
+; 0000 0259 }
+; 0000 025A case 2:                //  Pressed CA
+_0x3A:
 	CPI  R30,LOW(0x2)
 	LDI  R26,HIGH(0x2)
 	CPC  R31,R26
-	BRNE _0x3B
-; 0000 0259 {
-; 0000 025A if (CA == 0)
-	LDS  R30,_CA
-	CPI  R30,0
 	BRNE _0x3C
 ; 0000 025B {
-; 0000 025C S3 = 3;
+; 0000 025C if (CA == 0)
+	LDS  R30,_CA
+	CPI  R30,0
+	BRNE _0x3D
+; 0000 025D {
+; 0000 025E S3 = 3;
 	LDI  R30,LOW(3)
 	MOV  R14,R30
-; 0000 025D }
-; 0000 025E break;
-_0x3C:
-	RJMP _0x36
 ; 0000 025F }
-; 0000 0260 case 3:                // Released CA
-_0x3B:
+; 0000 0260 break;
+_0x3D:
+	RJMP _0x37
+; 0000 0261 }
+; 0000 0262 case 3:                // Released CA
+_0x3C:
 	CPI  R30,LOW(0x3)
 	LDI  R26,HIGH(0x3)
 	CPC  R31,R26
-	BRNE _0x3D
-; 0000 0261 {
-; 0000 0262 if (CA)
+	BRNE _0x3E
+; 0000 0263 {
+; 0000 0264 if (CA)
 	LDS  R30,_CA
 	CPI  R30,0
-	BREQ _0x3E
-; 0000 0263 {
-; 0000 0264 S3 = 4;
+	BREQ _0x3F
+; 0000 0265 {
+; 0000 0266 S3 = 4;
 	LDI  R30,LOW(4)
 	MOV  R14,R30
-; 0000 0265 Q1 = 2;
+; 0000 0267 Q1 = 2;
 	LDI  R30,LOW(2)
 	MOV  R11,R30
-; 0000 0266 }
-; 0000 0267 break;
-_0x3E:
-	RJMP _0x36
 ; 0000 0268 }
-; 0000 0269 case 4:
-_0x3D:
+; 0000 0269 break;
+_0x3F:
+	RJMP _0x37
+; 0000 026A }
+; 0000 026B case 4:
+_0x3E:
 	CPI  R30,LOW(0x4)
 	LDI  R26,HIGH(0x4)
 	CPC  R31,R26
-	BRNE _0x3F
-; 0000 026A {
-; 0000 026B if (CA == 0)
-	LDS  R30,_CA
-	CPI  R30,0
 	BRNE _0x40
 ; 0000 026C {
-; 0000 026D S3 = 5;
+; 0000 026D if (CA == 0)
+	LDS  R30,_CA
+	CPI  R30,0
+	BRNE _0x41
+; 0000 026E {
+; 0000 026F S3 = 5;
 	LDI  R30,LOW(5)
 	MOV  R14,R30
-; 0000 026E }
-; 0000 026F break;
-_0x40:
-	RJMP _0x36
 ; 0000 0270 }
-; 0000 0271 case 5:
-_0x3F:
+; 0000 0271 break;
+_0x41:
+	RJMP _0x37
+; 0000 0272 }
+; 0000 0273 case 5:
+_0x40:
 	CPI  R30,LOW(0x5)
 	LDI  R26,HIGH(0x5)
 	CPC  R31,R26
-	BRNE _0x41
-; 0000 0272 {
-; 0000 0273 if (CA)
+	BRNE _0x42
+; 0000 0274 {
+; 0000 0275 if (CA)
 	LDS  R30,_CA
 	CPI  R30,0
-	BREQ _0x42
-; 0000 0274 {
-; 0000 0275 S3 = 6;
+	BREQ _0x43
+; 0000 0276 {
+; 0000 0277 S3 = 6;
 	LDI  R30,LOW(6)
 	MOV  R14,R30
-; 0000 0276 Q1 = 3;
+; 0000 0278 Q1 = 3;
 	LDI  R30,LOW(3)
 	MOV  R11,R30
-; 0000 0277 }
-; 0000 0278 break;
-_0x42:
-	RJMP _0x36
 ; 0000 0279 }
-; 0000 027A case 6:
-_0x41:
+; 0000 027A break;
+_0x43:
+	RJMP _0x37
+; 0000 027B }
+; 0000 027C case 6:
+_0x42:
 	CPI  R30,LOW(0x6)
 	LDI  R26,HIGH(0x6)
 	CPC  R31,R26
-	BRNE _0x43
-; 0000 027B {
-; 0000 027C if (CA == 0)
-	LDS  R30,_CA
-	CPI  R30,0
 	BRNE _0x44
 ; 0000 027D {
-; 0000 027E S3 = 7;
+; 0000 027E if (CA == 0)
+	LDS  R30,_CA
+	CPI  R30,0
+	BRNE _0x45
+; 0000 027F {
+; 0000 0280 S3 = 7;
 	LDI  R30,LOW(7)
 	MOV  R14,R30
-; 0000 027F }
-; 0000 0280 break;
-_0x44:
-	RJMP _0x36
 ; 0000 0281 }
-; 0000 0282 case 7:
-_0x43:
+; 0000 0282 break;
+_0x45:
+	RJMP _0x37
+; 0000 0283 }
+; 0000 0284 case 7:
+_0x44:
 	CPI  R30,LOW(0x7)
 	LDI  R26,HIGH(0x7)
 	CPC  R31,R26
-	BRNE _0x36
-; 0000 0283 {
-; 0000 0284 if (CA)
+	BRNE _0x37
+; 0000 0285 {
+; 0000 0286 if (CA)
 	LDS  R30,_CA
 	CPI  R30,0
-	BREQ _0x46
-; 0000 0285 {
-; 0000 0286 S3 = 0;
+	BREQ _0x47
+; 0000 0287 {
+; 0000 0288 S3 = 0;
 	CLR  R14
-; 0000 0287 Q1 = 0;
+; 0000 0289 Q1 = 0;
 	CLR  R11
-; 0000 0288 }
-; 0000 0289 break;
-_0x46:
 ; 0000 028A }
-; 0000 028B }
-_0x36:
-; 0000 028C 
-; 0000 028D out = CLC_RANGE_OUTPUT[Q1] | (CLC_RANGE_OUTPUT[Q] << 2);
+; 0000 028B break;
+_0x47:
+; 0000 028C }
+; 0000 028D }
+_0x37:
+; 0000 028E 
+; 0000 028F out = CLC_RANGE_OUTPUT[Q1] | (CLC_RANGE_OUTPUT[Q] << 2);
 	MOV  R30,R11
 	LDI  R31,0
 	SUBI R30,LOW(-_CLC_RANGE_OUTPUT)
@@ -2722,20 +2729,20 @@ _0x36:
 	LSL  R30
 	OR   R30,R26
 	MOV  R17,R30
-; 0000 028E // out = 0x0A;
-; 0000 028F 
-; 0000 0290 // Delete PB4-PB0
-; 0000 0291 PORTB &= 0xE0;
+; 0000 0290 // out = 0x0A;
+; 0000 0291 
+; 0000 0292 // Delete PB4-PB0
+; 0000 0293 PORTB &= 0xE0;
 	IN   R30,0x5
 	ANDI R30,LOW(0xE0)
 	OUT  0x5,R30
-; 0000 0292 
-; 0000 0293 // Display out on PB3-PB0
-; 0000 0294 PORTB |= out;
+; 0000 0294 
+; 0000 0295 // Display out on PB3-PB0
+; 0000 0296 PORTB |= out;
 	IN   R30,0x5
 	OR   R30,R17
 	OUT  0x5,R30
-; 0000 0295 }
+; 0000 0297 }
 _0x2000001:
 	LD   R17,Y+
 	RET
