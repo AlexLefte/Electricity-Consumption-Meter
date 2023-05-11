@@ -1,0 +1,9 @@
+1) MODE = 0 -> Mod de lucru cu intervale orare
+2) dT = 1s -> Perioada de esantionare de o secunda
+3) Nr. pulsuri / kWh -> 5000 pulsuri/kWh
+		     -> 720 Ws -> prag de transmitere 1 puls
+4) Fisiere de intrare de test (ADSP) -> Valori U, I generate aleator.
+			      -> Test_case_2_I_raw.txt & Test_case_2_U_raw.txt
+5) Fisier de intrare (ATmega) -> Fisierul generat de stream-ul definit in VisualDSP++
+				si convertit ulterior pentru a fi utilizat in Proteus Pro.
+			      -> 

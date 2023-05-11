@@ -469,7 +469,7 @@ dm(PulsesNumber) = ax0;	// Pulses / kWh
 */
 	
 // Get input data
-ax0 = 0x18;				// MODE = 1;  dTIndex = 10; PulsesNumberIndex = 11;
+ax0 = 0x04;				// MODE = 1;  dTIndex = 10; PulsesNumberIndex = 11;
 						// 			  dT = 30000	Threshold = 2880
 IO(PORT_IN) = ax0;
 ay0 = IO(PORT_IN);
@@ -844,7 +844,7 @@ Q1:
         modify(i4, m4);
         my0 = dm(i4, m4);		// my0 = exp2
         mr = mr + mx0 * my0 (uu);	// mr = U * [I] + (U >> exp1) * exp2
-        mr0 = 1200;
+        // mr0 = 1200;
         dm(P) = mr0;			// P (power) = U * I
         mx1 = dm(dT);			// mx1 = dT
         my1 = mr0;				// my1 = U * I
