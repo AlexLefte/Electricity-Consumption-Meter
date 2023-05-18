@@ -95,17 +95,32 @@ char CA;
 int PowerLevel = 0;
 
 // Digit patterns (CLC)
+// PB 7 6 5 4 3 2 1 0
+//    B G C F A . D E
+// 0 = LED ON; 1 = LED OFF
 const char DIGITS[] = {
-    0b11000000, // 0
-    0b11111001, // 1
-    0b10100100, // 2
-    0b10110000, // 3
-    0b10011001, // 4
-    0b10010010, // 5
-    0b10000010, // 6
-    0b11111000, // 7
-    0b10000000, // 8
-    0b10010000  // 9
+    0b01000100,  // 0
+    0b01011111,  // 1
+    0b00110100,  // 2
+    0b00010101,  // 3
+    0b00001111,  // 4
+    0b10000101,  // 5
+    0b10000100,  // 6
+    0b01010111,  // 7
+    0b00000100,  // 8
+    0b00000111   // 9
+/*
+    0b11000000,  0
+    0b11111001,  1
+    0b10100100,  2
+    0b10110000,  3
+    0b10011001,  4
+    0b10010010,  5
+    0b10000010,  6
+    0b11111000,  7
+    0b10000100,  8
+    0b10010100   9      
+    */     
 };
 ///////////////////////////////
 
@@ -150,7 +165,7 @@ interrupt [TIM0_OVF] void timer0_ovf_isr(void)
     DisplayInfo();
                                     
     // Update mock pulse
-    // MockPULSE();
+    MockPULSE();
     
     // Check for pulses coming from ADSP
     UpdateConsumption();
@@ -324,7 +339,7 @@ void Init()
 void UpdateConsumption()
 {                
     // Identify PULSE
-    PULSE = PINA & 0x01;
+    // PULSE = PINA & 0x01;
     
     /* switch(S2) 
     {
@@ -410,7 +425,7 @@ void UpdateConsumption()
         }
         case 1:
         {      
-            if (~PULSE)
+            if (PULSE == 0)
             {   
                 // Update current consumption range
                 CLS();
@@ -461,7 +476,7 @@ void MockPULSE()
 void DisplayConsumption()
 {
     // We assume:
-    // PORTC: PC0 - PC6 -> 7 segments (A-G)
+    // PORTCc: PC0 - PC6 -> 7 segments (A-G)
     // PORTD: PD0 - PD3 -> select the common cathode for each digit (multiplexing)
               // PD3 - C4, PD2 - C3, PD1 - C2, PD0 - C1  
     // Q - consumption range:
@@ -502,39 +517,39 @@ void DisplayDigit(char currentDisplay, char digit)
     // corresponding to the desired digit (C4/C3/C2/C1) 
     char output;
     
-    // Set PORTC pins to the corresponding digit
-    // PORTC = DIGITS[digit];
+    // Set PORTCc pins to the corresponding digit
+    // PORTCc = DIGITS[digit];
         
     switch (currentDisplay)
     {
         case 4:       
             // Turn PD3 on 
             //output &= 0b00000111;  
-            output = 0x08;  
+            output = 0x01;  
             break;
         case 3:       
             // Turn PD2 on
             // output &= 0b00001011; 
-            output = 0x04;    
+            output = 0x02;    
             break;  
         case 2:       
             // Turn PD1 on
-            output = 0x02;     
+            output = 0x04;     
             break; 
         case 1:       
             // Turn PD0 on
-            output = 0x01;     
+            output = 0x08;     
             break;
     }          
            
     // Delete PD0-3 
     PORTD &= 0xF0; 
     
-    // Assign output to PORTC in order to select the desired display;
+    // Assign output to PORTCc in order to select the desired display;
     PORTD |= output;
     
-    // Set PORTC pins to the corresponding digit
-    PORTC = DIGITS[digit];
+    // Set PORTCc pins to the corresponding digit
+    PORTB = DIGITS[digit];
     
     // Add delay (10 us)
     // _display_us(10); 
