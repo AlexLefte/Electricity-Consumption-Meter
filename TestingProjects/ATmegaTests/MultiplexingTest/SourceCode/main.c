@@ -65,7 +65,7 @@ char S_PULSE;
  
 // Working mode ///
 // 0 -> range on; 1 -> range off
-char MODE = 1;
+char MODE = 0;
 ///////////////////
 
 ////// Global variables //////// 
@@ -80,7 +80,7 @@ char Q, Q1, S3;
 // Consumption array
 //            0 - H1   H1 - H2   H2 - 0   Sat - Sun   Total 
 //              ^         ^         ^         ^         ^
-int CONSUM[] = {21,        0,        0,        0,        0};
+int CONSUM[] = {7,        6,        8,        10,        11};
 
 // Total consumption
 char TOTAL_CONS = 0;
@@ -108,7 +108,7 @@ const char DIGITS[] = {
     0b10000100,  // 6
     0b01010111,  // 7
     0b00000100,  // 8
-    0b00000111   // 9
+    0b00000101   // 9
 /*
     0b11000000,  0
     0b11111001,  1
@@ -165,7 +165,7 @@ interrupt [TIM0_OVF] void timer0_ovf_isr(void)
     DisplayInfo();
                                     
     // Update mock pulse
-    MockPULSE();
+    // MockPULSE();
     
     // Check for pulses coming from ADSP
     UpdateConsumption();
@@ -188,8 +188,8 @@ CLKPR=(0<<CLKPCE) | (0<<CLKPS3) | (0<<CLKPS2) | (0<<CLKPS1) | (0<<CLKPS0);
 // Port A initialization
 // Function: Bit7=Out Bit6=In Bit5=In Bit4=In Bit3=In Bit2=In Bit1=In Bit0=In 
 DDRA=(1<<DDA7) | (0<<DDA6) | (0<<DDA5) | (0<<DDA4) | (0<<DDA3) | (0<<DDA2) | (0<<DDA1) | (0<<DDA0);
-// State: Bit7=1 Bit6=P Bit5=P Bit4=P Bit3=P Bit2=P Bit1=P Bit0=P 
-PORTA=(1<<PORTA7) | (1<<PORTA6) | (1<<PORTA5) | (1<<PORTA4) | (1<<PORTA3) | (1<<PORTA2) | (1<<PORTA1) | (1<<PORTA0);
+// State: Bit7=1 Bit6=P Bit5=P Bit4=P Bit3=P Bit2=P Bit1=P Bit0=T 
+PORTA=(0<<PORTA7) | (0<<PORTA6) | (0<<PORTA5) | (0<<PORTA4) | (0<<PORTA3) | (0<<PORTA2) | (0<<PORTA1) | (0<<PORTA0);
 
 // Port B initialization
 // Function: Bit7=Out Bit6=Out Bit5=Out Bit4=Out Bit3=Out Bit2=Out Bit1=Out Bit0=Out 
@@ -207,7 +207,7 @@ PORTC=(1<<PORTC7) | (1<<PORTC6) | (1<<PORTC5) | (1<<PORTC4) | (1<<PORTC3) | (1<<
 // Function: Bit7=In Bit6=In Bit5=Out Bit4=In Bit3=Out Bit2=Out Bit1=Out Bit0=Out 
 DDRD=(0<<DDD7) | (0<<DDD6) | (0<<DDD5) | (0<<DDD4) | (1<<DDD3) | (1<<DDD2) | (1<<DDD1) | (1<<DDD0);
 // State: Bit7=T Bit6=T Bit5=1 Bit4=0 Bit3=1 Bit2=1 Bit1=1 Bit0=1 
-PORTD=(1<<PORTD7) | (1<<PORTD6) | (1<<PORTD5) | (1<<PORTD4) | (1<<PORTD3) | (1<<PORTD2) | (1<<PORTD1) | (1<<PORTD0);
+PORTD=(0<<PORTD7) | (0<<PORTD6) | (0<<PORTD5) | (0<<PORTD4) | (0<<PORTD3) | (0<<PORTD2) | (0<<PORTD1) | (0<<PORTD0);
 
 // Timer/Counter 0 initialization
 // Clock source: System Clock
@@ -333,13 +333,13 @@ void Init()
     Q = Q1 = S1 = S2 = S3 = S_PULSE = 0;
     
     // Setting the working mode
-    MODE = 1;     
+    MODE = 0;     
 }
 
 void UpdateConsumption()
 {                
     // Identify PULSE
-    // PULSE = PINA & 0x01;
+    PULSE = PINA & 0x01;
     
     /* switch(S2) 
     {
@@ -402,7 +402,7 @@ void UpdateConsumption()
     PowerLevel = (PINA & 0xfe) >> 1;  
     
     // For testing purposes, we will assume PowerLevel = 6 kW
-    PowerLevel = 6;
+    PowerLevel = 8;
          
     switch(S2) 
     {
@@ -517,8 +517,8 @@ void DisplayDigit(char currentDisplay, char digit)
     // corresponding to the desired digit (C4/C3/C2/C1) 
     char output;
     
-    // Set PORTCc pins to the corresponding digit
-    // PORTCc = DIGITS[digit];
+    // Set PORTD pins to the corresponding digit
+    // PORTD = DIGITS[digit];
         
     switch (currentDisplay)
     {
@@ -654,10 +654,10 @@ void DisplayPowerLevel()
    }  
                    
    // Delete PB7-PB5
-   PORTB &= 0x1f;       
+   PORTC &= 0x1f;       
    
    // Display out on PB7-PB5
-   PORTB |= out;   
+   PORTC |= out;   
 }
 
 void DisplayConsumptionDisplayMode()
@@ -667,10 +667,10 @@ void DisplayConsumptionDisplayMode()
     if (MODE == 1)  // Working without ranges
     {            
         // Clear PB4-0
-        PORTB &= 0xE0;
+        PORTC &= 0xE0;
         
         // Display on PB4-0
-        PORTB |= 0x10; 
+        PORTC |= 0x10; 
         
         return;
     }
@@ -679,7 +679,7 @@ void DisplayConsumptionDisplayMode()
     {
         case 0:                 
         {
-            if (CA == 0)            // Pressed CA
+            if (CA)            // Pressed CA
             {
                 S3 = 1;  
             }
@@ -687,7 +687,7 @@ void DisplayConsumptionDisplayMode()
         }
         case 1:                 // Released CA
         {
-            if (CA) 
+            if (!CA) 
             {
                 S3 = 2;  
                 Q1 = 1;
@@ -696,7 +696,7 @@ void DisplayConsumptionDisplayMode()
         }
         case 2:                //  Pressed CA
         {
-            if (CA == 0) 
+            if (CA) 
             {
                 S3 = 3;  
             }
@@ -704,7 +704,7 @@ void DisplayConsumptionDisplayMode()
         }
         case 3:                // Released CA
         {
-            if (CA) 
+            if (!CA) 
             {
                 S3 = 4;  
                 Q1 = 2;
@@ -713,7 +713,7 @@ void DisplayConsumptionDisplayMode()
         }
         case 4:
         {
-            if (CA == 0) 
+            if (CA) 
             {
                 S3 = 5;  
             }
@@ -721,7 +721,7 @@ void DisplayConsumptionDisplayMode()
         }
         case 5:
         {
-            if (CA) 
+            if (!CA) 
             {
                 S3 = 6; 
                 Q1 = 3; 
@@ -730,7 +730,7 @@ void DisplayConsumptionDisplayMode()
         }    
         case 6:
         {
-            if (CA == 0) 
+            if (CA) 
             {
                 S3 = 7;  
             }
@@ -738,7 +738,7 @@ void DisplayConsumptionDisplayMode()
         }
         case 7:
         {
-            if (CA) 
+            if (!CA) 
             {
                 S3 = 0; 
                 Q1 = 0; 
@@ -749,10 +749,10 @@ void DisplayConsumptionDisplayMode()
       
     out = CLC_RANGE_OUTPUT[Q1] | (CLC_RANGE_OUTPUT[Q] << 2);
     
-    // Delete PB4-PB0
-    PORTB &= 0xE0;   
+    // Delete PC4-PC0
+    PORTC &= 0xE0;   
    
-    // Display out on PB3-PB0
-    PORTB |= out; 
+    // Display out on PC3-PC0
+    PORTC |= out; 
 }
 ////////////////////////////////////////
