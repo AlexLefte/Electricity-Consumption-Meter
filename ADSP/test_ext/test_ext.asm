@@ -168,6 +168,13 @@
 .var init;
 .var firstPulse = 0;
 
+
+// Testing section
+.var testMode = 1;
+.var testPower;
+.var cntTest = 0;
+//////////////////
+
 .var TAB_PULSES[4] = {10000, 5000, 2500, 1250};	// Number of pulses/kWh -> 1/2/4/8;
 .var TAB_THRESHOLDS[8] = {0, 0x168, 0, 0x2D0, 0, 0x5A0, 0, 0xB40};
 .var TAB_SAMPLING_PERIODS_INTER[4] = {50, 3000, 30000, 60000}; // Necessary interrupts to cover: 1s/1m/5m/10m
@@ -342,23 +349,6 @@ start:
                   +------- | GO MODE
             */
 
-
-//
-
-// si = IO(PORT_IN);
-
-// Read the working mode
-// AR = si;
-// AY0 = 0x0001;
-// AR = AR AND AY0;
-// dm(MODE) = AR;
-
-// Read the sampling rate
-// AR = si;
-// AY0 = 0x0002;
-// AR = AR AND AY0;
-// dm(dT) = AR;
-
 jump skip;
 
 //
@@ -455,22 +445,13 @@ si = 0x007f;
 dm(Prog_Flag_Comp_Sel_Ctrl) = si; // PF7 - Input && PF0-6 outputs 
 
 ena m_mode;
-/*
-ax0 = IO(PORT_IN);
-ay0 = 0x01;
-ar = ax0 and ay0;
-dm(MODE) = ar;		// Mode 0 => working range on
-ax0 = 50;
-dm(cntDT) = ax0; 	// Interr -> every 20ms => cntDT = 50
-ax0 = 1;
-dm(dT) = ax0; 
-ax0 = 4;
-dm(PulsesNumber) = ax0;	// Pulses / kWh
-*/
-	
+
+ax0 = dm(testMode);
+ar = ax0 - 1;
+if eq jump TEST_MODE;
+
 // Get input data
-ax0 = 0x00;				// MODE = 1;  dTIndex = 10; PulsesNumberIndex = 11;
-						// 			  dT = 30000	Threshold = 2880
+ax0 = 0x00;				
 IO(PORT_IN) = ax0;
 ay0 = IO(PORT_IN);
 ax0 = 0x03;
@@ -491,8 +472,7 @@ i3 = TAB_PULSES;
 m3 = dm(PulsesNumberIndex);
 modify(i3, m3);
 mx0 = dm(i3, m3);
-dm(PulsesNumber) = mx0;
-	
+dm(PulsesNumber) = mx0;	
 
 i3 = TAB_SAMPLING_PERIODS_INTER;
 m3 = dm(dTIndex);
@@ -522,40 +502,56 @@ dm(Threshold) = mr0;
 mr0 = dm(i3, m3);
 dm(Threshold + 1) = mr0;
 
-/*
-// Threshold = 360 Ws (Testing purposes)
-mr0 = 0;
-dm(Threshold) = mr0;
-mr0 = 360;
-dm(Threshold + 1) = mr0;
-*/
+ax0 = 1;
+dm(init) = ax0;
+jump wt;
 
+TEST_MODE:
+// 100,000 pulses/kWh => Threshold 360Ws
+ax0 = 0; 
+dm(Threshold) = ax0;
+ax0 = 0x168;
+dm(Threshold + 1) = ax0;
+
+// Ts = 1s
+ax0 = 1;
+dm(dT) = ax0;
+
+// dT cnt
+ax0 = 50;
+dm(cntDT) = ax0;
+
+// Case 1
+ax0 = 90;
+dm(testPower) = ax0;
+ax0 = 0;
+dm(MODE) = ax0;
 
 ax0 = 1;
 dm(init) = ax0;
+/*
+// Case 2:
+ax0 = 180;
+dm(testPower) = ax0;
+ax0 = 0;
+dm(MODE) = ax0;
+*/
 
-/* // Computing the hard way
-ax1 = dm(PulsesNumber);
-ay0 = 3600;				// ay0 = 1kWh = 3600 kWs
-ay1 = 0;
+/*
+// Case 3:
+ax0 = 360;
+dm(testPower) = ax0;
+ax0 = 1;
+dm(MODE) = ax0;
+*/
 
-DIVS ay1, ax1; 
-DIVQ ax1; DIVQ ax1; 
-DIVQ ax1; DIVQ ax1; 
-DIVQ ax1; DIVQ ax1; 
-DIVQ ax1; DIVQ ax1; 
-DIVQ ax1; DIVQ ax1; 
-DIVQ ax1; DIVQ ax1; 
-DIVQ ax1; DIVQ ax1; 
-DIVQ ax1; DIVQ ax1;
-
-mx0 = ay0;
-my0 = 1000;				// Get the result in Ws
-mr = mx0 * my0 (uu);
-	
-dm(Threshold) = mr0;
-dm(Threshold + 1) = mr1; */
-
+/*
+// Case 4:
+ax0 = 720;
+dm(testPower) = ax0;
+ax0 = 1;
+dm(MODE) = ax0;
+*/
 
 /* wait for char to go out */
 wt:
@@ -580,6 +576,19 @@ sci:
         
         // Implementing a counter in order to sync with ATmega 
         // (which has timing interrupts at every 20ms;
+        // Incrementing the sampling period counter
+        ay0 = dm(cntTest);	// Read current interrupts counter
+        ar = ay0 + 1;		// Increment the interrupts counter
+        dm(cntTest) = ar;	// Save the result
+        ax0 = 160;		// Get the interrupts counter value
+        ay0 = dm(cntTest);			// Get the necessary interrupts number
+        af = ax0 - ay0;			// Compute cntInterrupts - cntInterrupts
+        if gt rti;		// If not cntDT - cntP <= 0 => read new samples
+			
+        ax0 = 0;
+        dm(cntTest) = ax0;
+        
+        // Incrementing the sampling period counter
         ay0 = dm(cntP);		// Read current interrupts counter
         ar = ay0 + 1;		// Increment the interrupts counter
         dm(cntP) = ar;		// Save the result
@@ -639,6 +648,11 @@ Q1:
         // IO(PORT_OUT) = ax1;
         dm(Prog_Flag_Data) = ax1;
         dm(PF_output) = ax1;
+        
+        ax0 = dm(testMode);
+		ar = ax0 - 0;
+		if eq jump SKIP_UI;
+
         
         // Compute consumption:  
 		// Reading the voltage (U) 
@@ -825,12 +839,7 @@ Q1:
         i4 = TAB_I;
 		m4 = ax1;
         modify(i4, m4);
-        my0 = dm(i4, m4);
-        
-        // Compute dE
-        // mx0 = 225;
-        // my0 = 2;
-        
+        my0 = dm(i4, m4);      
         mr = mx0 * my0 (uu);	// mr = U * [I]
         ax0 = mx0;				// ax0 = U
         i4 = EXP_1;
@@ -845,7 +854,13 @@ Q1:
         modify(i4, m4);
         my0 = dm(i4, m4);		// my0 = exp2
         mr = mr + mx0 * my0 (uu);	// mr = U * [I] + (U >> exp1) * exp2
-        // mr0 = 1200;
+        
+        // Testing section //
+        // Providing a hardcoded value for power:
+        SKIP_UI:
+        mr0 = dm(testPower);
+        ////
+        
         dm(P) = mr0;			// P (power) = U * I
         mx1 = dm(dT);			// mx1 = dT
         my1 = mr0;				// my1 = U * I
