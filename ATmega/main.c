@@ -144,7 +144,7 @@ interrupt [TIM0_OVF] void timer0_ovf_isr(void)
     //power from ADSP
     outPower = (PINA & 0x38)<<2;
     // Delete PB7-PB5
-   PORTB &= 0x1f;       
+    PORTB &= 0x1f;       
    
    // Display out on PB7-PB5
    PORTB = (PORTB) | (outPower);    

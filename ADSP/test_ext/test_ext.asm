@@ -190,7 +190,8 @@
 .SECTION/PM     interrupts;
 		jump start;  rti; rti; rti;     /*00: reset */
       
-		jump sci;    rti; rti; rti;	/*04: IRQ2 */
+		// jump sci; 
+		rti;    rti; rti; rti;	/*04: IRQ2 */
 		
         rti;         rti; rti; rti;     /*08: IRQL1 */
         rti;         rti; rti; rti;     /*0c: IRQL0 */
@@ -349,7 +350,7 @@ start:
                   +------- | GO MODE
             */
 
-jump skip;
+// jump skip;
 
 //
 
@@ -451,8 +452,8 @@ ar = ax0 - 1;
 if eq jump TEST_MODE;
 
 // Get input data
-ax0 = 0x00;				
-IO(PORT_IN) = ax0;
+// ax0 = 0x00;				
+// IO(PORT_IN) = ax0;
 ay0 = IO(PORT_IN);
 ax0 = 0x03;
 ar = ax0 and ay0;
@@ -507,6 +508,10 @@ dm(init) = ax0;
 jump wt;
 
 TEST_MODE:
+// All SW -> to 0
+
+/*
+// In case it cannot read from the switches:
 // 100,000 pulses/kWh => Threshold 360Ws
 ax0 = 0; 
 dm(Threshold) = ax0;
@@ -520,6 +525,7 @@ dm(dT) = ax0;
 // dT cnt
 ax0 = 50;
 dm(cntDT) = ax0;
+*/
 
 // Case 1
 ax0 = 90;
@@ -880,7 +886,7 @@ Q1:
 		ar = ax0 - ay0;
 		ar = ax1 - ay1 + C - 1, ax0 = ar;
 		ax1 = ar;
-        if lt rti;			
+        if lt jump GO_TO_Q0;			
         
         // COMPUTE_N:      
         si = 1;
@@ -900,6 +906,11 @@ Q1:
         ar = ar + 1;
         si = ar;
         jump DIVIDE;
+        
+        GO_TO_Q0:
+        ax0 = 0;
+        dm(Q) = ax0;
+        rti;
         
         STOP:
         dm(n) = si;      

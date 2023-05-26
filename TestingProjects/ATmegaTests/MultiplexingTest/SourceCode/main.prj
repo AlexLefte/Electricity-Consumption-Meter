@@ -8,9 +8,9 @@ C=
 D=3/11/2023
 Files=1
 F1=main.c
-OpenedFiles=1
+OpenedFiles=0
 OF1=main.c
-ActiveTab=1
+ActiveTab=0
 DebugOutputListFilesDirectory=Debug\List
 DebugOutputObjectFilesDirectory=Debug
 DebugOutputExecutableFilesDirectory=Debug\Exe
@@ -142,9 +142,9 @@ DisplayCodeSizeError=1
 UseBootAppXmega=0
 RebuildAll=0
 LinkageInformationPresent=1
-COFFileTimeStamp=1454021225
-Build=125
-GlobalVarAddr=726
+COFFileTimeStamp=1455052151
+Build=136
+GlobalVarAddr=729
 EEPROMVarAddr=0
 [DefinedSymbolsDebug]
 Count=0
@@ -256,7 +256,7 @@ RebuildAll=0
 LinkageInformationPresent=1
 COFFileTimeStamp=-1
 <<<<<<< Updated upstream
-Build=152
+Build=136
 =======
 Build=121
 >>>>>>> Stashed changes
@@ -364,7 +364,7 @@ Column=0
 ScrollPosX=0
 ScrollPosY=0
 <<<<<<< Updated upstream
-TimeStamp=1454663255
+TimeStamp=1455052107
 =======
 TimeStamp=1452588882
 >>>>>>> Stashed changes
@@ -411,11 +411,11 @@ BK8=-1
 BK9=-1
 [Bookmarks3]
 <<<<<<< Updated upstream
-TimeStamp=1454640893
-Row=548
-Column=7
+TimeStamp=1455052101
+Row=128
+Column=18
 ScrollPosX=0
-ScrollPosY=520
+ScrollPosY=106
 =======
 TimeStamp=1452588601
 Row=395
@@ -452,8 +452,8 @@ L13=Enhanced function parameters passing: Mode 2
 L14=Automatic register allocation: Yes
 L15=Smart register allocation: Yes
 L16=
-L17=Build: 125
-L18=1788 line(s) compiled
+L17=Build: 136
+L18=1775 line(s) compiled
 L19=No errors
 L20=2 warning(s)
 L21=
@@ -463,38 +463,38 @@ L24=Data Stack area: 0x100 to 0x1FF
 L25=Data Stack size: 256 byte(s)
 L26=Estimated Data Stack usage: 30 byte(s)
 L27=
-L28=RAM Global variables area: 0x200 to 0x2D5
-L29=RAM Global variables size: 214 byte(s)
+L28=RAM Global variables area: 0x200 to 0x2D8
+L29=RAM Global variables size: 217 byte(s)
 L30=
-L31=Hardware Stack area: 0x2D6 to 0x4FF
-L32=Hardware Stack size: 554 byte(s)
+L31=Hardware Stack area: 0x2D9 to 0x4FF
+L32=Hardware Stack size: 551 byte(s)
 L33=
 L34=Heap size: 0 byte(s)
 L35=
 L36=EEPROM usage: 0 byte(s), 0.0% of EEPROM
-L37=Program size: 962 words (1924 bytes), 11.7% of FLASH
-L38=20 words (40 bytes), 2.0% reduced by Code Compression
+L37=Program size: 972 words (1944 bytes), 11.9% of FLASH
+L38=12 words (24 bytes), 1.2% reduced by Code Compression
 Lines=38
 [BuildInfoAssembler]
 L1=AVRASM: AVR macro assembler 2.1.30 (build 592 Nov  7 2008 12:38:17)
 L2=Copyright (C) 1995-2008 ATMEL Corporation
 L3=
-L4=F:\AN 3 SEM 2\P2-ZOICAN\chestii alexutu\Electricity-Consumption-Meter\TestingProjects\ATmegaTests\MultiplexingTest\SourceCode\Debug\List\main.asm(3070): No EEPROM data, deleting F:\AN 3 SEM 2\P2-ZOICAN\chestii alexutu\Electricity-Consumption-Meter\TestingProjects\ATmegaTests\MultiplexingTest\SourceCode\Debug\Exe\main.eep
+L4=C:\Users\Engineer\Documents\Updates\Repo\Electricity-Consumption-Meter\TestingProjects\ATmegaTests\MultiplexingTest\SourceCode\Debug\List\main.asm(2904): No EEPROM data, deleting C:\Users\Engineer\Documents\Updates\Repo\Electricity-Consumption-Meter\TestingProjects\ATmegaTests\MultiplexingTest\SourceCode\Debug\Exe\main.eep
 L5=
 L6=ATmega164A memory use summary [bytes]:
 L7=Segment   Begin    End      Code   Data   Used    Size   Use%
 L8=---------------------------------------------------------------
-L9=[.cseg] 0x000000 0x000784   1668    256   1924   16384  11.7%
-L10=[.dseg] 0x000100 0x0002d6      0    214    214    1024  20.9%
+L9=[.cseg] 0x000000 0x000798   1680    264   1944   16384  11.9%
+L10=[.dseg] 0x000100 0x0002d9      0    217    217    1024  21.2%
 L11=[.eseg] 0x000000 0x000000      0      0      0     512   0.0%
 L12=
 Lines=12
 [Bookmarks4]
-TimeStamp=1454021124
-Row=78
-Column=16
+TimeStamp=1455051850
+Row=100
+Column=0
 ScrollPosX=0
-ScrollPosY=67
+ScrollPosY=91
 BK0=-1
 BK1=-1
 BK2=-1
@@ -505,14 +505,14 @@ BK6=-1
 BK7=-1
 BK8=-1
 BK9=-1
+[FoldedCode3]
+Blocks=0
 [FoldedCode4]
 Blocks=0
 [HeadersList]
 Files=1
-F1=D:\GithubRepos\Electricity-Consumption-Meter\TestingProjects\ATmegaTests\MultiplexingTest\SourceCode\main.c
+F1=C:\Users\Engineer\Documents\Updates\Repo\Electricity-Consumption-Meter\TestingProjects\ATmegaTests\MultiplexingTest\SourceCode\main.c
 [Header1]
 Files=2
-F1=C:\cvavreval\inc\mega164a.h
-F2=C:\cvavreval\inc\mega324_bits.h
-[FoldedCode3]
-Blocks=0
+F1=..\..\..\..\..\avr\inc\mega164a.h
+F2=..\..\..\..\..\avr\inc\mega324_bits.h

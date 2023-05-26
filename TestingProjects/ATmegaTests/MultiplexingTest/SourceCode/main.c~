@@ -66,6 +66,8 @@ char S_PULSE;
 // Working mode ///
 // 0 -> range on; 1 -> range off
 char MODE = 0;
+// Flag (1 -> mode not set yet)
+char modeFlag = 1;
 ///////////////////
 
 ////// Global variables //////// 
@@ -162,10 +164,22 @@ interrupt [TIM0_OVF] void timer0_ovf_isr(void)
     CA = (PIND & 0x80) >> 7; 
     
     // DisplayInfo
-    DisplayInfo();
+    // DisplayInfo();   
+    
+    //power from ADSP
+    outPower = (PINA & 0x38)<<2;
+    // Delete PB7-PB5
+    PORTC &= 0x1f;       
+   
+    // Display out on PB7-PB5
+    PORTC = (PORTC) | (outPower);    
+   
+    DisplayConsumptionDisplayMode();
                                     
     // Update mock pulse
     // MockPULSE();
+              
+    CLS();
     
     // Check for pulses coming from ADSP
     UpdateConsumption();
@@ -339,70 +353,13 @@ void Init()
 void UpdateConsumption()
 {                
     // Identify PULSE
-    PULSE = PINA & 0x01;
-    
-    /* switch(S2) 
-    {
-        case 0:
-        {      
-            char cntP = 0;
-                       
-            // PD6 -> Sending request from ADSP
-            // PD7 -> Reading ack from ATmega164A
-                
-            // Check if sending request flag is up
-            // (Receiving sending request on PD6)
-            if (PORTD && 0x40)
-            {                
-                // Send reading ack 
-                // (Sending ack on PD7)  
-                PORTD |= 0x80;   
-                
-                // Going further to reading the pulses
-                S2 = 1;
-            }   
-            break;
-        }
-        case 1:
-        {          
-            // If PULSE is on, start counting
-            if (PULSE)
-            {   
-                // Increment cntP          
-                cntP += 1;   
-                
-                // Reset reading flag
-                PORTD &= 0x7f;   
-                
-                // Go further if the pulse period has passed,
-                // otherwise go back wait for sensding ack again.
-                S2 = (cntP == DP) ? 2 : 1;
-            }
-            break;
-        }
-        case 2:
-        {
-            if (~PULSE)
-            {   
-                // Update current consumption range
-                Q = CLS();
-                
-                // Increment consumption
-                CONS[Q] += 1;
-                
-                // Wait for another pulse
-                S2 = 0;
-            }          
-            break;  
-        }   
-    } */  
-                
+    PULSE = PINA & 0x01;                
     
     // Read power level
     PowerLevel = (PINA & 0xfe) >> 1;  
     
     // For testing purposes, we will assume PowerLevel = 6 kW
-    PowerLevel = 2;
+    PowerLevel = 8;
          
     switch(S2) 
     {
@@ -417,6 +374,12 @@ void UpdateConsumption()
                 // Reset reading flag
                 // PORTD &= 0x7f;   
                 
+                if (modeFlag) 
+                {
+                    MODE = (PINA & 0x02) >> 1; 
+                    //modeFlag = 0;
+                }
+                
                 // Go further if the pulse period has passed,
                 // otherwise go back wait for sensding ack again.
                 S2 = (cntP == DP) ? 1 : 0;
@@ -428,7 +391,13 @@ void UpdateConsumption()
             if (PULSE == 0)
             {   
                 // Update current consumption range
-                CLS();
+                // CLS();  
+                
+                if (modeFlag)
+                {  
+                    pulsesNumber = (PINA & 0x06)>>1;
+                    modeFlag = 0;
+                }
                 
                 // Increment consumption 
                 if (MODE == 0)
