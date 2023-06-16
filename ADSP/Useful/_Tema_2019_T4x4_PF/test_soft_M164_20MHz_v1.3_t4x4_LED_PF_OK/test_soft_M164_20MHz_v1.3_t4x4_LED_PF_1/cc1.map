@@ -1,0 +1,42 @@
+RAM Allocation [bytes]
+Variable                                                                          Address   Size
+------------------------------------------------------------------------------------------------
+rx_buffer0                                                                        0x0200       8
+tx_buffer0                                                                        0x0208       8
+_seed (stdlib.lib)                                                                0x0210       4
+
+EEPROM Allocation [bytes]
+Variable                                                                          Address   Size
+------------------------------------------------------------------------------------------------
+
+Register Allocation
+Variable                                                                          Register  Size
+------------------------------------------------------------------------------------------------
+rx_wr_index0                                                                      R3           1
+rx_rd_index0                                                                      R2           1
+rx_counter0                                                                       R5           1
+rx_buffer_overflow0                                                               GPIOR0.0  1bit
+cnt                                                                               R4           1
+key                                                                               R7           1
+tx_wr_index0                                                                      R6           1
+tx_rd_index0                                                                      R9           1
+tx_counter0                                                                       R8           1
+
+FLASH Allocation [words]
+Function                                                                          Address   Size
+------------------------------------------------------------------------------------------------
+usart0_rx_isr                                                                     0x00095     29
+getchar                                                                           0x000B2     19
+usart0_tx_isr                                                                     0x000C5     21
+putchar                                                                           0x000DA     30
+timer1_compa_isr                                                                  0x000F8     48
+main                                                                              0x00128     68
+read_keyboard                                                                     0x0016C     55
+write_LED                                                                         0x001A3      8
+write_PF                                                                          0x001AB      7
+Init_initController                                                               0x001B2    109
+put_usart_G100                                                                    0x0021F     13
+_print_G100                                                                       0x0022C    294
+printf                                                                            0x00352     35
+strlen                                                                            0x00375     12
+strlenf                                                                           0x00381     13

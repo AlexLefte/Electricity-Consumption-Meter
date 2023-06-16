@@ -362,7 +362,7 @@ void UpdateConsumption()
     PowerLevel = (PINA & 0xfe) >> 1;  
     
     // For testing purposes, we will assume PowerLevel = 6 kW
-    PowerLevel = 8;
+    // PowerLevel = 8;
          
     switch(S2) 
     {

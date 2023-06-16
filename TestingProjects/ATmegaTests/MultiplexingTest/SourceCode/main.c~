@@ -124,6 +124,9 @@ const char DIGITS[] = {
     0b10010000   9      
     */     
 };
+
+char outPower ;
+char pulsesNumber;
 ///////////////////////////////
 
 // Power Level (CLC) ///
